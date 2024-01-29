@@ -1,0 +1,77 @@
+version 1.0
+
+
+workflow ClairWorkflow {
+    input {
+        File bam
+        String sample_id
+        File assembly
+        File par_region_bed
+        String docker_image="hkubal/clair3:latest"
+        Int preemptible=3
+        Int boot_disk_size=20
+        Int disk_space=300
+        Int cpu = 48
+        Int mem = 96
+    }
+
+    call clairTask {
+        input:
+            input_bam=bam,
+            sample_id=sample_id,
+            docker_image=docker_image,
+            assembly=assembly,
+            preemptible=preemptible,
+            boot_disk_size=boot_disk_size,
+            disk_space=disk_space,
+            cpu=cpu,
+            mem=mem,
+            mode=mode
+    }
+
+    output {
+        File phased_vcf = clairTask.output_directory
+    }
+}
+
+
+task clairTask {
+    input {
+        File input_bam
+        String sample_id
+        File assembly
+        String docker_image
+        Int preemptible=3
+        Int boot_disk_size=10
+        Int disk_space=20
+        Int cpu = 10
+        Int mem = 64
+    }
+
+    command <<<
+	MODEL_NAME="hifi_revio"
+
+        /opt/bin/run_clair3.sh \
+        --bam_fn=~{input_bam} \
+        --ref_fn=~{assembly} \
+        --threads=~{cpu} \
+        --platform="hifi" \
+        --model_path="/opt/models/${MODEL_NAME}" \
+        --output=~{sample_id} \
+        --enable_phasing \
+        --longphase_for_phasing
+    >>>
+
+    runtime {
+        disks: "local-disk ~{disk_space} HDD"
+        memory: "~{mem} GB"
+        cpu: cpu
+        preemptible: preemptible
+        bootDiskSizeGb: boot_disk_size
+        docker: docker_image
+    }
+
+    output {
+        File output_directory = "~{sample_id}"
+    }
+}
