@@ -1,13 +1,13 @@
 version 1.0
 
 
-workflow DeepVariantWorkflow {
+workflow SeverusWorkflow {
     input {
         File bam
         String sample_id
         File assembly
         File par_region_bed
-        String docker_image="google/deepvariant:1.6.0"
+        String docker_image="docker.io/qianqin/severus"
         Int preemptible=3
         Int boot_disk_size=20
         Int disk_space=300
@@ -37,7 +37,7 @@ workflow DeepVariantWorkflow {
 }
 
 
-task deepvariantTask {
+task severusTask {
     input {
         File input_bam
         String mode
