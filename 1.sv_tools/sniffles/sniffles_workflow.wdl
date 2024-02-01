@@ -1,68 +1,58 @@
 version 1.0
 
 
-workflow DeepVariantWorkflow {
+workflow SNFWorkflow {
     input {
-        File bam
+        File cram
+        File crai
+
         String sample_id
-        File assembly
-        File par_region_bed
-        String docker_image="google/deepvariant:1.6.0"
+        String docker_image="qianqin/snf2.2"
+        String? mosaic
+
         Int preemptible=3
         Int boot_disk_size=20
         Int disk_space=300
-        Int cpu = 48
+        Int cpu = 16
         Int mem = 96
-        String mode = "PACBIO"
     }
 
-    call deepvariantTask {
+    call SNFTask {
         input:
-            input_bam=bam,
+            cram=cram,
+            crai=crai,
+            mosaic=mosaic,
             sample_id=sample_id,
             docker_image=docker_image,
-            assembly=assembly,
-            par_region_bed=par_region_bed,
             preemptible=preemptible,
             boot_disk_size=boot_disk_size,
             disk_space=disk_space,
             cpu=cpu,
-            mem=mem,
-            mode=mode
+            mem=mem
     }
 
     output {
-        File vcf = deepvariantTask.vcf
+        File vcf = SNFTask.vcf
     }
 }
 
 
-task deepvariantTask {
+task SNFTask {
     input {
-        File input_bam
-        String mode
+        File cram
+        File crai
         String sample_id
-        File assembly
+        String? mosaic
         String docker_image
         Int preemptible=3
         Int boot_disk_size=10
         Int disk_space=20
         Int cpu = 10
         Int mem = 32
-        File par_region_bed
     }
 
     command <<<
-        /opt/deepvariant/bin/run_deepvariant \
-        --model_type=~{mode} \
-        --ref=~{assembly} \
-        --reads=~{input_bam} \
-        --output_vcf=~{sample_id}.vcf \
-        --num_shards=~{cpu} \
-        --logging_dir=logs \
-        --haploid_contigs="chrX,chrY" \
-        --par_regions_bed=~{par_region_bed} \
-        --dry_run=false
+        sniffles --threads ~{cpu} -i ~{cram} -v ~{sample_id}.vcf.gz --output-rnames --sample-id ~{sample_id} ~{" " + mosaic}
     >>>
 
     runtime {
@@ -75,6 +65,7 @@ task deepvariantTask {
     }
 
     output {
-        File vcf = "~{sample_id}.vcf"
+        File vcf = "~{sample_id}.vcf.gz"
+        File tbi = "~{sample_id}.vcf.gz.tbi"
     }
 }
