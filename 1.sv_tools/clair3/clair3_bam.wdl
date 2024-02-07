@@ -8,7 +8,7 @@ workflow ClairWorkflow {
         String sample_id
         File assembly
         File fai
-        String docker_image="hkubal/clair3:latest"
+        String docker_image="hkubal/clair3:v1.0.5"
         Int preemptible=3
         Int boot_disk_size=20
         Int disk_space=300
