@@ -8,7 +8,7 @@ def main():
     
     for variant in vcf:
         genotypes = variant.genotypes
-        if genotypes[0][0] == -1 or (genotypes[0][0] == 0 and genotypes[0][1] == 0):
+        if genotypes[0][0] == -1: # or (genotypes[0][0] == 0 and genotypes[0][1] == 0):
             continue
         # somatic mutations
         if genotypes[1][0] == -1:
