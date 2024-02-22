@@ -25,3 +25,7 @@ grep -E "DEL" sniffles2_somaticSVs_COLO829_hg38_singlesample.bed > sniffles2_som
 grep -E "INS" sniffles2_somaticSVs_COLO829_hg38_singlesample.bed > sniffles2_somaticSVs_COLO829_hg38_singlesample_ins.bed
 gzip sniffles*.bed
 
+#python parse_hprc.py > hprc_grch38_wave_indels50bp.bed
+
+awk '($5 > 0)' hprc_grch38_wave_indels50bp.bed > hprc_grch38_wave_indels50bp_ins.bed
+awk '($5 < 0)' hprc_grch38_wave_indels50bp.bed > hprc_grch38_wave_indels50bp_del.bed

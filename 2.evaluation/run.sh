@@ -106,12 +106,20 @@ main() {
   #     zcat ${bed} | awk '($4>0)' | gzip -c - > ${bed/mergedindel/ins}
   #done
 
+
+  zcat ../pangenome_sv_benchmarking/2.evaluation/sniffles2_somaticSVs_COLO829_hg38_singlesample_ins.bed.gz | bedtools intersect -v -a - -b ../pangenome_sv_benchmarking/2.evaluation/hprc_grch38_wave_indels50bp_ins.bed > COLO829.GRCh38.pacbio.wave_filtered_sniffled.ins.bed
+  zcat ../pangenome_sv_benchmarking/2.evaluation/sniffles2_somaticSVs_COLO829_hg38_singlesample_del.bed.gz | bedtools intersect -v -a - -b ../pangenome_sv_benchmarking/2.evaluation/hprc_grch38_wave_indels50bp_del.bed > COLO829.GRCh38.pacbio.wave_filtered_sniffled.del.bed
+
+  gzip -c COLO829.GRCh38.pacbio.wave_filtered_sniffled.ins.bed > COLO829.GRCh38.pacbio.wave_filtered_sniffled.ins.bed.gz
+  gzip -c COLO829.GRCh38.pacbio.wave_filtered_sniffled.del.bed > COLO829.GRCh38.pacbio.wave_filtered_sniffled.del.bed.gz
+
   golds=(/home/ubuntu/pangenome/pangenome_sv_benchmarking/2.evaluation/truthset_somaticSVs_COLO829_hg38_sort_ins_PB.bed /home/ubuntu/pangenome/pangenome_sv_benchmarking/2.evaluation/truthset_somaticSVs_COLO829_hg38_sort_del_PB.bed)
   severus=(/home/ubuntu/pangenome/pangenome_sv_benchmarking/2.evaluation/severus_somaticSVs_COLO829_hg38_ins.bed /home/ubuntu/pangenome/pangenome_sv_benchmarking/2.evaluation/severus_somaticSVs_COLO829_hg38_del.bed)
   ours_minimap2_linear=(COLO829_mapq30_mlen100_cnt3_local_linear_grch38_minimap2_ins.bed.gz COLO829_mapq30_mlen100_cnt3_local_linear_grch38_minimap2_del.bed.gz)
   ours_linear=(COLO829_mapq30_mlen100_cnt3_local_grch38_diff0.05_linear_ins.bed.gz COLO829_mapq30_mlen100_cnt3_local_grch38_diff0.05_linear_del.bed.gz)
   ours_graph=(COLO829_mapq30_mlen100_cnt3_local_grch38_graph_ins.bed.gz COLO829_mapq30_mlen100_cnt3_local_grch38_graph_del.bed.gz)
   tumoronly=(COLO829_mapq30_mlen100_cnt3_local_grch38_tumoronly_graph_ins.bed.gz COLO829_mapq30_mlen100_cnt3_local_grch38_tumoronly_graph_del.bed.gz)
+  sniffles=(COLO829.GRCh38.pacbio.wave_filtered_sniffled.ins.bed.gz COLO829.GRCh38.pacbio.wave_filtered_sniffled.del.bed.gz)
 
    for ((i=0; i<${#severus[@]}; i++)); do
       for depth in {1..3}; do
@@ -136,6 +144,9 @@ main() {
       done
       res=$(compare_truthset ${severus[$i]} ${golds[$i]} 3 severus)
       echo "severus_grch38_linear_merged" $res ${total} 3 $i
+
+      res=$(compare_truthset ${sniffles[$i]} ${golds[$i]} 3 severus)
+      echo "sniffles2_grch38_linear_merged" $res ${total} 3 $i
   done
 }
 
