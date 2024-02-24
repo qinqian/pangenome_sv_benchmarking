@@ -1,0 +1,4 @@
+entity_id,configuration,status,Succeeded,Running,Failed,Aborted,Aborting,Submitted,Queued,date,submission_id
+nanopore_merged_techreps,minigraph_cram_XvDFxuG8La8,Submitted,0,3,0,0,0,0,0,2024-02-24 22:16:23,5494a02f-ebb1-4522-aba6-6cae7f4938fe
+nanopore_merged_techreps,minigraph_cram_pV3AQKSE6Zg,Submitted,0,3,0,0,0,0,0,2024-02-24 21:25:11,4669590c-9fb2-43c2-b1fe-01bfe25156f0
+nanopore_merged_techreps,minigraph_cram_iEYdr8n_zZM,Submitted,0,3,0,0,0,0,0,2024-02-24 21:10:47,d03abbfa-a842-49cb-93bf-d738cdb5ea4d
