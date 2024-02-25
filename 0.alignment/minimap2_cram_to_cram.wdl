@@ -5,6 +5,7 @@ workflow LineargenomeAlignment {
     input {
         File cram
         File crai
+        File input_cram_reference
 
         String sample_id
         File assembly
@@ -19,7 +20,9 @@ workflow LineargenomeAlignment {
 
     call minimapTask {
         input:
-            input_bam=bam,
+            input_cram=cram,
+            input_crai=crai,  
+            input_cram_reference=input_cram_reference,
             sample_id=sample_id,
             docker_image=docker_image,
             assembly=assembly,
@@ -42,6 +45,7 @@ task minimapTask {
     input {
         File input_cram
         File input_crai
+        File input_cram_reference
         String mode
         String sample_id
         File assembly
