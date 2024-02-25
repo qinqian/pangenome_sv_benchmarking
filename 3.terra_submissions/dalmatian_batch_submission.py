@@ -16,23 +16,21 @@ minigraph_cram_output_to_assemblies = {"minigraph_chm13v2_gaf": "\"gs://fc-secur
                                        "minigraph_grch37graph_gaf": "\"gs://fc-secure-062e6633-7a72-4623-9394-491e0ce6c324/GRCh37-91c.r559.gfa.gz\"",
                                        "minigraph_grch37linear_gaf": "\"gs://fc-secure-062e6633-7a72-4623-9394-491e0ce6c324/hs37d5.fa\""}
 #TODO: automatically generate this in the future
-#remaining_task = ["minigraph_chm13graph_gaf", "minigraph_grch38graph_gaf", "minigraph_grch37linear_gaf"]
+remaining_task = ["minigraph_chm13graph_gaf", "minigraph_grch38graph_gaf", "minigraph_grch37linear_gaf"]
 
 
 # Workspace column name to corresponding assembly
 # This minigraph_cram_to_cram will output pafs
-minigraph_cram_output_to_assemblies = {"minigraph_chm13v2_gaf": "\"gs://fc-secure-062e6633-7a72-4623-9394-491e0ce6c324/chm13v2.0.fa\"", 
-                                       "minigraph_chm13graph_gaf": "\"gs://fc-secure-062e6633-7a72-4623-9394-491e0ce6c324/chm13-90c.r518.gfa\"",
-                                       "minigraph_grch38graph_gaf": "\"gs://fc-secure-062e6633-7a72-4623-9394-491e0ce6c324/GRCh38-90c.r518.gfa\"",
-                                       "minigraph_grch38_noalt_gaf": "\"gs://fc-secure-062e6633-7a72-4623-9394-491e0ce6c324/GCA_000001405.15_GRCh38_no_alt_analysis_set.fna\"", 
-                                       "minigraph_grch37graph_gaf": "\"gs://fc-secure-062e6633-7a72-4623-9394-491e0ce6c324/GRCh37-91c.r559.gfa.gz\"",
-                                       "minigraph_grch37linear_gaf": "\"gs://fc-secure-062e6633-7a72-4623-9394-491e0ce6c324/hs37d5.fa\""}
-#TODO: automatically generate this in the future
-#remaining_task = ["minigraph_chm13graph_gaf", "minigraph_grch38graph_gaf", "minigraph_grch37linear_gaf"]
+minimap2_cram_output_to_assemblies = {("minimap2_chm13v2_cram", "minimap2_chm13v2_crai"): "\"gs://fc-secure-062e6633-7a72-4623-9394-491e0ce6c324/chm13v2.0.fa\"", 
+                                      ("minimap2_grch37_noalt_cram", "minimap2_grch37_noalt_crai"): "\"gs://fc-secure-062e6633-7a72-4623-9394-491e0ce6c324/hs37d5.fa\""}
 
 
 def submit_minigraph_gaf_jobs(sample_set_id, minigraph_wdl="minigraph_cram", use_callcache=False):
     submission_id = wm.create_submission(minigraph_wdl, sample_set_id, 'sample_set', expression='this.samples', use_callcache=use_callcache)
+    #await terra.waitForSubmission(pangenome_sv_workspace, submission_id)
+
+def submit_minimap2_cram_jobs(sample_set_id, minimap2_wdl="minimap2_cram_to_cram", use_callcache=False):
+    submission_id = wm.create_submission(minimap2_wdl, sample_set_id, 'sample_set', expression='this.samples', use_callcache=use_callcache)
     #await terra.waitForSubmission(pangenome_sv_workspace, submission_id)
 
 
@@ -64,6 +62,18 @@ def main():
     #    new_config = wm.update_config(old_config)
     #    submit_minigraph_gaf_jobs("nanopore_merged_techreps")
     #    #break
+
+    for output_col, assembly in minimap2_cram_output_to_assemblies.items():
+        old_config = wm.get_config("minimap2_cram_to_cram")
+        print(old_config)
+        old_config["inputs"]['LineargenomeAlignment.assembly'] = assembly
+        
+        old_config['outputs']['LineargenomeAlignment.cram'] = f'this.{output_col[0]}'
+        old_config['outputs']['LineargenomeAlignment.crai'] = f'this.{output_col[1]}'
+
+        print(old_config)
+        new_config = wm.update_config(old_config)
+        submit_minimap2_cram_jobs("nanopore_merged_techreps")
 
     status = wm.get_submission_status(filter_active=False)
     status.loc[:, 'clean_up'] = False
