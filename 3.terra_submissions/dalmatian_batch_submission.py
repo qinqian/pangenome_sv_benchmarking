@@ -67,7 +67,6 @@ def main():
         old_config = wm.get_config("minimap2_cram_to_cram")
         print(old_config)
         old_config["inputs"]['LineargenomeAlignment.assembly'] = assembly
-        
         old_config['outputs']['LineargenomeAlignment.cram'] = f'this.{output_col[0]}'
         old_config['outputs']['LineargenomeAlignment.crai'] = f'this.{output_col[1]}'
 
