@@ -58,8 +58,13 @@ task minimapTask {
     }
 
     command <<<
-        samtools fasta -@ ~{cpu} --reference ~{input_cram_reference} ~{input_cram} | minimap2 -ax ~{mode} -t ~{cpu} ~{assembly} - | samtools sort -l 1 -@ ~{cpu} --output-fmt CRAM --reference ~{assembly} > ~{sample_id}.cram
-        samtools index ~{sample_id}.cram
+        #samtools fasta -@ ~{cpu} --reference ~{input_cram_reference} ~{input_cram} | minimap2 -ax ~{mode} -t ~{cpu} ~{assembly} - | samtools sort -l 1 -@ ~{cpu} --output-fmt CRAM --reference ~{assembly} > ~{sample_id}.cram
+
+        samtools collate -Oun128 --reference ~{input_cram_reference} ~{input_cram} | samtools fastq - \
+          | minimap2 -ax ~{mode} -t ~{cpu} ~{assembly} - \
+          | samtools sort --write-index -l 1 --output-fmt CRAM --reference ~{assembly} -@4 -m4g -o ~{sample_id}.cram -
+
+        #samtools index ~{sample_id}.cram
     >>>
 
     runtime {
