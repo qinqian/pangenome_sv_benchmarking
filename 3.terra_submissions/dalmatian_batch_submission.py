@@ -25,19 +25,28 @@ minimap2_cram_output_to_assemblies = {("minimap2_chm13v2_cram", "minimap2_chm13v
                                       ("minimap2_grch37_noalt_cram", "minimap2_grch37_noalt_crai"): "\"gs://fc-secure-062e6633-7a72-4623-9394-491e0ce6c324/hs37d5.fa\""}
 
 
+# Sniffles2 single sample columns
+# for GRCh37 and Chm13v2 of all samples
+sniffles2_single_mode_t2t_37 = {("minimap2_grch37_noalt_cram", "minimap2_grch37_noalt_crai"): ("sniffles_grch37_vcf", "sniffles_grch37_tbi"),
+                                ("minimap2_chm13v2_cram", "minimap2_chm13v2_crai"): ("sniffles_chm13v2_vcf", "sniffles_chm13v2_tbi")}
+
+# NOTE: GRCh38 distributed in different columns
+# sniffles2_single_mode_hg38 = {("cram", "crai"): "sample_set"}
+
+
 def submit_minigraph_gaf_jobs(sample_set_id, minigraph_wdl="minigraph_cram", use_callcache=False):
     submission_id = wm.create_submission(minigraph_wdl, sample_set_id, 'sample_set', expression='this.samples', use_callcache=use_callcache)
-    #await terra.waitForSubmission(pangenome_sv_workspace, submission_id)
 
 def submit_minimap2_cram_jobs(sample_set_id, minimap2_wdl="minimap2_cram_to_cram", use_callcache=False):
     submission_id = wm.create_submission(minimap2_wdl, sample_set_id, 'sample_set', expression='this.samples', use_callcache=use_callcache)
-    #await terra.waitForSubmission(pangenome_sv_workspace, submission_id)
+
+
+def submit_sniffles2_cram_jobs(sample_set_id, minimap2_wdl="sniffles_workflow", use_callcache=True):
+    submission_id = wm.create_submission(minimap2_wdl, sample_set_id, 'sample_set', expression='this.samples', use_callcache=use_callcache)
 
 
 def clean_up(to_be_clean_submission_ids, dry_run=True):
     print("cleaning workspaces")
-    #torm = await terra_cleanup.deleteHeavyFiles("broad-firecloud-ccle/DEV_DepMap_WGS_CN")
-    #h.parrun(['gsutil rm '+i for i in torm], cores=8)
     subprocess.call("rm -f clean.logs", shell=True)
     for submission_id in to_be_clean_submission_ids:
         if dry_run:
@@ -48,7 +57,8 @@ def clean_up(to_be_clean_submission_ids, dry_run=True):
 
 
 def main():
-    print(wm.get_samples())
+    samples_df = wm.get_samples()
+    #wm.update_sample_set('all_samples', samples_df.index)
     print(wm.get_sample_sets())
 
     #for output_col in remaining_task:
@@ -63,16 +73,32 @@ def main():
     #    submit_minigraph_gaf_jobs("nanopore_merged_techreps")
     #    #break
 
-    for output_col, assembly in minimap2_cram_output_to_assemblies.items():
-        old_config = wm.get_config("minimap2_cram_to_cram")
-        print(old_config)
-        old_config["inputs"]['LineargenomeAlignment.assembly'] = assembly
-        old_config['outputs']['LineargenomeAlignment.cram'] = f'this.{output_col[0]}'
-        old_config['outputs']['LineargenomeAlignment.crai'] = f'this.{output_col[1]}'
+    #for output_col, assembly in minimap2_cram_output_to_assemblies.items():
+    #    old_config = wm.get_config("minimap2_cram_to_cram")
+    #    print('-------')
+    #    print(old_config)
+    #    old_config["inputs"]['LineargenomeAlignment.assembly'] = assembly
+    #    old_config['outputs']['LineargenomeAlignment.cram'] = f'this.{output_col[0]}'
+    #    old_config['outputs']['LineargenomeAlignment.crai'] = f'this.{output_col[1]}'
+    #    print(old_config)
+    #    new_config = wm.update_config(old_config)
+    #    submit_minimap2_cram_jobs("nanopore_merged_techreps")
 
+    for ((cram, crai), (vcf, tbi)) in sniffles2_single_mode_t2t_37.items():
+        print(cram, crai)
+        old_config = wm.get_config("sniffles_workflow")
+        old_config["inputs"]["SNFWorkflow.boot_disk_size"] = '100'
+        old_config["inputs"]["SNFWorkflow.disk_space"] = '200'
+        old_config["inputs"]["SNFWorkflow.mosaic"] = ''
+        print('-------')
+        print(old_config)
+        old_config["inputs"]['SNFWorkflow.cram'] = f'this.{cram}'
+        old_config["inputs"]['SNFWorkflow.crai'] = f'this.{crai}'
+        old_config['outputs']['SNFWorkflow.vcf'] = f'this.{vcf}'
+        old_config['outputs']['SNFWorkflow.tbi'] = f'this.{tbi}'
         print(old_config)
         new_config = wm.update_config(old_config)
-        submit_minimap2_cram_jobs("nanopore_merged_techreps")
+        submit_sniffles2_cram_jobs("all_samples")
 
     status = wm.get_submission_status(filter_active=False)
     status.loc[:, 'clean_up'] = False
@@ -86,4 +112,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
