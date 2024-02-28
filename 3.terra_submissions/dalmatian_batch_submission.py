@@ -25,13 +25,23 @@ minimap2_cram_output_to_assemblies = {("minimap2_chm13v2_cram", "minimap2_chm13v
                                       ("minimap2_grch37_noalt_cram", "minimap2_grch37_noalt_crai"): "\"gs://fc-secure-062e6633-7a72-4623-9394-491e0ce6c324/hs37d5.fa\""}
 
 
+# Clair3 for severus
+clair3_phasing = {("minimap2_chm13v2_cram", "minimap2_chm13v2_crai", "\"gs://fc-secure-062e6633-7a72-4623-9394-491e0ce6c324/chm13v2.0.fa\"", "\"gs://fc-secure-062e6633-7a72-4623-9394-491e0ce6c324/chm13v2.0.fa.fai\""): ("clair_chm13v2_phased_vcf", "clair_chm13v2_phased_vcf_tbi"),
+                  ("minimap2_grch37_noalt_cram", "minimap2_grch37_noalt_crai", "\"gs://fc-secure-062e6633-7a72-4623-9394-491e0ce6c324/hs37d5.fa\"", "\"gs://fc-secure-062e6633-7a72-4623-9394-491e0ce6c324/hs37d5.fa.fai\""): ("clair_grch37_phased_vcf", "clair_grch37_phased_vcf_tbi")}
+
+# NOTE: GRCh38 distributed in different columns
+clair3_phasing_grch38 = {("cram", "crai", "nanopore_merged_techreps", "\"gs://fc-secure-062e6633-7a72-4623-9394-491e0ce6c324/GCA_000001405.15_GRCh38_no_alt_analysis_set.fna\"", "\"gs://fc-secure-062e6633-7a72-4623-9394-491e0ce6c324/GCA_000001405.15_GRCh38_no_alt_analysis_set.fna.fai\""): ("clair_phased_vcf", "clair_phased_vcf_tbi"),
+                         ("bam", "bai", "all_pacbio_hg002_4cancerpairedcells", "\"gs://fc-secure-062e6633-7a72-4623-9394-491e0ce6c324/GCA_000001405.15_GRCh38_no_alt_analysis_set.fna\"", "\"gs://fc-secure-062e6633-7a72-4623-9394-491e0ce6c324/GCA_000001405.15_GRCh38_no_alt_analysis_set.fna.fai\""): ("clair_phased_vcf", "clair_phased_vcf_tbi")}
+
+
 # Sniffles2 single sample columns
 # for GRCh37 and Chm13v2 of all samples
 sniffles2_single_mode_t2t_37 = {("minimap2_grch37_noalt_cram", "minimap2_grch37_noalt_crai"): ("sniffles_grch37_vcf", "sniffles_grch37_tbi"),
                                 ("minimap2_chm13v2_cram", "minimap2_chm13v2_crai"): ("sniffles_chm13v2_vcf", "sniffles_chm13v2_tbi")}
 
 # NOTE: GRCh38 distributed in different columns
-# sniffles2_single_mode_hg38 = {("cram", "crai"): "sample_set"}
+sniffles2_single_mode_hg38 = {("cram", "crai", "nanopore_merged_techreps"): ("sniffles_grch38_noalt_vcf", "sniffles_grch38_noalt_tbi"),
+                              ("bam", "bai", "all_pacbio_hg002_4cancerpairedcells"): ("sniffles_grch38_noalt_vcf", "sniffles_grch38_noalt_tbi")}
 
 
 def submit_minigraph_gaf_jobs(sample_set_id, minigraph_wdl="minigraph_cram", use_callcache=False):
@@ -40,10 +50,11 @@ def submit_minigraph_gaf_jobs(sample_set_id, minigraph_wdl="minigraph_cram", use
 def submit_minimap2_cram_jobs(sample_set_id, minimap2_wdl="minimap2_cram_to_cram", use_callcache=False):
     submission_id = wm.create_submission(minimap2_wdl, sample_set_id, 'sample_set', expression='this.samples', use_callcache=use_callcache)
 
-
 def submit_sniffles2_cram_jobs(sample_set_id, minimap2_wdl="sniffles_workflow", use_callcache=True):
     submission_id = wm.create_submission(minimap2_wdl, sample_set_id, 'sample_set', expression='this.samples', use_callcache=use_callcache)
 
+def submit_clair3_cram_jobs(sample_set_id, minimap2_wdl="clair3_bam", use_callcache=True):
+    submission_id = wm.create_submission(minimap2_wdl, sample_set_id, 'sample_set', expression='this.samples', use_callcache=use_callcache)
 
 def clean_up(to_be_clean_submission_ids, dry_run=True):
     print("cleaning workspaces")
@@ -53,8 +64,6 @@ def clean_up(to_be_clean_submission_ids, dry_run=True):
             subprocess.call(f"gsutil du -sh gs://fc-secure-062e6633-7a72-4623-9394-491e0ce6c324/submissions/{submission_id} >> clean.logs", shell=True)
         else:
             subprocess.call(f"gsutil rm -r gs://fc-secure-062e6633-7a72-4623-9394-491e0ce6c324/submissions/{submission_id}", shell=True)
-
-
 
 def main():
     samples_df = wm.get_samples()
@@ -84,21 +93,65 @@ def main():
     #    new_config = wm.update_config(old_config)
     #    submit_minimap2_cram_jobs("nanopore_merged_techreps")
 
-    for ((cram, crai), (vcf, tbi)) in sniffles2_single_mode_t2t_37.items():
+    #for ((cram, crai), (vcf, tbi)) in sniffles2_single_mode_t2t_37.items():
+    #    print(cram, crai)
+    #    old_config = wm.get_config("sniffles_workflow")
+    #    old_config["inputs"]["SNFWorkflow.boot_disk_size"] = '100'
+    #    old_config["inputs"]["SNFWorkflow.disk_space"] = '200'
+    #    old_config["inputs"]["SNFWorkflow.mosaic"] = ''
+    #    print('-------')
+    #    print(old_config)
+    #    old_config["inputs"]['SNFWorkflow.cram'] = f'this.{cram}'
+    #    old_config["inputs"]['SNFWorkflow.crai'] = f'this.{crai}'
+    #    old_config['outputs']['SNFWorkflow.vcf'] = f'this.{vcf}'
+    #    old_config['outputs']['SNFWorkflow.tbi'] = f'this.{tbi}'
+    #    print(old_config)
+    #    new_config = wm.update_config(old_config)
+    #    submit_sniffles2_cram_jobs("all_samples")
+
+    #for ((cram, crai, sample_set), (vcf, tbi)) in sniffles2_single_mode_hg38.items():
+    #    print(cram, crai)
+    #    old_config = wm.get_config("sniffles_workflow")
+    #    old_config["inputs"]["SNFWorkflow.boot_disk_size"] = '100'
+    #    old_config["inputs"]["SNFWorkflow.disk_space"] = '200'
+    #    old_config["inputs"]["SNFWorkflow.mosaic"] = ''
+    #    print('-------')
+    #    print(old_config)
+    #    old_config["inputs"]['SNFWorkflow.cram'] = f'this.{cram}'
+    #    old_config["inputs"]['SNFWorkflow.crai'] = f'this.{crai}'
+    #    old_config['outputs']['SNFWorkflow.vcf'] = f'this.{vcf}'
+    #    old_config['outputs']['SNFWorkflow.tbi'] = f'this.{tbi}'
+    #    print(old_config)
+    #    new_config = wm.update_config(old_config)
+    #    submit_sniffles2_cram_jobs(sample_set)
+
+    #for ((cram, crai, fa, fai), (vcf, tbi)) in clair3_phasing.items():
+    #    print(cram, crai)
+    #    old_config = wm.get_config("clair3_bam")
+    #    print(old_config)
+    #    old_config["inputs"]["ClairWorkflow.assembly"] = fa
+    #    old_config["inputs"]["ClairWorkflow.fai"] = fai
+    #    old_config["inputs"]['ClairWorkflow.bam'] = f'this.{cram}'
+    #    old_config["inputs"]['ClairWorkflow.bai'] = f'this.{crai}'
+    #    old_config['outputs']['ClairWorkflow.phased_vcf'] = f'this.{vcf}'
+    #    old_config['outputs']['ClairWorkflow.phased_vcf_tbi'] = f'this.{tbi}'
+    #    print(old_config)
+    #    new_config = wm.update_config(old_config)
+    #    submit_clair3_cram_jobs("all_samples")
+
+    for ((cram, crai, sample_set, fa, fai), (vcf, tbi)) in clair3_phasing_grch38.items():
         print(cram, crai)
-        old_config = wm.get_config("sniffles_workflow")
-        old_config["inputs"]["SNFWorkflow.boot_disk_size"] = '100'
-        old_config["inputs"]["SNFWorkflow.disk_space"] = '200'
-        old_config["inputs"]["SNFWorkflow.mosaic"] = ''
-        print('-------')
+        old_config = wm.get_config("clair3_bam")
         print(old_config)
-        old_config["inputs"]['SNFWorkflow.cram'] = f'this.{cram}'
-        old_config["inputs"]['SNFWorkflow.crai'] = f'this.{crai}'
-        old_config['outputs']['SNFWorkflow.vcf'] = f'this.{vcf}'
-        old_config['outputs']['SNFWorkflow.tbi'] = f'this.{tbi}'
+        old_config["inputs"]["ClairWorkflow.assembly"] = fa
+        old_config["inputs"]["ClairWorkflow.fai"] = fai
+        old_config["inputs"]['ClairWorkflow.bam'] = f'this.{cram}'
+        old_config["inputs"]['ClairWorkflow.bai'] = f'this.{crai}'
+        old_config['outputs']['ClairWorkflow.phased_vcf'] = f'this.{vcf}'
+        old_config['outputs']['ClairWorkflow.phased_vcf_tbi'] = f'this.{tbi}'
         print(old_config)
         new_config = wm.update_config(old_config)
-        submit_sniffles2_cram_jobs("all_samples")
+        submit_clair3_cram_jobs(sample_set)
 
     status = wm.get_submission_status(filter_active=False)
     status.loc[:, 'clean_up'] = False
