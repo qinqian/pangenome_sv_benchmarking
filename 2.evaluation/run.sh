@@ -9,8 +9,8 @@
 ##  done
 ##}
 
-compress_vcf(){
-  for vcf in COLO829_mapq30_mlen100_cnt3_local_mergedindel.vcf HCC1395_mapq30_mlen100_cnt3_local_mergedindel.vcf COLO829_mapq30_mlen100_cnt3_local_grch38_mergedindel.vcf  HCC1395_mapq30_mlen100_cnt3_local_grch38_mergedindel.vcf; do 
+compress_vcf() {
+  for vcf in *vcf; do 
       ls $vcf
       bcftools sort $vcf  > ${vcf/.vcf/sort.vcf}
       bgzip -f ${vcf/.vcf/sort.vcf}
@@ -48,7 +48,8 @@ run_all_cancer_cell_lines() {
   indel_len=50
   cpu=8
   support_read=1
-  for assembly in chm13v2_linear chm13_graph; do # grch38_graph grch38_noalt_linear; do
+  #for assembly in chm13v2_linear chm13_graph; do # grch38_graph grch38_noalt_linear; do
+  for assembly in grch37_graph; do # grch38_graph grch38_noalt_linear; do
       for cell_line in COLO829 HCC1395; do
           #tumor_gaf=minigraph_grch38_graph/COLO829.gaf
           #time gaftools getindel -c 8 -m 5 -l 50 --input $tumor_gaf -r 1 -p COLO829_mapq30_mlen100_cnt3_local_grch38_tumoronly_graph --cent ../phaseA_minigraph_largedel/grch38_cen.bed --vntr Severus/vntrs/human_GRCh38_no_alt_analysis_set.trf.bed --l1 ../dfam/FamDB/selected_L1.fasta
@@ -73,11 +74,19 @@ run_hg002() {
     indel_len=50
     cpu=8
     support_read=1
-    cell_line=HG002_PACBIO_REVIO
-    for assembly in chm13v2_linear chm13_graph; do # grch38_graph grch38_noalt_linear; do
-	single_gaf=minigraph_${assembly}/${cell_line}.gaf
-	time gaftools getindel -c 8 -m 5 -l 50 --input $single_gaf -r 1 -p ${cell_line}_mq${mapq}_mlen${indel_len}_count${support_read}_${assembly}_germline_only --cent ../phaseA_minigraph_largedel/chm13v2.cen-mask.bed --vntr Severus/vntrs/chm13.bed --l1 ../dfam/FamDB/selected_L1.fasta &
-	#time gaftools getindel -c 8 -m 5 -l 50 --input $single_gaf -r 1 -p HG002_mapq30_mlen100_cnt3_local_grch38_graph --cent ../phaseA_minigraph_largedel/grch38_cen.bed --vntr Severus/vntrs/human_GRCh38_no_alt_analysis_set.trf.bed
+    #for assembly in chm13v2_linear chm13_graph; do # grch38_graph grch38_noalt_linear; do
+    #for assembly in grch37_graph; do
+    for assembly in grch37_linear; do
+        for cell_line in HG002_PACBIO_REVIO HG002_ONT_sup; do
+	    single_gaf=minigraph_${assembly}/${cell_line}.gaf
+	    if [[ $assembly == *"grch37"* ]]; then
+	        trf=../reference/pbsv/annotations/human_hs37d5.trf.bed
+	        time gaftools getindel -c 8 -m 5 -l 50 --input $single_gaf -r 1 -p ${cell_line}_mq${mapq}_mlen${indel_len}_count${support_read}_${assembly}_germline_only --vntr ${trf} --l1 ../dfam/FamDB/selected_L1.fasta &
+	    else
+	        time gaftools getindel -c 8 -m 5 -l 50 --input $single_gaf -r 1 -p ${cell_line}_mq${mapq}_mlen${indel_len}_count${support_read}_${assembly}_germline_only --cent ../phaseA_minigraph_largedel/chm13v2.cen-mask.bed --vntr Severus/vntrs/chm13.bed --l1 ../dfam/FamDB/selected_L1.fasta &
+	        #time gaftools getindel -c 8 -m 5 -l 50 --input $single_gaf -r 1 -p HG002_mapq30_mlen100_cnt3_local_grch38_graph --cent ../phaseA_minigraph_largedel/grch38_cen.bed --vntr Severus/vntrs/human_GRCh38_no_alt_analysis_set.trf.bed
+	    fi
+	done
     done
 }
 
@@ -87,8 +96,22 @@ main() {
 
   # Tumor-normal pair for diff assemblies
   # and diff cell lines
-  # run_all_cell_lines
-  # run_hg002  
+  #run_all_cancer_cell_lines
+  #run_hg002  
+  #compress_vcf
+
+  #vcf=HG002_PACBIO_REVIO_mq5_mlen50_count1_grch37_graph_germline_only_mergedindel.vcf
+  #cat <(cat $vcf | grep "^#" | sed 's/chr//g') \
+  #    <(cat $vcf | grep -vE "^#" | grep -v "^hs" | sort -k1,1 -k2,2g) \
+  #    | bgzip -c > ${vcf/.vcf/_sort.vcf}.gz
+  #ls ${vcf/.vcf/_sort.vcf}.gz
+
+  #vcf=HG002_ONT_sup_mq5_mlen50_count1_grch37_graph_germline_only_mergedindel.vcf
+  #cat <(cat $vcf | grep "^#" | sed 's/chr//g') \
+  #    <(cat $vcf | grep -vE "^#" | grep -v "^hs" | sort -k1,1 -k2,2g) \
+  #    | bgzip -c > ${vcf/.vcf/_sort.vcf}.gz
+  #ls ${vcf/.vcf/_sort.vcf}.gz
+
   # time docker run -i -v $(pwd):$(pwd) us.gcr.io/broad-qqin/gaftools:0.1.0 gaftools getindel -c 8 -m 5 -l 50 --input $(pwd)/$tumor_gaf -n $(pwd)/$normal_gaf -r 3 -p $(pwd)/test_docker
 
   ## separate insertion and deletion
@@ -99,11 +122,6 @@ main() {
   # wait
   # echo "done"
 
-  #zcat ../pangenome_sv_benchmarking/2.evaluation/sniffles2_somaticSVs_COLO829_hg38_singlesample_ins.bed.gz | bedtools intersect -v -a - -b ../pangenome_sv_benchmarking/2.evaluation/hprc_grch38_wave_indels50bp_ins.bed > COLO829.GRCh38.pacbio.wave_filtered_sniffled.ins.bed
-  #zcat ../pangenome_sv_benchmarking/2.evaluation/sniffles2_somaticSVs_COLO829_hg38_singlesample_del.bed.gz | bedtools intersect -v -a - -b ../pangenome_sv_benchmarking/2.evaluation/hprc_grch38_wave_indels50bp_del.bed > COLO829.GRCh38.pacbio.wave_filtered_sniffled.del.bed
-  #gzip -c COLO829.GRCh38.pacbio.wave_filtered_sniffled.ins.bed > COLO829.GRCh38.pacbio.wave_filtered_sniffled.ins.bed.gz
-  #gzip -c COLO829.GRCh38.pacbio.wave_filtered_sniffled.del.bed > COLO829.GRCh38.pacbio.wave_filtered_sniffled.del.bed.gz
-
   #golds=(/home/ubuntu/pangenome/pangenome_sv_benchmarking/2.evaluation/truthset_somaticSVs_COLO829_hg38_sort_ins_PB.bed /home/ubuntu/pangenome/pangenome_sv_benchmarking/2.evaluation/truthset_somaticSVs_COLO829_hg38_sort_del_PB.bed)
   #severus=(/home/ubuntu/pangenome/pangenome_sv_benchmarking/2.evaluation/severus_somaticSVs_COLO829_hg38_ins.bed /home/ubuntu/pangenome/pangenome_sv_benchmarking/2.evaluation/severus_somaticSVs_COLO829_hg38_del.bed)
   #ours_minimap2_linear=(COLO829_mapq30_mlen100_cnt3_local_linear_grch38_minimap2_ins.bed.gz COLO829_mapq30_mlen100_cnt3_local_linear_grch38_minimap2_del.bed.gz)
@@ -111,8 +129,7 @@ main() {
   #ours_graph=(COLO829_mapq30_mlen100_cnt3_local_grch38_graph_ins.bed.gz COLO829_mapq30_mlen100_cnt3_local_grch38_graph_del.bed.gz)
   #tumoronly=(COLO829_mapq30_mlen100_cnt3_local_grch38_tumoronly_graph_ins.bed.gz COLO829_mapq30_mlen100_cnt3_local_grch38_tumoronly_graph_del.bed.gz)
   #sniffles=(COLO829.GRCh38.pacbio.wave_filtered_sniffled.ins.bed.gz COLO829.GRCh38.pacbio.wave_filtered_sniffled.del.bed.gz)
-
-  # for ((i=0; i<${#severus[@]}; i++)); do
+  #for ((i=0; i<${#severus[@]}; i++)); do
   #    for depth in {1..3}; do
   #       echo $depth
   #       echo "mode indel total_benchmark depth sv_type"
@@ -120,22 +137,18 @@ main() {
   #       bed=${ours_minimap2_linear[$i]}
   #       local res=$(compare_truthset $bed ${golds[$i]} $depth none) 
   #       echo "minimap2_grch38_linear_merged" $res ${total} $depth $i
-
   #       bed=${ours_linear[$i]}
   #       local res=$(compare_truthset $bed ${golds[$i]} $depth none) 
   #       echo "minigraph_grch38_linear_merged" $res ${total} $depth $i
-
   #       bed=${ours_graph[$i]}
   #       local res=$(compare_truthset $bed ${golds[$i]} $depth none) 
   #       echo "minigraph_grch38_graph_merged" $res ${total} $depth $i
-
   #       bed=${tumoronly[$i]}
   #       local res=$(compare_truthset $bed ${golds[$i]} $depth none) 
   #       echo "minigraph_grch38_tumor_only" $res ${total} $depth $i
   #    done
   #    res=$(compare_truthset ${severus[$i]} ${golds[$i]} 3 severus)
   #    echo "severus_grch38_linear_merged" $res ${total} 3 $i
-
   #    res=$(compare_truthset ${sniffles[$i]} ${golds[$i]} 3 severus)
   #    echo "sniffles2_grch38_linear_merged" $res ${total} 3 $i
   #done
