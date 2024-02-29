@@ -43,111 +43,102 @@ function compare_truthset() {
   echo $res $total
 }
 
+run_all_cancer_cell_lines() {
+  mapq=5
+  indel_len=50
+  cpu=8
+  support_read=1
+  for assembly in chm13v2_linear chm13_graph; do # grch38_graph grch38_noalt_linear; do
+      for cell_line in COLO829 HCC1395; do
+          #tumor_gaf=minigraph_grch38_graph/COLO829.gaf
+          #time gaftools getindel -c 8 -m 5 -l 50 --input $tumor_gaf -r 1 -p COLO829_mapq30_mlen100_cnt3_local_grch38_tumoronly_graph --cent ../phaseA_minigraph_largedel/grch38_cen.bed --vntr Severus/vntrs/human_GRCh38_no_alt_analysis_set.trf.bed --l1 ../dfam/FamDB/selected_L1.fasta
+          #tumor_gaf=minigraph_grch38_graph/COLO829.gaf
+          #normal_gaf=minigraph_grch38_graph/COLO829-BL.gaf
+          #time gaftools getindel -c 8 -m 5 -l 50 --input $tumor_gaf -n $normal_gaf -r 1 -p COLO829_mapq30_mlen100_cnt3_local_grch38_graph --cent ../phaseA_minigraph_largedel/grch38_cen.bed --vntr Severus/vntrs/human_GRCh38_no_alt_analysis_set.trf.bed --l1 ../dfam/FamDB/selected_L1.fasta
+          #tumor_gaf=minigraph_grch38_noalt_linear/COLO829.gaf
+          #normal_gaf=minigraph_grch38_noalt_linear/COLO829-BL.gaf
+          #time gaftools getindel -c 8 -m 5 -l 50 --input $tumor_gaf -n $normal_gaf -r 1 -p COLO829_mapq30_mlen100_cnt3_local_grch38_diff0.05_linear --cent ../phaseA_minigraph_largedel/grch38_cen.bed --vntr Severus/vntrs/human_GRCh38_no_alt_analysis_set.trf.bed --l1 ../dfam/FamDB/selected_L1.fasta
+          tumor_gaf=minigraph_${assembly}/${cell_line}.gaf
+          normal_gaf=minigraph_${assembly}/${cell_line}.gaf
+          time gaftools getindel -c $cpu -m $mapq -l $indel_len --input $tumor_gaf -n $normal_gaf -r $support_read -p ${cell_line}_mq${mapq}_mlen${indel_len}_count${support_read}_${assembly}_tumor_normal_pair --cent ../phaseA_minigraph_largedel/chm13v2.cen-mask.bed --vntr Severus/vntrs/chm13.bed --l1 ../dfam/FamDB/selected_L1.fasta &
+
+          tumor_gaf=minigraph_${assembly}/${cell_line}.gaf
+          time gaftools getindel -c $cpu -m $mapq -l $indel_len --input $tumor_gaf -r $support_read -p ${cell_line}_mq${mapq}_mlen${indel_len}_count${support_read}_${assembly}_tumor_only --cent ../phaseA_minigraph_largedel/chm13v2.cen-mask.bed --vntr Severus/vntrs/chm13.bed --l1 ../dfam/FamDB/selected_L1.fasta &
+      done
+  done
+}
+
+run_hg002() {
+    mapq=5
+    indel_len=50
+    cpu=8
+    support_read=1
+    cell_line=HG002_PACBIO_REVIO
+    for assembly in chm13v2_linear chm13_graph; do # grch38_graph grch38_noalt_linear; do
+	single_gaf=minigraph_${assembly}/${cell_line}.gaf
+	time gaftools getindel -c 8 -m 5 -l 50 --input $single_gaf -r 1 -p ${cell_line}_mq${mapq}_mlen${indel_len}_count${support_read}_${assembly}_germline_only --cent ../phaseA_minigraph_largedel/chm13v2.cen-mask.bed --vntr Severus/vntrs/chm13.bed --l1 ../dfam/FamDB/selected_L1.fasta &
+	#time gaftools getindel -c 8 -m 5 -l 50 --input $single_gaf -r 1 -p HG002_mapq30_mlen100_cnt3_local_grch38_graph --cent ../phaseA_minigraph_largedel/grch38_cen.bed --vntr Severus/vntrs/human_GRCh38_no_alt_analysis_set.trf.bed
+    done
+}
+
 main() {
   #compare_tools
   #time docker run -i -v $(pwd):$(pwd) gaftools gaftools getindel-cython -c 4 -m 30 -l 100 --input $(pwd)/$gaf -r 3 -p $(pwd)/${gaf/.gaf/}_mapq30_mlen100_cnt3
 
-  #tumor_gaf=minigraph_chm13v2_linear/HCC1395.gaf
-  #normal_gaf=minigraph_chm13v2_linear/HCC1395-BL.gaf
-  #time gaftools getindel -c 8 -m 30 -l 100 --input $tumor_gaf --normal $normal_gaf -r 3 -p HCC1395_mapq30_mlen100_cnt3_local_chm13v2_linear &
-
-  ##tumor_gaf=minigraph_grch38_graph/HCC1395.gaf
-  ##normal_gaf=minigraph_grch38_graph/HCC1395-BL.gaf
-  ##time gaftools getindel -c 8 -m 30 -l 100 --input $tumor_gaf --normal $normal_gaf -r 3 -p HCC1395_mapq30_mlen100_cnt3_local_grch38 &
-
-  ##tumor_gaf=minigraph_chm13_graph/HCC1395.gaf
-  ##normal_gaf=minigraph_chm13_graph/HCC1395-BL.gaf
-  ##time gaftools getindel -c 8 -m 30 -l 100 --input $tumor_gaf --normal $normal_gaf -r 3 -p HCC1395_mapq30_mlen100_cnt3_local &
-
-  #single_gaf=minigraph_chm13_graph/HG002_PACBIO_REVIO.gaf
-  #time gaftools getindel -c 8 -m 5 -l 50 --input $single_gaf -r 1 -p HG002_mapq30_mlen100_cnt3_local_chm13_graph --cent ../phaseA_minigraph_largedel/chm13v2.cen-mask.bed --vntr Severus/vntrs/chm13.bed
-
-  #single_gaf=minigraph_chm13v2_linear/HG002_PACBIO_REVIO.gaf
-  #time gaftools getindel -c 8 -m 5 -l 50 --input $single_gaf -r 1 -p HG002_mapq30_mlen100_cnt3_local_chm13_linear --cent ../phaseA_minigraph_largedel/chm13v2.cen-mask.bed --vntr Severus/vntrs/chm13.bed
-
-  #single_gaf=minigraph_grch38_graph/HG002_PACBIO_REVIO.gaf
-  #time gaftools getindel -c 8 -m 5 -l 50 --input $single_gaf -r 1 -p HG002_mapq30_mlen100_cnt3_local_grch38_graph --cent ../phaseA_minigraph_largedel/grch38_cen.bed --vntr Severus/vntrs/human_GRCh38_no_alt_analysis_set.trf.bed
-
-  #single_gaf=minigraph_grch38_noalt_linear/HG002_PACBIO_REVIO.gaf
-  #time gaftools getindel -c 8 -m 5 -l 50 --input $single_gaf -r 1 -p HG002_mapq30_mlen100_cnt3_local_grch38_linear --cent ../phaseA_minigraph_largedel/grch38_cen.bed --vntr Severus/vntrs/human_GRCh38_no_alt_analysis_set.trf.bed
-  # 
-  ##Latest results
-  ##multi-platform bencharmking
-  #tumor_gaf=minigraph_grch38_graph/COLO829.gaf
-  #normal_gaf=minigraph_grch38_graph/COLO829-BL.gaf
-  #time gaftools getindel -c 8 -m 5 -l 50 --input $tumor_gaf -n $normal_gaf -r 1 -p COLO829_mapq30_mlen100_cnt3_local_grch38_graph --cent ../phaseA_minigraph_largedel/grch38_cen.bed --vntr Severus/vntrs/human_GRCh38_no_alt_analysis_set.trf.bed
-
-  #tumor_gaf=minigraph_grch38_graph/COLO829.gaf
-  #time gaftools getindel -c 8 -m 5 -l 50 --input $tumor_gaf -r 1 -p COLO829_mapq30_mlen100_cnt3_local_grch38_tumoronly_graph --cent ../phaseA_minigraph_largedel/grch38_cen.bed --vntr Severus/vntrs/human_GRCh38_no_alt_analysis_set.trf.bed
-
-  #tumor_gaf=minigraph_grch38_noalt_linear/COLO829.gaf
-  #normal_gaf=minigraph_grch38_noalt_linear/COLO829-BL.gaf
-  #time gaftools getindel -c 8 -m 5 -l 50 --input $tumor_gaf -n $normal_gaf -r 1 -p COLO829_mapq30_mlen100_cnt3_local_grch38_diff0.05_linear --cent ../phaseA_minigraph_largedel/grch38_cen.bed --vntr Severus/vntrs/human_GRCh38_no_alt_analysis_set.trf.bed
-
-  #tumor_gaf=minigraph_chm13_graph/COLO829.gaf
-  #normal_gaf=minigraph_chm13_graph/COLO829-BL.gaf
-  #time gaftools getindel -c 8 -m 5 -l 50 --input $tumor_gaf -n $normal_gaf -r 1 -p COLO829_mapq30_mlen100_cnt3_local_chm13_diff0.05_graph --cent ../phaseA_minigraph_largedel/chm13v2.cen-mask.bed --vntr Severus/vntrs/chm13.bed
-
-  #tumor_gaf=minigraph_chm13_graph/COLO829.gaf
-  #time gaftools getindel -c 8 -m 5 -l 50 --input $tumor_gaf -r 1 -p COLO829_mapq30_mlen100_cnt3_local_chm13_diff0.05_tumoronly_graph --cent ../phaseA_minigraph_largedel/chm13v2.cen-mask.bed --vntr Severus/vntrs/chm13.bed
-
-  #tumor_gaf=minigraph_chm13v2_linear/COLO829.gaf
-  #normal_gaf=minigraph_chm13v2_linear/COLO829-BL.gaf
-  #time gaftools getindel -c 8 -m 30 -l 100 --input $tumor_gaf -n $normal_gaf -r 3 -p COLO829_mapq30_mlen100_cnt3_local_chm13v2_linear --cent ../phaseA_minigraph_largedel/chm13v2.cen-mask.bed --vntr Severus/vntrs/chm13.bed
-
-  ##minimap2 revisit
-  #tumor_gaf=/home/ubuntu/pangenome/phaseA_minigraph_largedel/minimap2_GCA_000001405.15_GRCh38_no_alt_linear/COLO829.paf
-  #normal_gaf=/home/ubuntu/pangenome/phaseA_minigraph_largedel/minimap2_GCA_000001405.15_GRCh38_no_alt_linear/COLO829-BL.paf
-  #time gaftools getindel -c 8 -m 5 -l 50 --input $tumor_gaf --normal $normal_gaf -r 1 -p COLO829_mapq30_mlen100_cnt3_local_linear_grch38_minimap2 --cent ../phaseA_minigraph_largedel/grch38_cen.bed --vntr Severus/vntrs/human_GRCh38_no_alt_analysis_set.trf.bed
+  # Tumor-normal pair for diff assemblies
+  # and diff cell lines
+  # run_all_cell_lines
+  # run_hg002  
+  # time docker run -i -v $(pwd):$(pwd) us.gcr.io/broad-qqin/gaftools:0.1.0 gaftools getindel -c 8 -m 5 -l 50 --input $(pwd)/$tumor_gaf -n $(pwd)/$normal_gaf -r 3 -p $(pwd)/test_docker
 
   ## separate insertion and deletion
-  #for bed in COLO829_mapq30_mlen100_cnt3_local_grch38_graph_mergedindel.bed.gz COLO829_mapq30_mlen100_cnt3_local_grch38_diff0.05_linear_mergedindel.bed.gz COLO829_mapq30_mlen100_cnt3_local_linear_grch38_minimap2_mergedindel.bed.gz COLO829_mapq30_mlen100_cnt3_local_grch38_tumoronly_graph_mergedindel.bed.gz; do
-  #     zcat ${bed} | awk '($4<0)' | gzip -c - > ${bed/mergedindel/del}
-  #     zcat ${bed} | awk '($4>0)' | gzip -c - > ${bed/mergedindel/ins}
+  # for bed in *mergedindel.bed.gz; do
+  #      zcat ${bed} | awk '($4<0)' | gzip -c - > ${bed/mergedindel/del} &
+  #      zcat ${bed} | awk '($4>0)' | gzip -c - > ${bed/mergedindel/ins} &
+  # done
+  # wait
+  # echo "done"
+
+  #zcat ../pangenome_sv_benchmarking/2.evaluation/sniffles2_somaticSVs_COLO829_hg38_singlesample_ins.bed.gz | bedtools intersect -v -a - -b ../pangenome_sv_benchmarking/2.evaluation/hprc_grch38_wave_indels50bp_ins.bed > COLO829.GRCh38.pacbio.wave_filtered_sniffled.ins.bed
+  #zcat ../pangenome_sv_benchmarking/2.evaluation/sniffles2_somaticSVs_COLO829_hg38_singlesample_del.bed.gz | bedtools intersect -v -a - -b ../pangenome_sv_benchmarking/2.evaluation/hprc_grch38_wave_indels50bp_del.bed > COLO829.GRCh38.pacbio.wave_filtered_sniffled.del.bed
+  #gzip -c COLO829.GRCh38.pacbio.wave_filtered_sniffled.ins.bed > COLO829.GRCh38.pacbio.wave_filtered_sniffled.ins.bed.gz
+  #gzip -c COLO829.GRCh38.pacbio.wave_filtered_sniffled.del.bed > COLO829.GRCh38.pacbio.wave_filtered_sniffled.del.bed.gz
+
+  #golds=(/home/ubuntu/pangenome/pangenome_sv_benchmarking/2.evaluation/truthset_somaticSVs_COLO829_hg38_sort_ins_PB.bed /home/ubuntu/pangenome/pangenome_sv_benchmarking/2.evaluation/truthset_somaticSVs_COLO829_hg38_sort_del_PB.bed)
+  #severus=(/home/ubuntu/pangenome/pangenome_sv_benchmarking/2.evaluation/severus_somaticSVs_COLO829_hg38_ins.bed /home/ubuntu/pangenome/pangenome_sv_benchmarking/2.evaluation/severus_somaticSVs_COLO829_hg38_del.bed)
+  #ours_minimap2_linear=(COLO829_mapq30_mlen100_cnt3_local_linear_grch38_minimap2_ins.bed.gz COLO829_mapq30_mlen100_cnt3_local_linear_grch38_minimap2_del.bed.gz)
+  #ours_linear=(COLO829_mapq30_mlen100_cnt3_local_grch38_diff0.05_linear_ins.bed.gz COLO829_mapq30_mlen100_cnt3_local_grch38_diff0.05_linear_del.bed.gz)
+  #ours_graph=(COLO829_mapq30_mlen100_cnt3_local_grch38_graph_ins.bed.gz COLO829_mapq30_mlen100_cnt3_local_grch38_graph_del.bed.gz)
+  #tumoronly=(COLO829_mapq30_mlen100_cnt3_local_grch38_tumoronly_graph_ins.bed.gz COLO829_mapq30_mlen100_cnt3_local_grch38_tumoronly_graph_del.bed.gz)
+  #sniffles=(COLO829.GRCh38.pacbio.wave_filtered_sniffled.ins.bed.gz COLO829.GRCh38.pacbio.wave_filtered_sniffled.del.bed.gz)
+
+  # for ((i=0; i<${#severus[@]}; i++)); do
+  #    for depth in {1..3}; do
+  #       echo $depth
+  #       echo "mode indel total_benchmark depth sv_type"
+  #       total=$(cat ${golds[$i]} | wc -l)
+  #       bed=${ours_minimap2_linear[$i]}
+  #       local res=$(compare_truthset $bed ${golds[$i]} $depth none) 
+  #       echo "minimap2_grch38_linear_merged" $res ${total} $depth $i
+
+  #       bed=${ours_linear[$i]}
+  #       local res=$(compare_truthset $bed ${golds[$i]} $depth none) 
+  #       echo "minigraph_grch38_linear_merged" $res ${total} $depth $i
+
+  #       bed=${ours_graph[$i]}
+  #       local res=$(compare_truthset $bed ${golds[$i]} $depth none) 
+  #       echo "minigraph_grch38_graph_merged" $res ${total} $depth $i
+
+  #       bed=${tumoronly[$i]}
+  #       local res=$(compare_truthset $bed ${golds[$i]} $depth none) 
+  #       echo "minigraph_grch38_tumor_only" $res ${total} $depth $i
+  #    done
+  #    res=$(compare_truthset ${severus[$i]} ${golds[$i]} 3 severus)
+  #    echo "severus_grch38_linear_merged" $res ${total} 3 $i
+
+  #    res=$(compare_truthset ${sniffles[$i]} ${golds[$i]} 3 severus)
+  #    echo "sniffles2_grch38_linear_merged" $res ${total} 3 $i
   #done
-
-
-  zcat ../pangenome_sv_benchmarking/2.evaluation/sniffles2_somaticSVs_COLO829_hg38_singlesample_ins.bed.gz | bedtools intersect -v -a - -b ../pangenome_sv_benchmarking/2.evaluation/hprc_grch38_wave_indels50bp_ins.bed > COLO829.GRCh38.pacbio.wave_filtered_sniffled.ins.bed
-  zcat ../pangenome_sv_benchmarking/2.evaluation/sniffles2_somaticSVs_COLO829_hg38_singlesample_del.bed.gz | bedtools intersect -v -a - -b ../pangenome_sv_benchmarking/2.evaluation/hprc_grch38_wave_indels50bp_del.bed > COLO829.GRCh38.pacbio.wave_filtered_sniffled.del.bed
-
-  gzip -c COLO829.GRCh38.pacbio.wave_filtered_sniffled.ins.bed > COLO829.GRCh38.pacbio.wave_filtered_sniffled.ins.bed.gz
-  gzip -c COLO829.GRCh38.pacbio.wave_filtered_sniffled.del.bed > COLO829.GRCh38.pacbio.wave_filtered_sniffled.del.bed.gz
-
-  golds=(/home/ubuntu/pangenome/pangenome_sv_benchmarking/2.evaluation/truthset_somaticSVs_COLO829_hg38_sort_ins_PB.bed /home/ubuntu/pangenome/pangenome_sv_benchmarking/2.evaluation/truthset_somaticSVs_COLO829_hg38_sort_del_PB.bed)
-  severus=(/home/ubuntu/pangenome/pangenome_sv_benchmarking/2.evaluation/severus_somaticSVs_COLO829_hg38_ins.bed /home/ubuntu/pangenome/pangenome_sv_benchmarking/2.evaluation/severus_somaticSVs_COLO829_hg38_del.bed)
-  ours_minimap2_linear=(COLO829_mapq30_mlen100_cnt3_local_linear_grch38_minimap2_ins.bed.gz COLO829_mapq30_mlen100_cnt3_local_linear_grch38_minimap2_del.bed.gz)
-  ours_linear=(COLO829_mapq30_mlen100_cnt3_local_grch38_diff0.05_linear_ins.bed.gz COLO829_mapq30_mlen100_cnt3_local_grch38_diff0.05_linear_del.bed.gz)
-  ours_graph=(COLO829_mapq30_mlen100_cnt3_local_grch38_graph_ins.bed.gz COLO829_mapq30_mlen100_cnt3_local_grch38_graph_del.bed.gz)
-  tumoronly=(COLO829_mapq30_mlen100_cnt3_local_grch38_tumoronly_graph_ins.bed.gz COLO829_mapq30_mlen100_cnt3_local_grch38_tumoronly_graph_del.bed.gz)
-  sniffles=(COLO829.GRCh38.pacbio.wave_filtered_sniffled.ins.bed.gz COLO829.GRCh38.pacbio.wave_filtered_sniffled.del.bed.gz)
-
-   for ((i=0; i<${#severus[@]}; i++)); do
-      for depth in {1..3}; do
-         echo $depth
-         echo "mode indel total_benchmark depth sv_type"
-         total=$(cat ${golds[$i]} | wc -l)
-         bed=${ours_minimap2_linear[$i]}
-         local res=$(compare_truthset $bed ${golds[$i]} $depth none) 
-         echo "minimap2_grch38_linear_merged" $res ${total} $depth $i
-
-         bed=${ours_linear[$i]}
-         local res=$(compare_truthset $bed ${golds[$i]} $depth none) 
-         echo "minigraph_grch38_linear_merged" $res ${total} $depth $i
-
-         bed=${ours_graph[$i]}
-         local res=$(compare_truthset $bed ${golds[$i]} $depth none) 
-         echo "minigraph_grch38_graph_merged" $res ${total} $depth $i
-
-         bed=${tumoronly[$i]}
-         local res=$(compare_truthset $bed ${golds[$i]} $depth none) 
-         echo "minigraph_grch38_tumor_only" $res ${total} $depth $i
-      done
-      res=$(compare_truthset ${severus[$i]} ${golds[$i]} 3 severus)
-      echo "severus_grch38_linear_merged" $res ${total} 3 $i
-
-      res=$(compare_truthset ${sniffles[$i]} ${golds[$i]} 3 severus)
-      echo "sniffles2_grch38_linear_merged" $res ${total} 3 $i
-  done
 }
 
 main

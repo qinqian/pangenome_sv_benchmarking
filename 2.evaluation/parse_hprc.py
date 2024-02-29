@@ -4,7 +4,7 @@ from cyvcf2 import VCF
 
 def main():
     variant_dict = {}
-    for variant in VCF('../../phaseA3_L1_TSD_polyA_SVA/hprc-v1.1-mc-grch38.vcfbub.a100k.wave.vcf.gz'):
+    for variant in VCF('../../phaseA3_L1_TSD_polyA_SVA/hprc-v1.1-mc-chm13.vcfbub.a100k.wave.vcf.gz'):
         variant_id = '_'.join(variant.ID.split('_')[0:2])
         alt_len = max(list(map(len, variant.ALT)))
         ref_len = len(variant.REF)
