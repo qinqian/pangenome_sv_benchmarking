@@ -53,7 +53,7 @@ task minimapTask {
     }
 
     command <<<
-         samtools collate -Oun128 --reference ~{input_cram_reference} ~{input_cram} | samtools fastq - | minimap2 -c -x ~{mode} -t ~{cpu} ~{assembly} - > ~{sample_id}.paf 
+        samtools collate -Oun128 --reference ~{input_cram_reference} ~{input_cram} | samtools fastq - | minimap2 -c -x ~{mode} -t ~{cpu} ~{assembly} - > ~{sample_id}.paf 
     >>>
 
     runtime {

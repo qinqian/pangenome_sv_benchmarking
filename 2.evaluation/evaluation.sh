@@ -42,6 +42,9 @@ zcat sniffles2_somaticSVs_COLO829_hg38_singlesample_del.bed.gz | bedtools inters
 gzip -c COLO829.GRCh38.pacbio.wave_filtered_sniffled.ins.bed > COLO829.GRCh38.pacbio.wave_filtered_sniffled.ins.bed.gz
 gzip -c COLO829.GRCh38.pacbio.wave_filtered_sniffled.del.bed > COLO829.GRCh38.pacbio.wave_filtered_sniffled.del.bed.gz
 
+# add some extensions +/-50bp of hprc_chm13_wave_indels50bp_ins.bed and hprc_chm13_wave_indels50bp_del.bed
+# add some lengths restrictions 10% difference
+# try some efforts
 zcat sniffles2_somaticSVs_COLO829_chm13_singlesample_ins.bed.gz | bedtools intersect -v -a - -b hprc_chm13_wave_indels50bp_ins.bed > COLO829.chm13.pacbio.wave_filtered_sniffled.ins.bed
 zcat sniffles2_somaticSVs_COLO829_chm13_singlesample_del.bed.gz | bedtools intersect -v -a - -b hprc_chm13_wave_indels50bp_del.bed > COLO829.chm13.pacbio.wave_filtered_sniffled.del.bed
 gzip -c COLO829.chm13.pacbio.wave_filtered_sniffled.ins.bed > COLO829.chm13.pacbio.wave_filtered_sniffled.ins.bed.gz

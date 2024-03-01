@@ -153,41 +153,41 @@ def main():
     #    new_config = wm.update_config(old_config)
     #    submit_clair3_cram_jobs("all_pacbio_hg002_4cancerpairedcells")
 
-    for ((cram, crai, sample_set, fa, fai), (vcf, tbi, platform, model_name)) in clair3_phasing_grch38.items():
-        print(cram, crai)
-        old_config = wm.get_config("clair3_bam")
-        print(old_config)
-        old_config["inputs"]["ClairWorkflow.assembly"] = fa
-        old_config["inputs"]["ClairWorkflow.fai"] = fai
-        old_config["inputs"]['ClairWorkflow.bam'] = f'this.{cram}'
-        old_config["inputs"]['ClairWorkflow.bai'] = f'this.{crai}'
-        old_config['outputs']['ClairWorkflow.phased_vcf'] = f'this.{vcf}'
-        old_config['outputs']['ClairWorkflow.phased_vcf_tbi'] = f'this.{tbi}'
-        if "hifi" in platform : # skip pacbio which we have right model
-            continue
-        old_config["inputs"]['ClairWorkflow.model_name'] = model_name
-        old_config["inputs"]['ClairWorkflow.platform'] = platform
-        print(old_config)
-        new_config = wm.update_config(old_config)
-        submit_clair3_cram_jobs(sample_set)
+    #for ((cram, crai, sample_set, fa, fai), (vcf, tbi, platform, model_name)) in clair3_phasing_grch38.items():
+    #    print(cram, crai)
+    #    old_config = wm.get_config("clair3_bam")
+    #    print(old_config)
+    #    old_config["inputs"]["ClairWorkflow.assembly"] = fa
+    #    old_config["inputs"]["ClairWorkflow.fai"] = fai
+    #    old_config["inputs"]['ClairWorkflow.bam'] = f'this.{cram}'
+    #    old_config["inputs"]['ClairWorkflow.bai'] = f'this.{crai}'
+    #    old_config['outputs']['ClairWorkflow.phased_vcf'] = f'this.{vcf}'
+    #    old_config['outputs']['ClairWorkflow.phased_vcf_tbi'] = f'this.{tbi}'
+    #    if "hifi" in platform : # skip pacbio which we have right model
+    #        continue
+    #    old_config["inputs"]['ClairWorkflow.model_name'] = model_name
+    #    old_config["inputs"]['ClairWorkflow.platform'] = platform
+    #    print(old_config)
+    #    new_config = wm.update_config(old_config)
+    #    submit_clair3_cram_jobs(sample_set)
 
-    for ((cram, crai, fa, fai), (vcf, tbi)) in clair3_phasing.items():
-        print(cram, crai)
-        old_config = wm.get_config("clair3_bam")
-        print(old_config)
-        old_config["inputs"]["ClairWorkflow.assembly"] = fa
-        old_config["inputs"]["ClairWorkflow.fai"] = fai
-        old_config["inputs"]['ClairWorkflow.bam'] = f'this.{cram}'
-        old_config["inputs"]['ClairWorkflow.bai'] = f'this.{crai}'
+    #for ((cram, crai, fa, fai), (vcf, tbi)) in clair3_phasing.items():
+    #    print(cram, crai)
+    #    old_config = wm.get_config("clair3_bam")
+    #    print(old_config)
+    #    old_config["inputs"]["ClairWorkflow.assembly"] = fa
+    #    old_config["inputs"]["ClairWorkflow.fai"] = fai
+    #    old_config["inputs"]['ClairWorkflow.bam'] = f'this.{cram}'
+    #    old_config["inputs"]['ClairWorkflow.bai'] = f'this.{crai}'
 
-        old_config["inputs"]['ClairWorkflow.model_name'] = '\"r1041_e82_400bps_sup_v430\"'
-        old_config["inputs"]['ClairWorkflow.platform'] = '\"ont\"'
+    #    old_config["inputs"]['ClairWorkflow.model_name'] = '\"r1041_e82_400bps_sup_v430\"'
+    #    old_config["inputs"]['ClairWorkflow.platform'] = '\"ont\"'
 
-        old_config['outputs']['ClairWorkflow.phased_vcf'] = f'this.{vcf}'
-        old_config['outputs']['ClairWorkflow.phased_vcf_tbi'] = f'this.{tbi}'
-        print(old_config)
-        new_config = wm.update_config(old_config)
-        submit_clair3_cram_jobs("nanopore_merged_techreps")
+    #    old_config['outputs']['ClairWorkflow.phased_vcf'] = f'this.{vcf}'
+    #    old_config['outputs']['ClairWorkflow.phased_vcf_tbi'] = f'this.{tbi}'
+    #    print(old_config)
+    #    new_config = wm.update_config(old_config)
+    #    submit_clair3_cram_jobs("nanopore_merged_techreps")
 
     #for ((cram, crai, sample_set, fa, fai), (vcf, tbi)) in clair3_phasing_grch38.items():
     #    print(cram, crai)
