@@ -14,6 +14,8 @@ workflow ClairWorkflow {
         Int disk_space=300
         Int cpu = 10
         Int mem = 40
+        String model_name = "hifi_revio"
+        String platform = "hifi"
     }
 
     call clairTask {
@@ -29,6 +31,8 @@ workflow ClairWorkflow {
             disk_space=disk_space,
             cpu=cpu,
             mem=mem,
+            model_name=model_name,
+            platform=platform
     }
 
     output {
@@ -51,16 +55,19 @@ task clairTask {
         Int disk_space=20
         Int cpu = 10
         Int mem = 64
+        String model_name = "hifi_revio"
+        String platform = "hifi"
     }
 
     command <<<
-	MODEL_NAME="hifi_revio"
+	MODEL_NAME="~{model_name}"
+        platform="~{platform}"
 
         /opt/bin/run_clair3.sh \
         --bam_fn=~{input_bam} \
         --ref_fn=~{assembly} \
         --threads=~{cpu} \
-        --platform="hifi" \
+        --platform="${platform}" \
         --model_path="/opt/models/${MODEL_NAME}" \
         --output=~{sample_id} \
         --enable_phasing \
