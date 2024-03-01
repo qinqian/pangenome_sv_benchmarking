@@ -29,12 +29,9 @@ minimap2_cram_output_to_assemblies = {("minimap2_chm13v2_cram", "minimap2_chm13v
 clair3_phasing = {("minimap2_chm13v2_cram", "minimap2_chm13v2_crai", "\"gs://fc-secure-062e6633-7a72-4623-9394-491e0ce6c324/chm13v2.0.fa\"", "\"gs://fc-secure-062e6633-7a72-4623-9394-491e0ce6c324/chm13v2.0.fa.fai\""): ("clair_chm13v2_phased_vcf", "clair_chm13v2_phased_vcf_tbi"),
                   ("minimap2_grch37_noalt_cram", "minimap2_grch37_noalt_crai", "\"gs://fc-secure-062e6633-7a72-4623-9394-491e0ce6c324/hs37d5.fa\"", "\"gs://fc-secure-062e6633-7a72-4623-9394-491e0ce6c324/hs37d5.fa.fai\""): ("clair_grch37_phased_vcf", "clair_grch37_phased_vcf_tbi")}
 
-clair3_phasing_ont = {("minimap2_chm13v2_cram", "minimap2_chm13v2_crai", "\"gs://fc-secure-062e6633-7a72-4623-9394-491e0ce6c324/chm13v2.0.fa\"", "\"gs://fc-secure-062e6633-7a72-4623-9394-491e0ce6c324/chm13v2.0.fa.fai\""): ("clair_chm13v2_phased_vcf", "clair_chm13v2_phased_vcf_tbi"),
-                      ("minimap2_grch37_noalt_cram", "minimap2_grch37_noalt_crai", "\"gs://fc-secure-062e6633-7a72-4623-9394-491e0ce6c324/hs37d5.fa\"", "\"gs://fc-secure-062e6633-7a72-4623-9394-491e0ce6c324/hs37d5.fa.fai\""): ("clair_grch37_phased_vcf", "clair_grch37_phased_vcf_tbi")}
-
 # NOTE: GRCh38 distributed in different columns
-#clair3_phasing_grch38 = {("cram", "crai", "nanopore_merged_techreps", "\"gs://fc-secure-062e6633-7a72-4623-9394-491e0ce6c324/GCA_000001405.15_GRCh38_no_alt_analysis_set.fna\"", "\"gs://fc-secure-062e6633-7a72-4623-9394-491e0ce6c324/GCA_000001405.15_GRCh38_no_alt_analysis_set.fna.fai\""): ("clair_phased_vcf", "clair_phased_vcf_tbi"),
-#                         ("bam", "bai", "all_pacbio_hg002_4cancerpairedcells", "\"gs://fc-secure-062e6633-7a72-4623-9394-491e0ce6c324/GCA_000001405.15_GRCh38_no_alt_analysis_set.fna\"", "\"gs://fc-secure-062e6633-7a72-4623-9394-491e0ce6c324/GCA_000001405.15_GRCh38_no_alt_analysis_set.fna.fai\""): ("clair_phased_vcf", "clair_phased_vcf_tbi")}
+clair3_phasing_grch38 = {("cram", "crai", "nanopore_merged_techreps", "\"gs://fc-secure-062e6633-7a72-4623-9394-491e0ce6c324/GCA_000001405.15_GRCh38_no_alt_analysis_set.fna\"", "\"gs://fc-secure-062e6633-7a72-4623-9394-491e0ce6c324/GCA_000001405.15_GRCh38_no_alt_analysis_set.fna.fai\""): ("clair_phased_vcf", "clair_phased_vcf_tbi", '\"ont\"', '\"r1041_e82_400bps_sup_v430\"'),
+                         ("bam", "bai", "all_pacbio_hg002_4cancerpairedcells", "\"gs://fc-secure-062e6633-7a72-4623-9394-491e0ce6c324/GCA_000001405.15_GRCh38_no_alt_analysis_set.fna\"", "\"gs://fc-secure-062e6633-7a72-4623-9394-491e0ce6c324/GCA_000001405.15_GRCh38_no_alt_analysis_set.fna.fai\""): ("clair_phased_vcf", "clair_phased_vcf_tbi", '\"hifi\"', '\"hifi_revio\"')}
 
 
 # Sniffles2 single sample columns
@@ -62,7 +59,7 @@ def submit_minimap2_cram_jobs(sample_set_id, minimap2_wdl="minimap2_cram_to_cram
 def submit_sniffles2_cram_jobs(sample_set_id, minimap2_wdl="sniffles_workflow", use_callcache=True):
     submission_id = wm.create_submission(minimap2_wdl, sample_set_id, 'sample_set', expression='this.samples', use_callcache=use_callcache)
 
-def submit_clair3_cram_jobs(sample_set_id, minimap2_wdl="clair3_bam", use_callcache=True):
+def submit_clair3_cram_jobs(sample_set_id, minimap2_wdl="clair3_bam", use_callcache=False):
     submission_id = wm.create_submission(minimap2_wdl, sample_set_id, 'sample_set', expression='this.samples', use_callcache=use_callcache)
 
 def submit_severus_cram_jobs(sample_set_id, minimap2_wdl="severus_workflow", use_callcache=True):
@@ -156,6 +153,24 @@ def main():
     #    new_config = wm.update_config(old_config)
     #    submit_clair3_cram_jobs("all_pacbio_hg002_4cancerpairedcells")
 
+    for ((cram, crai, sample_set, fa, fai), (vcf, tbi, platform, model_name)) in clair3_phasing_grch38.items():
+        print(cram, crai)
+        old_config = wm.get_config("clair3_bam")
+        print(old_config)
+        old_config["inputs"]["ClairWorkflow.assembly"] = fa
+        old_config["inputs"]["ClairWorkflow.fai"] = fai
+        old_config["inputs"]['ClairWorkflow.bam'] = f'this.{cram}'
+        old_config["inputs"]['ClairWorkflow.bai'] = f'this.{crai}'
+        old_config['outputs']['ClairWorkflow.phased_vcf'] = f'this.{vcf}'
+        old_config['outputs']['ClairWorkflow.phased_vcf_tbi'] = f'this.{tbi}'
+        if "hifi" in platform : # skip pacbio which we have right model
+            continue
+        old_config["inputs"]['ClairWorkflow.model_name'] = model_name
+        old_config["inputs"]['ClairWorkflow.platform'] = platform
+        print(old_config)
+        new_config = wm.update_config(old_config)
+        submit_clair3_cram_jobs(sample_set)
+
     for ((cram, crai, fa, fai), (vcf, tbi)) in clair3_phasing.items():
         print(cram, crai)
         old_config = wm.get_config("clair3_bam")
@@ -165,8 +180,8 @@ def main():
         old_config["inputs"]['ClairWorkflow.bam'] = f'this.{cram}'
         old_config["inputs"]['ClairWorkflow.bai'] = f'this.{crai}'
 
-        old_config["inputs"]['ClairWorkflow.model_name'] = ''
-        old_config["inputs"]['ClairWorkflow.platform'] = 'ont'
+        old_config["inputs"]['ClairWorkflow.model_name'] = '\"r1041_e82_400bps_sup_v430\"'
+        old_config["inputs"]['ClairWorkflow.platform'] = '\"ont\"'
 
         old_config['outputs']['ClairWorkflow.phased_vcf'] = f'this.{vcf}'
         old_config['outputs']['ClairWorkflow.phased_vcf_tbi'] = f'this.{tbi}'

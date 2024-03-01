@@ -50,7 +50,7 @@ task minimapTask {
     }
 
     command <<<
-        samtools fasta -@ ~{cpu} ~{input_bam} | minimap2 -c -x ~{mode} -t ~{cpu} ~{assembly} - > ~{sample_id}.paf 
+        samtools collate -Oun128 ~{input_bam} | samtools fastq - | minimap2 -c -x ~{mode} -t ~{cpu} ~{assembly} - > ~{sample_id}.paf 
     >>>
 
     runtime {

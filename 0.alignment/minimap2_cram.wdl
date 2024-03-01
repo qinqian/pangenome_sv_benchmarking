@@ -4,7 +4,7 @@ version 1.0
 workflow LineargenomeAlignment {
     input {
         File cram
-			  File cram_reference
+        File cram_reference
         String sample_id
         File assembly
         String docker_image="trinityctat/pbfusion:v0.3.1"
@@ -53,7 +53,7 @@ task minimapTask {
     }
 
     command <<<
-        samtools fasta -@ ~{cpu} --reference ~{input_cram_reference} ~{input_cram} | minimap2 -c -x ~{mode} -t ~{cpu} ~{assembly} - > ~{sample_id}.paf 
+         samtools collate -Oun128 --reference ~{input_cram_reference} ~{input_cram} | samtools fastq - | minimap2 -c -x ~{mode} -t ~{cpu} ~{assembly} - > ~{sample_id}.paf 
     >>>
 
     runtime {
