@@ -47,6 +47,7 @@ sniffles2_single_mode_hg38 = {("cram", "crai", "nanopore_merged_techreps"): ("sn
 # for both tumor-only and tumor-normal pair mode
 severus_tumor_only_or_pair_grch37 = {("minimap2_grch37_noalt_cram", "minimap2_grch37_noalt_crai", "clair_grch37_phased_vcf", "clair_grch37_phased_vcf_tbi", "\"gs://fc-secure-062e6633-7a72-4623-9394-491e0ce6c324/human_hs37d5.trf.bed\"", "\"gs://fc-secure-062e6633-7a72-4623-9394-491e0ce6c324/hs37d5.fa\"", "\"gs://fc-secure-062e6633-7a72-4623-9394-491e0ce6c324/hs37d5.fa.fai\""): ("severus_grch37_singlelsample_vcf_all", "all_samples"),  # tumor only use phased tumor vcf
                                      ("minimap2_grch37_noalt_cram", "minimap2_grch37_noalt_crai", "paired_normal_grch37_cram", "paired_normal_grch37_crai", "clair_phased_grch37_normal_vcf", "clair_phased_grch37_normal_vcf_index", "\"gs://fc-secure-062e6633-7a72-4623-9394-491e0ce6c324/human_hs37d5.trf.bed\"", "\"gs://fc-secure-062e6633-7a72-4623-9394-491e0ce6c324/hs37d5.fa\"", "\"gs://fc-secure-062e6633-7a72-4623-9394-491e0ce6c324/hs37d5.fa.fai\""): ("severus_grch37_tumor_normal_pair_vcf_all", "all_tumor_normal_pairs")}  # tumor-normal pair only use phased normal vcf
+
                             # ("minimap2_chm13v2_cram", "minimap2_chm13v2_crai", "clair_chm13v2_phased_vcf", "clair_chm13v2_phased_vcf_tbi", "\"gs://fc-secure-062e6633-7a72-4623-9394-491e0ce6c324/chm13v2.0.fa\"", "\"gs://fc-secure-062e6633-7a72-4623-9394-491e0ce6c324/chm13v2.0.fa.fai\""): "severus_chm13v2_singlelsample_vcf_all"}
 
 
@@ -153,23 +154,23 @@ def main():
     #    new_config = wm.update_config(old_config)
     #    submit_clair3_cram_jobs("all_pacbio_hg002_4cancerpairedcells")
 
-    for ((cram, crai, sample_set, fa, fai), (vcf, tbi, platform, model_name)) in clair3_phasing_grch38.items():
-        print(cram, crai)
-        old_config = wm.get_config("clair3_bam")
-        print(old_config)
-        old_config["inputs"]["ClairWorkflow.assembly"] = fa
-        old_config["inputs"]["ClairWorkflow.fai"] = fai
-        old_config["inputs"]['ClairWorkflow.bam'] = f'this.{cram}'
-        old_config["inputs"]['ClairWorkflow.bai'] = f'this.{crai}'
-        old_config['outputs']['ClairWorkflow.phased_vcf'] = f'this.{vcf}'
-        old_config['outputs']['ClairWorkflow.phased_vcf_tbi'] = f'this.{tbi}'
-        if "hifi" in platform : # skip pacbio which we have right model
-            continue
-        old_config["inputs"]['ClairWorkflow.model_name'] = model_name
-        old_config["inputs"]['ClairWorkflow.platform'] = platform
-        print(old_config)
-        new_config = wm.update_config(old_config)
-        submit_clair3_cram_jobs(sample_set, use_callcache=True)
+    #for ((cram, crai, sample_set, fa, fai), (vcf, tbi, platform, model_name)) in clair3_phasing_grch38.items():
+    #    print(cram, crai)
+    #    old_config = wm.get_config("clair3_bam")
+    #    print(old_config)
+    #    old_config["inputs"]["ClairWorkflow.assembly"] = fa
+    #    old_config["inputs"]["ClairWorkflow.fai"] = fai
+    #    old_config["inputs"]['ClairWorkflow.bam'] = f'this.{cram}'
+    #    old_config["inputs"]['ClairWorkflow.bai'] = f'this.{crai}'
+    #    old_config['outputs']['ClairWorkflow.phased_vcf'] = f'this.{vcf}'
+    #    old_config['outputs']['ClairWorkflow.phased_vcf_tbi'] = f'this.{tbi}'
+    #    if "hifi" in platform : # skip pacbio which we have right model
+    #        continue
+    #    old_config["inputs"]['ClairWorkflow.model_name'] = model_name
+    #    old_config["inputs"]['ClairWorkflow.platform'] = platform
+    #    print(old_config)
+    #    new_config = wm.update_config(old_config)
+    #    submit_clair3_cram_jobs(sample_set, use_callcache=True)
 
     #for ((cram, crai, fa, fai), (vcf, tbi)) in clair3_phasing.items():
     #    print(cram, crai)
@@ -203,47 +204,47 @@ def main():
     #    new_config = wm.update_config(old_config)
     #    submit_clair3_cram_jobs(sample_set)
 
-    #for (inputs_severus, (vcf, sample_set)) in severus_tumor_only_or_pair_grch37.items():
-    #    old_config = wm.get_config("severus_workflow")
-    #    print(inputs_severus)
-    #    if len(inputs_severus) == 7: # tumor-only mode
-    #        old_config["inputs"]["SeverusWorkflow.tumor_bam_or_cram"] = f'this.{inputs_severus[0]}'
-    #        old_config["inputs"]["SeverusWorkflow.tumor_bam_or_cram_index"] = f'this.{inputs_severus[1]}'
+    for (inputs_severus, (vcf, sample_set)) in severus_tumor_only_or_pair_grch37.items():
+        old_config = wm.get_config("severus_workflow")
+        print(inputs_severus)
+        if len(inputs_severus) == 7: # tumor-only mode
+            old_config["inputs"]["SeverusWorkflow.tumor_bam_or_cram"] = f'this.{inputs_severus[0]}'
+            old_config["inputs"]["SeverusWorkflow.tumor_bam_or_cram_index"] = f'this.{inputs_severus[1]}'
 
-    #        old_config["inputs"]["SeverusWorkflow.phased_tumor_vcfgz"] = f'this.{inputs_severus[2]}'
-    #        old_config["inputs"]["SeverusWorkflow.phased_tumor_vcf_index"] = f'this.{inputs_severus[3]}'
-    #        old_config["inputs"]["SeverusWorkflow.phased_normal_vcfgz"] = f''
-    #        old_config["inputs"]["SeverusWorkflow.phased_normal_vcf_index"] = f''
+            old_config["inputs"]["SeverusWorkflow.phased_tumor_vcfgz"] = f'this.{inputs_severus[2]}'
+            old_config["inputs"]["SeverusWorkflow.phased_tumor_vcf_index"] = f'this.{inputs_severus[3]}'
+            old_config["inputs"]["SeverusWorkflow.phased_normal_vcfgz"] = f''
+            old_config["inputs"]["SeverusWorkflow.phased_normal_vcf_index"] = f''
 
-    #        old_config["inputs"]["SeverusWorkflow.vntr"] = inputs_severus[4]
-    #        old_config["inputs"]["SeverusWorkflow.assembly"] = inputs_severus[5]
-    #        old_config["inputs"]["SeverusWorkflow.assembly_index"] = inputs_severus[6]
-    #        old_config["inputs"]["SeverusWorkflow.boot_disk_size"] = '350'
-    #        old_config["inputs"]["SeverusWorkflow.disk_space"] = '500'
-    #        old_config['outputs']['SeverusWorkflow.vcf_all'] = f'this.{vcf}'
-    #        old_config["inputs"]["SeverusWorkflow.normal_bam_or_cram"] = ''
-    #        old_config["inputs"]["SeverusWorkflow.normal_bam_or_cram_index"] = ''
-    #        old_config["inputs"]["SeverusWorkflow.normal_sample_id"] = ''
-    #        print(old_config)
-    #    else: # tumor-normal pair
-    #        continue
-    #        #old_config["inputs"]["SeverusWorkflow.tumor_bam_or_cram"] = f'this.{inputs_severus[0]}'
-    #        #old_config["inputs"]["SeverusWorkflow.tumor_bam_or_cram_index"] = f'this.{inputs_severus[1]}'
-    #        #old_config["inputs"]["SeverusWorkflow.normal_bam_or_cram"] = f'this.{inputs_severus[2]}'
-    #        #old_config["inputs"]["SeverusWorkflow.normal_bam_or_cram_index"] = f'this.{inputs_severus[3]}'
-    #        #old_config["inputs"]["SeverusWorkflow.normal_sample_id"] = f'this.normal_sample_id'
-    #        #old_config["inputs"]["SeverusWorkflow.boot_disk_size"] = '200'
-    #        #old_config["inputs"]["SeverusWorkflow.disk_space"] = '200'
+            old_config["inputs"]["SeverusWorkflow.vntr"] = inputs_severus[4]
+            old_config["inputs"]["SeverusWorkflow.assembly"] = inputs_severus[5]
+            old_config["inputs"]["SeverusWorkflow.assembly_index"] = inputs_severus[6]
+            old_config["inputs"]["SeverusWorkflow.boot_disk_size"] = '500'
+            old_config["inputs"]["SeverusWorkflow.disk_space"] = '500'
+            old_config['outputs']['SeverusWorkflow.vcf_all'] = f'this.{vcf}'
+            old_config["inputs"]["SeverusWorkflow.normal_bam_or_cram"] = ''
+            old_config["inputs"]["SeverusWorkflow.normal_bam_or_cram_index"] = ''
+            old_config["inputs"]["SeverusWorkflow.normal_sample_id"] = ''
+            print(old_config)
+        else: # tumor-normal pair
+            old_config["inputs"]["SeverusWorkflow.tumor_bam_or_cram"] = f'this.{inputs_severus[0]}'
+            old_config["inputs"]["SeverusWorkflow.tumor_bam_or_cram_index"] = f'this.{inputs_severus[1]}'
+            old_config["inputs"]["SeverusWorkflow.normal_bam_or_cram"] = f'this.{inputs_severus[2]}'
+            old_config["inputs"]["SeverusWorkflow.normal_bam_or_cram_index"] = f'this.{inputs_severus[3]}'
+            old_config["inputs"]["SeverusWorkflow.normal_sample_id"] = f'this.normal_sample_id'
+            old_config["inputs"]["SeverusWorkflow.boot_disk_size"] = '500'
+            old_config["inputs"]["SeverusWorkflow.disk_space"] = '500'
 
-    #        #old_config["inputs"]["SeverusWorkflow.phased_normal_vcfgz"] = f'this.{inputs_severus[4]}'
-    #        #old_config["inputs"]["SeverusWorkflow.phased_normal_vcf_index"] = f'this.{inputs_severus[5]}'
+            old_config["inputs"]["SeverusWorkflow.phased_normal_vcfgz"] = f'this.{inputs_severus[4]}'
+            old_config["inputs"]["SeverusWorkflow.phased_normal_vcf_index"] = f'this.{inputs_severus[5]}'
 
-    #        #old_config["inputs"]["SeverusWorkflow.vntr"] = inputs_severus[6]
-    #        #old_config["inputs"]["SeverusWorkflow.assembly"] = inputs_severus[7]
-    #        #old_config["inputs"]["SeverusWorkflow.assembly_index"] = inputs_severus[8]
-    #        #old_config['outputs']['SeverusWorkflow.vcf_all'] = f'this.{vcf}'
-    #    new_config = wm.update_config(old_config)
-    #    submit_severus_cram_jobs(sample_set)
+            old_config["inputs"]["SeverusWorkflow.vntr"] = inputs_severus[6]
+            old_config["inputs"]["SeverusWorkflow.assembly"] = inputs_severus[7]
+            old_config["inputs"]["SeverusWorkflow.assembly_index"] = inputs_severus[8]
+            old_config['outputs']['SeverusWorkflow.vcf_all'] = f'this.{vcf}'
+            #continue
+        new_config = wm.update_config(old_config)
+        submit_severus_cram_jobs(sample_set)
 
     status = wm.get_submission_status(filter_active=False)
     status.loc[:, 'clean_up'] = False
