@@ -30,6 +30,7 @@ workflow SeverusWorkflow {
         Int disk_space=300
         Int cpu = 24
         Int mem = 96
+        Boolen use_ssd = True
     }
 
     Array[String] sample_id = select_all([tumor_sample_id, normal_sample_id])
@@ -47,7 +48,13 @@ workflow SeverusWorkflow {
           phased_vcfgz_index = phased_vcfgz_index,
           sample_id = sample_id[idx],
           assembly = assembly,
-          assembly_index = assembly_index
+          assembly_index = assembly_index,
+          cpu = cpu,
+          mem = mem,
+          use_ssd = use_ssd,
+          preemptible=preemptible,
+          boot_disk_size=boot_disk_size,
+          disk_space=disk_space
       }
     }
 
@@ -118,7 +125,8 @@ task whatshapTask {
         Int boot_disk_size=10
         Int disk_space=20
         Int cpu = 10
-        Int mem = 32
+        Int mem = 64
+        Boolen use_ssd = False
     }
 
     command <<<
@@ -127,12 +135,13 @@ task whatshapTask {
     >>>
 
     runtime {
-        disks: "local-disk ~{disk_space} HDD"
+        disks: "local-disk " + ceil(size(cram, "GB)+size(crai, "GB)+size(phased_vcfgz, "GB")+size(phased_vcfgz_index, "GB")+size(assembly, "GB")+disk_space) + " " + (if use_ssd then "SSD" else "HDD")
         memory: "~{mem} GB"
         cpu: cpu
         preemptible: preemptible
         bootDiskSizeGb: boot_disk_size
         docker: docker_image
+        maxRetries: 3
     }
 
     output {
