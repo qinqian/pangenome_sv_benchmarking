@@ -219,8 +219,9 @@ def main():
             old_config["inputs"]["SeverusWorkflow.vntr"] = inputs_severus[4]
             old_config["inputs"]["SeverusWorkflow.assembly"] = inputs_severus[5]
             old_config["inputs"]["SeverusWorkflow.assembly_index"] = inputs_severus[6]
-            old_config["inputs"]["SeverusWorkflow.boot_disk_size"] = '500'
-            old_config["inputs"]["SeverusWorkflow.disk_space"] = '500'
+            old_config["inputs"]["SeverusWorkflow.boot_disk_size"] = '100'
+            old_config["inputs"]["SeverusWorkflow.disk_space"] = '1000'
+            old_config["inputs"]["SeverusWorkflow.mem"] = '128'
             old_config['outputs']['SeverusWorkflow.vcf_all'] = f'this.{vcf}'
             old_config["inputs"]["SeverusWorkflow.normal_bam_or_cram"] = ''
             old_config["inputs"]["SeverusWorkflow.normal_bam_or_cram_index"] = ''
@@ -232,8 +233,9 @@ def main():
             old_config["inputs"]["SeverusWorkflow.normal_bam_or_cram"] = f'this.{inputs_severus[2]}'
             old_config["inputs"]["SeverusWorkflow.normal_bam_or_cram_index"] = f'this.{inputs_severus[3]}'
             old_config["inputs"]["SeverusWorkflow.normal_sample_id"] = f'this.normal_sample_id'
-            old_config["inputs"]["SeverusWorkflow.boot_disk_size"] = '500'
-            old_config["inputs"]["SeverusWorkflow.disk_space"] = '500'
+            old_config["inputs"]["SeverusWorkflow.boot_disk_size"] = '100'
+            old_config["inputs"]["SeverusWorkflow.disk_space"] = '1000'
+            old_config["inputs"]["SeverusWorkflow.mem"] = '128'
 
             old_config["inputs"]["SeverusWorkflow.phased_normal_vcfgz"] = f'this.{inputs_severus[4]}'
             old_config["inputs"]["SeverusWorkflow.phased_normal_vcf_index"] = f'this.{inputs_severus[5]}'
