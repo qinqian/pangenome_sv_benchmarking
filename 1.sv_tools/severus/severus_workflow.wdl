@@ -30,7 +30,7 @@ workflow SeverusWorkflow {
         Int disk_space=300
         Int cpu = 24
         Int mem = 96
-        Boolen use_ssd = True
+        Boolean use_ssd = true
     }
 
     Array[String] sample_id = select_all([tumor_sample_id, normal_sample_id])
@@ -126,7 +126,7 @@ task whatshapTask {
         Int disk_space=20
         Int cpu = 10
         Int mem = 64
-        Boolen use_ssd = False
+        Boolean use_ssd = false
     }
 
     command <<<
@@ -135,7 +135,7 @@ task whatshapTask {
     >>>
 
     runtime {
-        disks: "local-disk " + ceil(size(cram, "GB)+size(crai, "GB)+size(phased_vcfgz, "GB")+size(phased_vcfgz_index, "GB")+size(assembly, "GB")+disk_space) + " " + (if use_ssd then "SSD" else "HDD")
+        disks: "local-disk " + ceil(size(cram, "GB")+size(crai, "GB")+size(phased_vcfgz, "GB")+size(phased_vcfgz_index, "GB")+size(assembly, "GB")+disk_space) + " " + (if use_ssd then "SSD" else "HDD")
         memory: "~{mem} GB"
         cpu: cpu
         preemptible: preemptible
