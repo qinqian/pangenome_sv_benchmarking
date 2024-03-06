@@ -49,8 +49,13 @@ severus_tumor_only_or_pair_grch37 = {("minimap2_grch37_noalt_cram", "minimap2_gr
                                      ("minimap2_grch37_noalt_cram", "minimap2_grch37_noalt_crai", "paired_normal_grch37_cram", "paired_normal_grch37_crai", "clair_phased_grch37_normal_vcf", "clair_phased_grch37_normal_vcf_index", "\"gs://fc-secure-062e6633-7a72-4623-9394-491e0ce6c324/human_hs37d5.trf.bed\"", "\"gs://fc-secure-062e6633-7a72-4623-9394-491e0ce6c324/hs37d5.fa\"", "\"gs://fc-secure-062e6633-7a72-4623-9394-491e0ce6c324/hs37d5.fa.fai\""): ("severus_grch37_tumor_normal_pair_vcf_all", "all_tumor_normal_pairs")}  # tumor-normal pair only use phased normal vcf
 
 severus_tumor_only_or_pair_chm13v2 = {("minimap2_chm13v2_cram", "minimap2_chm13v2_crai", "clair_chm13v2_phased_vcf", "clair_chm13v2_phased_vcf_tbi", "\"gs://fc-secure-062e6633-7a72-4623-9394-491e0ce6c324/chm13v2.0.trf.bed\"", "\"gs://fc-secure-062e6633-7a72-4623-9394-491e0ce6c324/chm13v2.0.fa\"", "\"gs://fc-secure-062e6633-7a72-4623-9394-491e0ce6c324/chm13v2.0.fa.fai\""): ("severus_chm13v2_singlelsample_vcf_all", "all_samples"),  # tumor only use phased tumor vcf
-                                      ("minimap2_chm13v2_cram", "minimap2_chm13v2_crai", "paired_normal_chm13vs_cram", "paired_normal_chm13v2_crai", "clair_phased_grch37_normal_vcf", "clair_phased_grch37_normal_vcf_index", "\"gs://fc-secure-062e6633-7a72-4623-9394-491e0ce6c324/chm13v2.0.trf.bed\"", "\"gs://fc-secure-062e6633-7a72-4623-9394-491e0ce6c324/chm13v2.0.fa\"", "\"gs://fc-secure-062e6633-7a72-4623-9394-491e0ce6c324/chm13v2.0.fa.fai\""): ("severus_chm13v2_tumor_normal_pair_vcf_all", "all_tumor_normal_pairs")}  # tumor-normal pair only use phased normal vcf
-                            # ("minimap2_chm13v2_cram", "minimap2_chm13v2_crai", "clair_chm13v2_phased_vcf", "clair_chm13v2_phased_vcf_tbi", "\"gs://fc-secure-062e6633-7a72-4623-9394-491e0ce6c324/chm13v2.0.fa\"", "\"gs://fc-secure-062e6633-7a72-4623-9394-491e0ce6c324/chm13v2.0.fa.fai\""): "severus_chm13v2_singlelsample_vcf_all"}
+                                      ("minimap2_chm13v2_cram", "minimap2_chm13v2_crai", "paired_normal_chm13vs_cram", "paired_normal_chm13v2_crai", "clair_phased_chm13v2_normal_vcf", "clair_phased_chm13v2_normal_vcf_index", "\"gs://fc-secure-062e6633-7a72-4623-9394-491e0ce6c324/chm13v2.0.trf.bed\"", "\"gs://fc-secure-062e6633-7a72-4623-9394-491e0ce6c324/chm13v2.0.fa\"", "\"gs://fc-secure-062e6633-7a72-4623-9394-491e0ce6c324/chm13v2.0.fa.fai\""): ("severus_chm13v2_tumor_normal_pair_vcf_all", "all_tumor_normal_pairs")}  # tumor-normal pair only use phased normal vcf
+
+severus_tumor_only_or_pair_grch38 = {("cram", "crai", "clair_phased_vcf", "clair_phased_vcf_tbi", "\"gs://fc-secure-062e6633-7a72-4623-9394-491e0ce6c324/human_GRCh38_no_alt_analysis_set.trf.bed\"", "\"gs://fc-secure-062e6633-7a72-4623-9394-491e0ce6c324/GCA_000001405.15_GRCh38_no_alt_analysis_set.fna\"", "\"gs://fc-secure-062e6633-7a72-4623-9394-491e0ce6c324/GCA_000001405.15_GRCh38_no_alt_analysis_set.fna.fai\""): ("severus_single_sample_vcf_all", "nanopore_merged_techreps"),  # hg38 tumor only use phased tumor vcf for cram
+                                     ("bam", "bai", "clair_phased_vcf", "clair_phased_vcf_tbi", "\"gs://fc-secure-062e6633-7a72-4623-9394-491e0ce6c324/human_GRCh38_no_alt_analysis_set.trf.bed\"", "\"gs://fc-secure-062e6633-7a72-4623-9394-491e0ce6c324/GCA_000001405.15_GRCh38_no_alt_analysis_set.fna\"", "\"gs://fc-secure-062e6633-7a72-4623-9394-491e0ce6c324/GCA_000001405.15_GRCh38_no_alt_analysis_set.fna.fai\""): ("severus_single_sample_vcf_all", "all_pacbio_hg002_4cancerpairedcells"), # tumor only use phased tumor vcf
+                                     ("cram", "crai", "paired_normal_grch38_cram", "paired_normal_grch38_crai", "clair_phased_normal_vcf", "clair_phased_normal_vcf_index", "\"gs://fc-secure-062e6633-7a72-4623-9394-491e0ce6c324/human_GRCh38_no_alt_analysis_set.trf.bed\"", "\"gs://fc-secure-062e6633-7a72-4623-9394-491e0ce6c324/GCA_000001405.15_GRCh38_no_alt_analysis_set.fna\"", "\"gs://fc-secure-062e6633-7a72-4623-9394-491e0ce6c324/GCA_000001405.15_GRCh38_no_alt_analysis_set.fna.fai\""): ("severus_tumor_normal_pair_vcf_all", "all_tumor_normal_pairs"), # tumor-normal pair
+                                     ("bam", "bai", "paired_normal_grch38_cram", "paired_normal_grch38_crai", "clair_phased_normal_vcf", "clair_phased_normal_vcf_index", "\"gs://fc-secure-062e6633-7a72-4623-9394-491e0ce6c324/human_GRCh38_no_alt_analysis_set.trf.bed\"", "\"gs://fc-secure-062e6633-7a72-4623-9394-491e0ce6c324/GCA_000001405.15_GRCh38_no_alt_analysis_set.fna\"", "\"gs://fc-secure-062e6633-7a72-4623-9394-491e0ce6c324/GCA_000001405.15_GRCh38_no_alt_analysis_set.fna.fai\""): ("severus_tumor_normal_pair_vcf_all", "all_tumor_normal_pairs")}
+
 
 
 def submit_minigraph_gaf_jobs(sample_set_id, minigraph_wdl="minigraph_cram", use_callcache=False):
@@ -68,7 +73,7 @@ def submit_clair3_cram_jobs(sample_set_id, minimap2_wdl="clair3_bam", use_callca
 def submit_severus_cram_jobs(sample_set_id, minimap2_wdl="severus_workflow", use_callcache=True):
     submission_id = wm.create_submission(minimap2_wdl, sample_set_id, 'sample_set', expression='this.samples', use_callcache=use_callcache)
 
-def submit_all_severus_jobs(severus_dict):
+def submit_all_severus_jobs(severus_dict, use_callcache=True):
     for (inputs_severus, (vcf, sample_set)) in severus_dict.items():
         old_config = wm.get_config("severus_workflow")
         print(inputs_severus)
@@ -111,7 +116,7 @@ def submit_all_severus_jobs(severus_dict):
             old_config['outputs']['SeverusWorkflow.vcf_all'] = f'this.{vcf}'
             #continue
         new_config = wm.update_config(old_config)
-        submit_severus_cram_jobs(sample_set)
+        submit_severus_cram_jobs(sample_set, use_callcache=use_callcache)
     return
 
 def clean_up(to_be_clean_submission_ids, dry_run=True):
@@ -253,7 +258,8 @@ def main():
     #    submit_clair3_cram_jobs(sample_set)
 
     #submit_all_severus_jobs(severus_tumor_only_or_pair_grch37)
-    submit_all_severus_jobs(severus_tumor_only_or_pair_chm13v2)
+    #submit_all_severus_jobs(severus_tumor_only_or_pair_chm13v2, use_callcache=False)
+    submit_all_severus_jobs(severus_tumor_only_or_pair_grch38, use_callcache=False)
 
 
     status = wm.get_submission_status(filter_active=False)
