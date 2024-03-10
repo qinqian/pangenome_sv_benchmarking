@@ -7,13 +7,14 @@ workflow LineargenomeAlignment {
         File cram_reference
         String sample_id
         File assembly
-        String docker_image="trinityctat/pbfusion:v0.3.1"
+        String docker_image="docker.io/qianqin/minimap2_ds"
         Int preemptible=3
         Int boot_disk_size=20
         Int disk_space=300
         Int cpu = 24
         Int mem = 64
         String mode = "map-hifi"
+        Boolean use_ssd = true
     }
 
     call minimapTask {
@@ -53,11 +54,11 @@ task minimapTask {
     }
 
     command <<<
-        samtools collate -Oun128 --reference ~{input_cram_reference} ~{input_cram} | samtools fastq - | minimap2 -c -x ~{mode} -t ~{cpu} ~{assembly} - > ~{sample_id}.paf 
+        samtools collate -@ ~{cpu} -Oun128 --reference ~{input_cram_reference} ~{input_cram} | samtools fastq -@ ~{cpu} - | minimap2 --ds -c -x ~{mode} -t ~{cpu} ~{assembly} - > ~{sample_id}.paf 
     >>>
 
     runtime {
-        disks: "local-disk ~{disk_space} HDD"
+        disks: "local-disk ~{disk_space}" + " " + (if use_ssd then "SSD" else "HDD")
         memory: "~{mem} GB"
         cpu: cpu
         preemptible: preemptible

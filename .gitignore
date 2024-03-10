@@ -1,0 +1,8 @@
+
+*.bed
+*.bed.gz
+*bam
+*Workflow
+_LAST
+*.vcf.gz
+*.csv
