@@ -29,7 +29,8 @@ workflow LineargenomeAlignment {
             disk_space=disk_space,
             cpu=cpu,
             mem=mem,
-            mode=mode
+            mode=mode,
+					  use_ssd=use_ssd
     }
 
     output {
@@ -51,6 +52,7 @@ task minimapTask {
         Int disk_space=20
         Int cpu = 10
         Int mem = 32
+        Boolean use_ssd
     }
 
     command <<<
