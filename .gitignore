@@ -1,8 +1,11 @@
-
 *.bed
 *.bed.gz
 *bam
 *Workflow
 _LAST
 *.vcf.gz
+*.vcf.gz.tbi
 *.csv
+*.gaf
+*.paf
+*.vcf
