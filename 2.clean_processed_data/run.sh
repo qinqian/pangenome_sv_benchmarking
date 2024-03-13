@@ -65,10 +65,18 @@ clean_severus() {
 
 }
 
+add_reference() {
+    mkdir -p reference
+    gsutil -m cp gs://fc-secure-062e6633-7a72-4623-9394-491e0ce6c324/human_GRCh38_no_alt_analysis_set.trf.bed .
+    gsutil -m cp gs://fc-secure-062e6633-7a72-4623-9394-491e0ce6c324/human_hs37d5.trf.bed .
+    gsutil -m cp gs://fc-secure-062e6633-7a72-4623-9394-491e0ce6c324/chm13v2.0.trf.bed .
+}
+
 main() {
     #clean_alignment_data
     #clean_sniffles
     #clean_severus
+    add_reference
 }
 
 main
