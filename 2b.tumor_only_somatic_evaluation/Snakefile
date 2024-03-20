@@ -1,0 +1,54 @@
+import os
+import glob
+import sys
+import pandas as pd
+from snakemake.utils import validate
+
+configfile: "config.yaml"
+print(config)
+
+CELLLINE = ["HCC1395", "COLO829"] #, "COLO829_ONT"]
+ASSEMBLY = ["chm13graph", "grch37graph", "grch37linear", "grch38graph", "grch38linear"]
+
+vntr = {"chm13linear": "../2.clean_processed_data/chm13v2.0.trf.bed", "chm13graph": "../2.clean_processed_data/chm13v2.0.trf.bed",
+        "grch37graph": "../2.clean_processed_data/human_hs37d5.trf.bed",
+        "grch37linear": "../2.clean_processed_data/human_hs37d5.trf.bed",
+        "grch38linear": "../2.clean_processed_data/human_GRCh38_no_alt_analysis_set.trf.bed",
+        "grch38graph": "../2.clean_processed_data/human_GRCh38_no_alt_analysis_set.trf.bed"}
+
+all_outputs = expand("{assembly}_harmonize/{cellline}_mapq5_mlen50_support2_maplen2000_mergedindel.bed.gz", assembly=ASSEMBLY, cellline=CELLLINE)
+
+all_outputs_brk = expand("{assembly}_harmonize/{cellline}_mapq5_mlen50_support2_maplen2000_mergedbreaks.bed.gz", assembly=ASSEMBLY, cellline=CELLLINE)
+all_outputs_harmonized = expand("{assembly}_harmonize/{cellline}_mapq5_mlen50_support2_maplen2000_harmonized.bed.gz", assembly=ASSEMBLY, cellline=CELLLINE)
+
+print(len(all_outputs))
+
+rule all:
+    input: 
+        all_outputs,
+        all_outputs_brk,
+        all_outputs_harmonized
+
+rule gaftools:
+    input:
+        alignment="../2.clean_processed_data/data/minigraph/{assembly}/{cellline}.gaf",
+        l1=config["l1"],
+        tr=lambda wildcards: vntr[wildcards.assembly]
+    params:
+        mapq=5,
+        indel_len=50,
+        support_read=2,
+        maplen=2000,
+        prefix=lambda wildcards, output: output[0][:-19]
+    output:
+        "{assembly}_harmonize/{cellline}_mapq5_mlen50_support2_maplen2000_mergedindel.bed.gz",
+        "{assembly}_harmonize/{cellline}_mapq5_mlen50_support2_maplen2000_mergedbreaks.bed.gz",
+        "{assembly}_harmonize/{cellline}_mapq5_mlen50_support2_maplen2000_harmonized.bed.gz"
+    log:
+        "{assembly}_harmonize/{cellline}.logs"
+    threads:
+        1
+    shell:
+        """
+        gaftools getsv -c {threads} -m {params.mapq} -l {params.indel_len} --input {input.alignment} -r {params.support_read} -p {params.prefix} --vntr {input.tr} --l1 {input.l1} -a {params.maplen} -s {wildcards.assembly} --ds
+        """

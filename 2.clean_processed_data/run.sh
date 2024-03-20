@@ -4,18 +4,34 @@ clean_alignment_data() {
     mkdir -p data/minigraph/chm13graph
     mkdir -p data/minigraph/chm13linear
     mkdir -p data/minimap2/chm13
+    # add tumor chm13 minimap2 here
+    #gsutil -m cp gs://fc-secure-062e6633-7a72-4623-9394-491e0ce6c324/submissions/1c46d4f2-b4a3-4c01-8d27-0381d4ddb008/LineargenomeAlignment/e0866200-76e7-45a0-896c-71b9e28411df/call-minimapTask/COLO829.paf data/minimap2/chm13
+    #gsutil -m cp gs://fc-secure-062e6633-7a72-4623-9394-491e0ce6c324/submissions/99435f4f-ae67-4823-a734-f9babc979669/LineargenomeAlignment/39f23cb3-e819-407c-9927-1ede6eee9b12/call-minimapTask/COLO829_ONT.paf data/minimap2/chm13
+    #gsutil -m cp gs://fc-secure-062e6633-7a72-4623-9394-491e0ce6c324/submissions/1c46d4f2-b4a3-4c01-8d27-0381d4ddb008/LineargenomeAlignment/09cad466-4206-4113-94d4-116aec698cc8/call-minimapTask/HCC1395.paf data/minimap2/chm13
 
-    mkdir -p data/minigraph/grch38graph
-    mkdir -p data/minigraph/grch38linear
-    mkdir -p data/minimap2/grch38
+    #mv ../../phaseA3_L1_TSD_polyA_SVA/minigraph_chm13_graph/*gaf data/minigraph/chm13graph
+    #gsutil -m cp gs://fc-secure-062e6633-7a72-4623-9394-491e0ce6c324/submissions/d1aff087-1873-4e94-b148-77945403f2a2/PangenomeAlignment/2ebdab8b-d82e-43be-8507-24dc7926c847/call-minigraphTask/HG002_PACBIO_REVIO.gaf .
+
+    #mv ../../phaseA3_L1_TSD_polyA_SVA/minigraph_chm13v2_linear/*gaf data/minigraph/chm13linear
+    #gsutil cp gs://fc-secure-062e6633-7a72-4623-9394-491e0ce6c324/submissions/78e13b29-e087-4fc7-8dcf-8e71d2b71935/PangenomeAlignment/\*/call-minigraphTask/\*.gaf data/minigraph/chm13linear
+    #gsutil -m cp gs://fc-secure-062e6633-7a72-4623-9394-491e0ce6c324/submissions/39030d53-2a6a-4a47-914b-733e66074512/PangenomeAlignment/299a0846-3c64-4fdf-b784-f366eb21026d/call-minigraphTask/HG002_PACBIO_REVIO.gaf data/minigraph/chm13linear
+
+    #gsutil cp gs://fc-secure-062e6633-7a72-4623-9394-491e0ce6c324/submissions/5494a02f-ebb1-4522-aba6-6cae7f4938fe/PangenomeAlignment/ab73d380-e61c-42a5-97af-f855a44edae7/call-minigraphTask/COLO829_ONT.gaf data/minigraph/chm13linear
+    gsutil -m cp gs://fc-secure-062e6633-7a72-4623-9394-491e0ce6c324/submissions/f66ecd5a-a9f0-4a18-9260-fb1f8a1b8bfe/PangenomeAlignment/f20e0964-5400-481f-b97f-4c7010a8f706/call-minigraphTask/attempt-4/COLO829_ONT.gaf data/minigraph/chm13graph
+
+    #mkdir -p data/minigraph/grch38graph
+    #mkdir -p data/minigraph/grch38linear
+    #mkdir -p data/minimap2/grch38
 
     #for gaf in gs://broad_pangenome_sv_alvin/minigraph_GRCh38_graph_add_corrected_ds_Z/COLO829.gaf gs://broad_pangenome_sv_alvin/minigraph_GRCh38_graph_add_corrected_ds_Z/HCC1395.gaf gs://fc-secure-062e6633-7a72-4623-9394-491e0ce6c324/submissions/3a622caf-59a8-4fc6-8ee8-901f42038b86/PangenomeAlignment/6f07348b-bced-48f5-9424-eaff0e11fd88/call-minigraphTask/attempt-4/COLO829_ONT.gaf; do
     #	gsutil -m cp $gaf data/minigraph/grch38graph
     #done
 
-    #for gaf in gs://broad_pangenome_sv_alvin/minigraph_GCA_000001405.15_GRCh38_no_alt_linear/COLO829.gaf gs://broad_pangenome_sv_alvin/minigraph_GCA_000001405.15_GRCh38_no_alt_linear/HCC1395.gaf gs://fc-secure-062e6633-7a72-4623-9394-491e0ce6c324/submissions/d03abbfa-a842-49cb-93bf-d738cdb5ea4d/PangenomeAlignment/28145827-64a0-480a-a7e2-54b9843c23c1/call-minigraphTask/attempt-4/COLO829_ONT.gaf; do
+    #for gaf in gs://fc-secure-062e6633-7a72-4623-9394-491e0ce6c324/submissions/d03abbfa-a842-49cb-93bf-d738cdb5ea4d/PangenomeAlignment/28145827-64a0-480a-a7e2-54b9843c23c1/call-minigraphTask/attempt-4/COLO829_ONT.gaf; do
     #    gsutil -m cp $gaf data/minigraph/grch38linear
     #done
+    #gsutil -m cp gs://fc-secure-062e6633-7a72-4623-9394-491e0ce6c324/submissions/2c5d0d65-d575-4491-a311-2cf9a1fd695f/PangenomeAlignment/\*/call-minigraphTask/\*.gaf data/minigraph/grch38linear
+    #gsutil -m cp gs://fc-secure-062e6633-7a72-4623-9394-491e0ce6c324/submissions/f9c8deb0-66f4-4745-ae68-ca1f1fbd431c/PangenomeAlignment/5bd6b167-e107-4395-9235-fbf447bac80f/call-minigraphTask/attempt-4/HG002_PACBIO_REVIO.gaf data/minigraph/grch38linear
 
     #for gaf in gs://fc-secure-062e6633-7a72-4623-9394-491e0ce6c324/submissions/a788a6e1-7696-4b0e-bcb7-ecadb7e57741/LineargenomeAlignment/a04216ad-e4fe-4beb-b81f-ab74f4512812/call-minimapTask/attempt-3/COLO829.paf gs://fc-secure-062e6633-7a72-4623-9394-491e0ce6c324/submissions/a788a6e1-7696-4b0e-bcb7-ecadb7e57741/LineargenomeAlignment/62378f57-1603-48b1-98bd-5a028e4b8c23/call-minimapTask/HCC1395.paf; do
     #    gsutil -m cp $gaf data/minimap2/grch38
@@ -73,10 +89,10 @@ add_reference() {
 }
 
 main() {
-    #clean_alignment_data
+    clean_alignment_data
     #clean_sniffles
     #clean_severus
-    add_reference
+    #add_reference
 }
 
 main
