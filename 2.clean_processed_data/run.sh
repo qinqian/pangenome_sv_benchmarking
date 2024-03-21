@@ -57,14 +57,30 @@ clean_alignment_data() {
 clean_sniffles() {
     mkdir -p data/sniffles2/grch37
     mkdir -p data/sniffles2/grch38
+    mkdir -p data/sniffles2/chm13
 
     #for vcf in gs://fc-secure-062e6633-7a72-4623-9394-491e0ce6c324/submissions/3a88f5a3-929f-439b-a5eb-2e43e3135e0d/SNFWorkflow/70ab025d-86cb-45b6-82d5-249a753f9136/call-SNFTask/COLO829.vcf.gz\* gs://fc-secure-062e6633-7a72-4623-9394-491e0ce6c324/submissions/3a88f5a3-929f-439b-a5eb-2e43e3135e0d/SNFWorkflow/8b548aea-be9b-40ea-a18d-eed14d415c1e/call-SNFTask/COLO829_ONT.vcf.gz\* gs://fc-secure-062e6633-7a72-4623-9394-491e0ce6c324/submissions/3a88f5a3-929f-439b-a5eb-2e43e3135e0d/SNFWorkflow/6ae133a0-5f03-46a4-b21f-432f70ee0eb7/call-SNFTask/HCC1395.vcf.gz\*; do
+    #    gsutil -m cp $vcf data/sniffles2/grch37
+    #done
+
+    ##hg002
+    #for vcf in gs://fc-secure-062e6633-7a72-4623-9394-491e0ce6c324/submissions/3a88f5a3-929f-439b-a5eb-2e43e3135e0d/SNFWorkflow/8039e150-df3b-4391-9267-d778800a150d/call-SNFTask/attempt-2/HG002_ONT_sup.vcf.gz gs://fc-secure-062e6633-7a72-4623-9394-491e0ce6c324/submissions/3a88f5a3-929f-439b-a5eb-2e43e3135e0d/SNFWorkflow/8039e150-df3b-4391-9267-d778800a150d/call-SNFTask/attempt-2/HG002_ONT_sup.vcf.gz.tbi gs://fc-secure-062e6633-7a72-4623-9394-491e0ce6c324/submissions/3a88f5a3-929f-439b-a5eb-2e43e3135e0d/SNFWorkflow/e1a2ad0d-7e13-4f4e-b297-fb9adebe61f6/call-SNFTask/HG002_PACBIO_REVIO.vcf.gz.tbi gs://fc-secure-062e6633-7a72-4623-9394-491e0ce6c324/submissions/3a88f5a3-929f-439b-a5eb-2e43e3135e0d/SNFWorkflow/e1a2ad0d-7e13-4f4e-b297-fb9adebe61f6/call-SNFTask/HG002_PACBIO_REVIO.vcf.gz; do
     #    gsutil -m cp $vcf data/sniffles2/grch37
     #done
 
     #for vcf in gs://fc-secure-062e6633-7a72-4623-9394-491e0ce6c324/submissions/27981bb8-033a-456f-96c0-133c5a32f5dc/SNFWorkflow/871f2809-41d5-448a-b56d-5f5eb9a6a008/call-SNFTask/COLO829.vcf.gz\* gs://fc-secure-062e6633-7a72-4623-9394-491e0ce6c324/submissions/4ad27225-2824-47b5-a2a6-899185b3c298/SNFWorkflow/4a032a73-c785-4259-be3c-f6f8eaaff3ce/call-SNFTask/attempt-2/COLO829_ONT.vcf.gz\* gs://fc-secure-062e6633-7a72-4623-9394-491e0ce6c324/submissions/27981bb8-033a-456f-96c0-133c5a32f5dc/SNFWorkflow/e1843bed-2711-45c0-9931-daef90aa1d4d/call-SNFTask/HCC1395.vcf.gz\*; do
     #    gsutil -m cp $vcf data/sniffles2/grch38
     #done
+
+    #hg002
+    #for vcf in gs://fc-secure-062e6633-7a72-4623-9394-491e0ce6c324/submissions/4ad27225-2824-47b5-a2a6-899185b3c298/SNFWorkflow/2347cd57-0ddc-4b93-859f-87f045d505f6/call-SNFTask/HG002_ONT_sup.vcf.gz.tbi gs://fc-secure-062e6633-7a72-4623-9394-491e0ce6c324/submissions/4ad27225-2824-47b5-a2a6-899185b3c298/SNFWorkflow/2347cd57-0ddc-4b93-859f-87f045d505f6/call-SNFTask/HG002_ONT_sup.vcf.gz gs://fc-secure-062e6633-7a72-4623-9394-491e0ce6c324/submissions/27981bb8-033a-456f-96c0-133c5a32f5dc/SNFWorkflow/9e6bac59-88f0-4ca4-a5ce-793603ede424/call-SNFTask/HG002_PACBIO_REVIO.vcf.gz.tbi gs://fc-secure-062e6633-7a72-4623-9394-491e0ce6c324/submissions/27981bb8-033a-456f-96c0-133c5a32f5dc/SNFWorkflow/9e6bac59-88f0-4ca4-a5ce-793603ede424/call-SNFTask/HG002_PACBIO_REVIO.vcf.gz; do
+    #    gsutil -m cp $vcf data/sniffles2/grch38
+    #done
+
+    #hg002
+    for vcf in gs://fc-secure-062e6633-7a72-4623-9394-491e0ce6c324/submissions/e64ded27-805b-443a-84db-1541c99c1dcf/SNFWorkflow/5432c093-83d9-443b-b91d-ddfebf76fdd7/call-SNFTask/HG002_ONT_sup.vcf.gz gs://fc-secure-062e6633-7a72-4623-9394-491e0ce6c324/submissions/e64ded27-805b-443a-84db-1541c99c1dcf/SNFWorkflow/5432c093-83d9-443b-b91d-ddfebf76fdd7/call-SNFTask/HG002_ONT_sup.vcf.gz.tbi gs://fc-secure-062e6633-7a72-4623-9394-491e0ce6c324/submissions/e64ded27-805b-443a-84db-1541c99c1dcf/SNFWorkflow/e62925ea-3b69-499f-8401-ee3c16e5f569/call-SNFTask/HG002_PACBIO_REVIO.vcf.gz gs://fc-secure-062e6633-7a72-4623-9394-491e0ce6c324/submissions/e64ded27-805b-443a-84db-1541c99c1dcf/SNFWorkflow/e62925ea-3b69-499f-8401-ee3c16e5f569/call-SNFTask/HG002_PACBIO_REVIO.vcf.gz.tbi; do
+	gsutil -m cp $vcf data/sniffles2/chm13
+    done
 }
 
 clean_severus() {
@@ -89,8 +105,8 @@ add_reference() {
 }
 
 main() {
-    clean_alignment_data
-    #clean_sniffles
+    #clean_alignment_data
+    clean_sniffles
     #clean_severus
     #add_reference
 }
