@@ -9,11 +9,11 @@ print(config)
 
 CELLLINE = ["HCC1395", "COLO829", "COLO829_ONT"]
 ASSEMBLY = ["chm13linear", "chm13graph", 
-            #"grch37graph", "grch37linear",
+            "grch37graph", "grch37linear",
             "grch38graph", "grch38linear"]
 
 vntr = {"chm13linear": "../2.clean_processed_data/chm13v2.0.trf.bed", "chm13graph": "../2.clean_processed_data/chm13v2.0.trf.bed",
-        #"grch37graph": "../2.clean_processed_data/human_hs37d5.trf.bed", "grch37linear": "../2.clean_processed_data/human_hs37d5.trf.bed",
+        "grch37graph": "../2.clean_processed_data/human_hs37d5.trf.bed", "grch37linear": "../2.clean_processed_data/human_hs37d5.trf.bed",
         "grch38linear": "../2.clean_processed_data/human_GRCh38_no_alt_analysis_set.trf.bed",
         "grch38graph": "../2.clean_processed_data/human_GRCh38_no_alt_analysis_set.trf.bed"}
 
@@ -21,6 +21,8 @@ centromere = {"chm13linear": "../../phaseA_minigraph_largedel/chm13v2.cen-mask.b
               "chm13graph": "../../phaseA_minigraph_largedel/chm13v2.cen-mask.bed",
               "grch38linear": "../../phaseA_minigraph_largedel/grch38_cen.bed",
               "grch38graph": "../../phaseA_minigraph_largedel/grch38_cen.bed",
+              "grch37linear": "",
+              "grch37graph": ""
               }
 
 truth = {"chm13linear": "output/truthset.colo829.out.chm13v2.crossmap.vcf.PB.bed",
@@ -48,13 +50,14 @@ rule gaftools:
         alignment="../2.clean_processed_data/data/minigraph/{assembly}/{cellline}.gaf",
         l1=config["l1"],
         tr=lambda wildcards: vntr[wildcards.assembly],
-        cent=lambda wildcards: centromere[wildcards.assembly]
+        #cent=lambda wildcards: centromere[wildcards.assembly]
     params:
         mapq=5,
         indel_len=50,
         support_read=2,
         maplen=2000,
-        prefix=lambda wildcards, output: output[0][:-19]
+        prefix=lambda wildcards, output: output[0][:-19],
+        centromere=lambda wildcards: f" --cent {centromere[wildcards.assembly]} " if centromere[wildcards.assembly]!= "" else ""
     output:
         "{assembly}_harmonize/{cellline}_mapq5_mlen50_support2_maplen2000_mergedindel.bed.gz",
         "{assembly}_harmonize/{cellline}_mapq5_mlen50_support2_maplen2000_mergedbreaks.bed.gz",
@@ -65,5 +68,5 @@ rule gaftools:
         1
     shell:
         """
-        gaftools getsv -c {threads} -m {params.mapq} -l {params.indel_len} --input {input.alignment} -r {params.support_read} -p {params.prefix} --vntr {input.tr} --l1 {input.l1} -a {params.maplen} -s {wildcards.assembly} --ds --cent {input.cent}
+        gaftools getsv -c {threads} -m {params.mapq} -l {params.indel_len} --input {input.alignment} -r {params.support_read} -p {params.prefix} --vntr {input.tr} --l1 {input.l1} -a {params.maplen} -s {wildcards.assembly} --ds {params.centromere}
         """

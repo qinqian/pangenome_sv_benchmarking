@@ -72,7 +72,10 @@ main() {
     #clean_truthset
     #picard_liftover
     #crossmap_liftover
-    snakemake --cores 16
+    #snakemake --cores 16
+    for bed in */*harmonize*bed.gz; do
+        echo $bed
+    done
 }
 
 main

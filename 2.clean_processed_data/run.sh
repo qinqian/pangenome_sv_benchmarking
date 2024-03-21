@@ -86,14 +86,24 @@ clean_sniffles() {
 clean_severus() {
     mkdir -p data/severus/grch37
     mkdir -p data/severus/grch38
+    mkdir -p data/severus/chm13
 
-    gsutil -m cp gs://fc-secure-062e6633-7a72-4623-9394-491e0ce6c324/submissions/728dae11-5ac3-49c8-820a-79f40e502be9/SeverusWorkflow/254b4ab3-03d6-45f2-8b1f-94ba34fedfd9/call-severusTumor/attempt-2/glob-443a79c6c426960de8526eea118fdfe5/severus_all.vcf data/severus/grch37/COLO829.vcf
-    gsutil -m cp gs://fc-secure-062e6633-7a72-4623-9394-491e0ce6c324/submissions/728dae11-5ac3-49c8-820a-79f40e502be9/SeverusWorkflow/d6aefc7a-0ef2-43d1-ba22-730fb4df486a/call-severusTumor/attempt-2/glob-966d0305651d70bfbb44ea0eb6b76fc4/severus_all.vcf data/severus/grch37/COLO829_ONT.vcf
-    gsutil -m cp gs://fc-secure-062e6633-7a72-4623-9394-491e0ce6c324/submissions/728dae11-5ac3-49c8-820a-79f40e502be9/SeverusWorkflow/2b0beb1e-9482-41ac-b3aa-a977a61cc60b/call-severusTumor/glob-c54210335a4577a1db5ddcf420283162/severus_all.vcf data/severus/grch37/HCC1395.vcf
+    #gsutil -m cp gs://fc-secure-062e6633-7a72-4623-9394-491e0ce6c324/submissions/728dae11-5ac3-49c8-820a-79f40e502be9/SeverusWorkflow/254b4ab3-03d6-45f2-8b1f-94ba34fedfd9/call-severusTumor/attempt-2/glob-443a79c6c426960de8526eea118fdfe5/severus_all.vcf data/severus/grch37/COLO829.vcf
+    #gsutil -m cp gs://fc-secure-062e6633-7a72-4623-9394-491e0ce6c324/submissions/728dae11-5ac3-49c8-820a-79f40e502be9/SeverusWorkflow/d6aefc7a-0ef2-43d1-ba22-730fb4df486a/call-severusTumor/attempt-2/glob-966d0305651d70bfbb44ea0eb6b76fc4/severus_all.vcf data/severus/grch37/COLO829_ONT.vcf
+    #gsutil -m cp gs://fc-secure-062e6633-7a72-4623-9394-491e0ce6c324/submissions/728dae11-5ac3-49c8-820a-79f40e502be9/SeverusWorkflow/2b0beb1e-9482-41ac-b3aa-a977a61cc60b/call-severusTumor/glob-c54210335a4577a1db5ddcf420283162/severus_all.vcf data/severus/grch37/HCC1395.vcf
 
-    gsutil -m cp gs://fc-secure-062e6633-7a72-4623-9394-491e0ce6c324/submissions/feb01427-357a-4f8b-9ab2-47789d75b054/SeverusWorkflow/4d5dda7f-2d54-47e8-aee8-f6f96fd802f2/call-severusTumor/attempt-2/glob-443a79c6c426960de8526eea118fdfe5/severus_all.vcf data/severus/grch38/COLO829.vcf
-    gsutil -m cp gs://fc-secure-062e6633-7a72-4623-9394-491e0ce6c324/submissions/e9d77840-2603-40fd-94a5-d01575046496/SeverusWorkflow/884e8dc5-fdcf-403b-81a7-6e9d898a2101/call-severusTumor/attempt-4/glob-966d0305651d70bfbb44ea0eb6b76fc4/severus_all.vcf data/severus/grch38/COLO829_ONT.vcf
-    gsutil -m cp gs://fc-secure-062e6633-7a72-4623-9394-491e0ce6c324/submissions/feb01427-357a-4f8b-9ab2-47789d75b054/SeverusWorkflow/7b3d881e-ad6a-4284-a6bc-f342ff8c4daf/call-severusTumor/attempt-4/glob-c54210335a4577a1db5ddcf420283162/severus_all.vcf data/severus/grch38/HCC1395.vcf
+    gsutil -m cp gs://fc-secure-062e6633-7a72-4623-9394-491e0ce6c324/submissions/728dae11-5ac3-49c8-820a-79f40e502be9/SeverusWorkflow/43adc864-544a-42f9-9aff-68a7c1ed2bf5/call-severusTumor/glob-44bab286e11b18dfd5a120503d966eba/severus_all.vcf data/severus/grch37/HG002_ONT.vcf
+    gsutil -m cp gs://fc-secure-062e6633-7a72-4623-9394-491e0ce6c324/submissions/728dae11-5ac3-49c8-820a-79f40e502be9/SeverusWorkflow/852f85c8-8788-4ef9-8819-68841bc8ebb8/call-severusTumor/attempt-4/glob-0aacef18f32e6d689d769b045b20774a/severus_all.vcf data/severus/grch37/HG002_PACBIO_REVIO.vcf
+
+    #gsutil -m cp gs://fc-secure-062e6633-7a72-4623-9394-491e0ce6c324/submissions/feb01427-357a-4f8b-9ab2-47789d75b054/SeverusWorkflow/4d5dda7f-2d54-47e8-aee8-f6f96fd802f2/call-severusTumor/attempt-2/glob-443a79c6c426960de8526eea118fdfe5/severus_all.vcf data/severus/grch38/COLO829.vcf
+    #gsutil -m cp gs://fc-secure-062e6633-7a72-4623-9394-491e0ce6c324/submissions/e9d77840-2603-40fd-94a5-d01575046496/SeverusWorkflow/884e8dc5-fdcf-403b-81a7-6e9d898a2101/call-severusTumor/attempt-4/glob-966d0305651d70bfbb44ea0eb6b76fc4/severus_all.vcf data/severus/grch38/COLO829_ONT.vcf
+    #gsutil -m cp gs://fc-secure-062e6633-7a72-4623-9394-491e0ce6c324/submissions/feb01427-357a-4f8b-9ab2-47789d75b054/SeverusWorkflow/7b3d881e-ad6a-4284-a6bc-f342ff8c4daf/call-severusTumor/attempt-4/glob-c54210335a4577a1db5ddcf420283162/severus_all.vcf data/severus/grch38/HCC1395.vcf
+
+    gsutil -m cp gs://fc-secure-062e6633-7a72-4623-9394-491e0ce6c324/submissions/e9d77840-2603-40fd-94a5-d01575046496/SeverusWorkflow/65049b5e-f2f3-47a9-abc9-c0e16be58759/call-severusTumor/glob-44bab286e11b18dfd5a120503d966eba/severus_all.vcf data/severus/grch38/HG002_ONT.vcf
+    gsutil -m cp gs://fc-secure-062e6633-7a72-4623-9394-491e0ce6c324/submissions/feb01427-357a-4f8b-9ab2-47789d75b054/SeverusWorkflow/4cbf4628-49ed-416f-a808-61f57d15ef10/call-severusTumor/attempt-4/glob-0aacef18f32e6d689d769b045b20774a/severus_all.vcf data/severus/grch38/HG002_PACBIO_REVIO.vcf
+
+    gsutil -m cp gs://fc-secure-062e6633-7a72-4623-9394-491e0ce6c324/submissions/222d23a0-8298-48b7-8481-9d7260350604/SeverusWorkflow/77e31fbf-cd42-45cd-a980-bd898a561db8/call-severusTumor/attempt-3/glob-44bab286e11b18dfd5a120503d966eba/severus_all.vcf data/severus/chm13/HG002_ONT.vcf
+    gsutil -m cp gs://fc-secure-062e6633-7a72-4623-9394-491e0ce6c324/submissions/222d23a0-8298-48b7-8481-9d7260350604/SeverusWorkflow/d1ab1b81-bd30-4867-9a91-8d80423f7651/call-severusTumor/glob-0aacef18f32e6d689d769b045b20774a/severus_all.vcf data/severus/chm13/HG002_PACBIO_REVIO.vcf
 
 }
 
@@ -106,8 +116,8 @@ add_reference() {
 
 main() {
     #clean_alignment_data
-    clean_sniffles
-    #clean_severus
+    #clean_sniffles
+    clean_severus
     #add_reference
 }
 

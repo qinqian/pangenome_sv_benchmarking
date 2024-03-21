@@ -35,21 +35,39 @@ benchmark() {
     for ((i=0; i<${#assem[@]}; i++)); do
         genome=${assem[$i]}
 	fa=${fasta[$i]}
-        for vcf in ../2.clean_processed_data/data/sniffles2/${genome}/HG002_ONT_sup.vcf.gz ../2.clean_processed_data/data/sniffles2/${genome}/HG002_PACBIO_REVIO.vcf.gz; do
-            #cat <(zcat $vcf | grep "^#") \
-            #    <(zcat $vcf | grep -vE "^#" | \
-            #      grep 'DUP\|INS\|DEL' | sed 's/DUP/INS/g' | sort -k1,1 -k2,2g) \
-            #    | bgzip -c > ${vcf/.vcf.gz/_indel.vcf.gz}
-            #tabix ${vcf/.vcf.gz/_indel.vcf.gz}
+        #for vcf in ../2.clean_processed_data/data/sniffles2/${genome}/HG002_ONT_sup.vcf.gz ../2.clean_processed_data/data/sniffles2/${genome}/HG002_PACBIO_REVIO.vcf.gz; do
+        #    #cat <(zcat $vcf | grep "^#") \
+        #    #    <(zcat $vcf | grep -vE "^#" | \
+        #    #      grep 'DUP\|INS\|DEL' | sed 's/DUP/INS/g' | sort -k1,1 -k2,2g) \
+        #    #    | bgzip -c > ${vcf/.vcf.gz/_indel.vcf.gz}
+        #    #tabix ${vcf/.vcf.gz/_indel.vcf.gz}
+        #
+        #    rm -r -f ${vcf/.vcf.gz/}_${genome}_truvari
+        ##    truvari bench --includebed giab/HG002_SVs_Tier1_v0.6.bed --passonly --dup-to-ins\
+        ##	          -r 1000 -p 0.00 -b giab/HG002_SVs_Tier1_v0.6.vcf.gz -c ${vcf/.vcf.gz/_indel.vcf.gz} -f $fa -o ${vcf/.vcf.gz/_indel}_truvari 
+        #    truvari bench --includebed ${conf_bed[$i]} --passonly --dup-to-ins\
+        #	          -r 1000 -p 0.00 -b ${conf_vcf[$i]} -c $vcf -f $fa -o ${vcf/.vcf.gz/}_${genome}_truvari  &
+        #done
+
+        for vcf in ../2.clean_processed_data/data/severus/${genome}/HG002_ONT.vcf ../2.clean_processed_data/data/severus/${genome}/HG002_PACBIO_REVIO.vcf; do
+            cat <(cat $vcf | grep "^#") \
+                <(cat $vcf | grep -vE "^#" | \
+                  grep 'DUP\|INS\|DEL' | sed 's/DUP/INS/g' | sort -k1,1 -k2,2g) \
+                | bgzip -c > ${vcf/.vcf/_indel.vcf.gz}
+            tabix ${vcf/.vcf/_indel.vcf.gz}
         
-            rm -r -f ${vcf/.vcf.gz/}_${genome}_truvari
-        #    truvari bench --includebed giab/HG002_SVs_Tier1_v0.6.bed --passonly --dup-to-ins\
-        #	          -r 1000 -p 0.00 -b giab/HG002_SVs_Tier1_v0.6.vcf.gz -c ${vcf/.vcf.gz/_indel.vcf.gz} -f $fa -o ${vcf/.vcf.gz/_indel}_truvari 
+            rm -r -f ${vcf/.vcf/_indel.vcf.gz}_${genome}_truvari
             truvari bench --includebed ${conf_bed[$i]} --passonly --dup-to-ins\
-        	          -r 1000 -p 0.00 -b ${conf_vcf[$i]} -c $vcf -f $fa -o ${vcf/.vcf.gz/}_${genome}_truvari  &
+        	          -r 1000 -p 0.00 -b ${conf_vcf[$i]} -c ${vcf/.vcf/_indel.vcf.gz} -f $fa -o ${vcf/.vcf/_indel.vcf.gz}_${genome}_truvari  &
         done
     done
 }
 
+clean_performance_table() { 
+  grep "precision" ../2.clean_processed_data/data/*/*/*truvari/summary.json
+  grep "f1" ../2.clean_processed_data/data/*/*/*truvari/summary.json
+}
+
 #download_giab
-benchmark
+#benchmark
+clean_performance_table
