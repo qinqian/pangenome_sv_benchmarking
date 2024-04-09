@@ -1,0 +1,143 @@
+import os
+import glob
+import sys
+import pandas as pd
+from snakemake.utils import validate
+
+configfile: "config.yaml"
+print(config)
+
+CELLLINE = ["HCC1395", "COLO829", "COLO829_ONT"]
+#CELLLINE = ["COLO829"]
+ASSEMBLY = ["chm13linear", "chm13graph", 
+            "grch37graph", "grch37linear",
+            "grch38graph", "grch38linear"]
+
+minimap2_ASSEMBLY = ["chm13", "grch37", "grch38"]
+
+vntr = {"chm13linear": "../2.clean_processed_data/chm13v2.0.trf.bed", "chm13graph": "../2.clean_processed_data/chm13v2.0.trf.bed",
+        "grch37graph": "../2.clean_processed_data/human_hs37d5.trf.bed", "grch37linear": "../2.clean_processed_data/human_hs37d5.trf.bed",
+        "grch38linear": "../2.clean_processed_data/human_GRCh38_no_alt_analysis_set.trf.bed",
+        "grch38graph": "../2.clean_processed_data/human_GRCh38_no_alt_analysis_set.trf.bed", 
+        "chm13": "../2.clean_processed_data/chm13v2.0.trf.bed",
+        "grch38": "../2.clean_processed_data/human_GRCh38_no_alt_analysis_set.trf.bed",
+        "grch37": "../2.clean_processed_data/human_hs37d5.trf.bed"}
+
+centromere = {"chm13linear": "../../phaseA_minigraph_largedel/chm13v2.cen-mask.bed",
+              "chm13graph": "../../phaseA_minigraph_largedel/chm13v2.cen-mask.bed",
+              "chm13": "../../phaseA_minigraph_largedel/chm13v2.cen-mask.bed",
+              "grch38linear": "../../phaseA_minigraph_largedel/grch38_cen.bed",
+              "grch38graph": "../../phaseA_minigraph_largedel/grch38_cen.bed",
+              "grch38": "../../phaseA_minigraph_largedel/grch38_cen.bed",
+              "grch37": "",
+              "grch37linear": "",
+              "grch37graph": ""
+              }
+
+truth = {"chm13linear": "output/truthset.colo829.out.chm13v2.crossmap.vcf.PB.bed",
+         "chm13graph": "output/truthset.colo829.out.chm13v2.crossmap.vcf.PB.bed",
+         "grch37graph": "output/truthset_somaticSVs_COLO829_hg19_sort.vcf.gz.PB.bed",
+         "grch37linear": "output/truthset_somaticSVs_COLO829_hg19_sort.vcf.gz.PB.bed",
+         "grch38linear": "output/truthset_somaticSVs_COLO829_hg38_sort.vcf.gz.PB.bed",
+         "grch38graph": "output/truthset_somaticSVs_COLO829_hg38_sort.vcf.gz.PB.bed"}
+
+all_outputs_harmonized = expand("{assembly}_harmonize/{cellline}_merged.bed", assembly=ASSEMBLY, cellline=CELLLINE)
+all_outputs_individual = expand("{assembly}_harmonize/{cellline}_individual.bed", assembly=ASSEMBLY, cellline=CELLLINE)
+all_outputs_vcf   = expand("{assembly}_harmonize/{cellline}_merged.vcf", assembly=ASSEMBLY, cellline=CELLLINE)
+all_outputs_filtered_vcf   = expand("{assembly}_harmonize/{cellline}_filtered.vcf", assembly=ASSEMBLY, cellline=CELLLINE)
+all_outputs_filtered   = expand("{assembly}_harmonize/{cellline}_filtered.bed", assembly=ASSEMBLY, cellline=CELLLINE)
+
+all_outputs_harmonized_minimap2 = expand("{assembly}_minimap2_harmonize/{cellline}_merged.bed", assembly=minimap2_ASSEMBLY, cellline=CELLLINE)
+
+print(all_outputs_harmonized)
+
+
+rule all:
+    input: 
+        all_outputs_harmonized, all_outputs_individual, all_outputs_filtered, all_outputs_harmonized_minimap2, all_outputs_filtered_vcf, all_outputs_vcf
+
+rule gaftools:
+    input:
+        alignment="../2.clean_processed_data/data/minigraph/{assembly}/{cellline}.gaf",
+        l1=config["l1"],
+        tr=lambda wildcards: vntr[wildcards.assembly],
+    params:
+        mapq=5,
+        indel_len=50,
+        support_read=2,
+        maplen=2000,
+        prefix=lambda wildcards, output: output[0][:-19],
+        centromere=lambda wildcards: f" -b {centromere[wildcards.assembly]} " if centromere[wildcards.assembly]!= "" else ""
+    output:
+        "{assembly}_harmonize/{cellline}_individual.bed",
+        "{assembly}_harmonize/{cellline}_merged.bed"
+    threads:
+        2
+    shell:
+        """
+        ls {input.alignment}
+        mkdir -p {wildcards.assembly}_harmonize
+        ../../phaseA_minigraph_largedel/k8-1.0/k8-x86_64-Linux ../../minigraph/misc/mgutils-es6.js getsv {params.centromere} {input.alignment} > {output[0]}
+        sort -k1,1 -k2,2n {output[0]} | ../../phaseA_minigraph_largedel/k8-1.0/k8-x86_64-Linux ../../minigraph/misc/mgutils-es6.js mergesv - > {output[1]}
+        """
+
+rule sv2vcf:
+    input:
+        bed="{assembly}_harmonize/{cellline}_merged.bed"
+    output:
+        "{assembly}_harmonize/{cellline}_merged.vcf"
+    threads:
+        2
+    shell:
+        """
+        ../../phaseA_minigraph_largedel/k8-1.0/k8-x86_64-Linux ../../minigraph/misc/mgutils-es6.js sv2vcf {input.bed} > {output[0]}
+        """
+
+
+rule filter_sv:
+    input:
+        "{assembly}_harmonize/{cellline}_merged.bed"
+    output:
+        "{assembly}_harmonize/{cellline}_filtered.bed"
+    shell:
+        """
+        grep -v "#" {input} | grep -E -v "^[<>]" > {output}
+        """
+
+rule filter_sv_vcf:
+    input:
+        "{assembly}_harmonize/{cellline}_filtered.bed"
+    output:
+        "{assembly}_harmonize/{cellline}_filtered.vcf"
+    shell:
+        """
+        ../../phaseA_minigraph_largedel/k8-1.0/k8-x86_64-Linux ../../minigraph/misc/mgutils-es6.js sv2vcf {input[0]} > {output[0]}
+        """
+ 
+
+rule gaftools_minimap2:
+    input:
+        alignment="../2.clean_processed_data/data/minimap2/{assembly}/{cellline}.paf",
+        l1=config["l1"],
+        tr=lambda wildcards: vntr[wildcards.assembly],
+    params:
+        mapq=5,
+        indel_len=50,
+        support_read=2,
+        maplen=2000,
+        prefix=lambda wildcards, output: output[0][:-19],
+        centromere=lambda wildcards: f" -b {centromere[wildcards.assembly]} " if centromere[wildcards.assembly]!= "" else ""
+    output:
+        "{assembly}_minimap2_harmonize/{cellline}_individual.bed",
+        "{assembly}_minimap2_harmonize/{cellline}_merged.bed"
+    log:
+        "{assembly}_minimap2_harmonize/{cellline}.logs"
+    threads:
+        2
+    shell:
+        """
+        ls {input.alignment}
+        mkdir -p {wildcards.assembly}_harmonize
+        ../../phaseA_minigraph_largedel/k8-1.0/k8-x86_64-Linux ../../minigraph/misc/mgutils-es6.js getsv {params.centromere} {input.alignment} > {output[0]}
+        sort -k1,1 -k2,2n {output[0]} | ../../phaseA_minigraph_largedel/k8-1.0/k8-x86_64-Linux ../../minigraph/misc/mgutils-es6.js mergesv - > {output[1]}
+        """
