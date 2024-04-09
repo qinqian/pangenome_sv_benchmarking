@@ -10,11 +10,13 @@ download_colo829_truthset() {
 
 clean_truthset() {
     #exclude only two insertions for hg19
-    grep -v "INS" $output/truthset_somaticSVs_COLO829_hg19.vcf | sed  "s/GENE=.*;.*;CLUSTER/GENE=.;CLUSTER/" | bcftools sort -O z -  > $output/truthset_somaticSVs_COLO829_hg19_sort.vcf.gz
+    #grep -v "INS" $output/truthset_somaticSVs_COLO829_hg19.vcf | sed  "s/GENE=.*;.*;CLUSTER/GENE=.;CLUSTER/" | bcftools sort -O z -  > $output/truthset_somaticSVs_COLO829_hg19_sort.vcf.gz
+    cat $output/truthset_somaticSVs_COLO829_hg19.vcf | sed  "s/GENE=.*;.*;CLUSTER/GENE=.;CLUSTER/" | bcftools sort -O z -  > $output/truthset_somaticSVs_COLO829_hg19_sort.vcf.gz
     tabix -p vcf $output/truthset_somaticSVs_COLO829_hg19_sort.vcf.gz
     python vcf2bed.py colo_truth $output/truthset_somaticSVs_COLO829_hg19_sort.vcf.gz 
 
-    grep -v "INS" $output/truthset_somaticSVs_COLO829_hg38.vcf | sed  "s/GENE=.*;.*;CLUSTER/GENE=.;CLUSTER/" | bcftools sort -O z -  > $output/truthset_somaticSVs_COLO829_hg38_sort.vcf.gz
+    #grep -v "INS" $output/truthset_somaticSVs_COLO829_hg38.vcf | sed  "s/GENE=.*;.*;CLUSTER/GENE=.;CLUSTER/" | bcftools sort -O z -  > $output/truthset_somaticSVs_COLO829_hg38_sort.vcf.gz
+    cat $output/truthset_somaticSVs_COLO829_hg38.vcf | sed  "s/GENE=.*;.*;CLUSTER/GENE=.;CLUSTER/" | bcftools sort -O z -  > $output/truthset_somaticSVs_COLO829_hg38_sort.vcf.gz
     tabix -p vcf $output/truthset_somaticSVs_COLO829_hg38_sort.vcf.gz
     python vcf2bed.py colo_truth $output/truthset_somaticSVs_COLO829_hg38_sort.vcf.gz 
 
@@ -52,8 +54,8 @@ picard_liftover() {
 }
 
 crossmap_liftover() {
-    CrossMap vcf $output/hg19-chm13v2.chain  $output/truthset_somaticSVs_COLO829_hg19_sort.vcf.gz  ../../reference/chm13v2.0.fa  $output/truthset.colo829.out.chm13v2.crossmap.vcf
-    python vcf2bed.py colo_truth $output/truthset.colo829.out.chm13v2.crossmap.vcf
+    CrossMap vcf --chromid l $output/hg19-chm13v2.chain  $output/truthset_somaticSVs_COLO829_hg19_sort.vcf.gz  ../../reference/chm13v2.0.fa  $output/truthset.colo829.out.chm13v2.crossmap.vcf
+    #python vcf2bed.py colo_truth $output/truthset.colo829.out.chm13v2.crossmap.vcf
 }
 
 clean_sniffles() {
@@ -61,7 +63,8 @@ clean_sniffles() {
 }
 
 clean_severus() {
-    grep -v "INS" truthset_somaticSVs_COLO829_hg19.vcf | sed  "s/GENE=.*;.*;CLUSTER/GENE=.;CLUSTER/" | bcftools sort -O z -  > truthset_somaticSVs_COLO829_hg19_sort.vcf.gz
+    #grep -v "INS" truthset_somaticSVs_COLO829_hg19.vcf | sed  "s/GENE=.*;.*;CLUSTER/GENE=.;CLUSTER/" | bcftools sort -O z -  > truthset_somaticSVs_COLO829_hg19_sort.vcf.gz
+    cat truthset_somaticSVs_COLO829_hg19.vcf | sed  "s/GENE=.*;.*;CLUSTER/GENE=.;CLUSTER/" | bcftools sort -O z -  > truthset_somaticSVs_COLO829_hg19_sort.vcf.gz
     tabix -p vcf truthset_somaticSVs_COLO829_hg19_sort.vcf.gz
 }
 
@@ -69,13 +72,13 @@ main() {
     #mkdir -p $output
     #download_colo829_truthset
     #get_liftover
-    #clean_truthset
     #picard_liftover
-    #crossmap_liftover
+    #clean_truthset
+    crossmap_liftover
     #snakemake --cores 16
-    for bed in */*harmonize*bed.gz; do
-        echo $bed
-    done
+    #for bed in */*harmonize*bed.gz; do
+    #    echo $bed
+    #done
 }
 
 main

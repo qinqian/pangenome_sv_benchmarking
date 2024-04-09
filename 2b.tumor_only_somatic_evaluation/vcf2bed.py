@@ -37,6 +37,9 @@ def parse_truthset(vcf, platform, liftover):
 
     for variant in VCF(vcf):
         variant_id = '_'.join(variant.ID.split('_')[0:2])
+        if variant.INFO.get('SVTYPE') in ['BND', 'INV', 'DUP']:
+            continue
+
         if liftover is not None:
             print(variant.CHROM, variant.start)
             if len(liftover[f"chr{variant.CHROM}"][variant.start]) == 0 and len(liftover[f"chr{variant.CHROM}"][variant.end]) == 0:
@@ -65,7 +68,7 @@ def parse_truthset(vcf, platform, liftover):
             # skip non-validated SVs
             continue
 
-        if platform in variant_dict[key][0][-2].split(','):
+        if platform == 'all' or platform in variant_dict[key][0][-2].split(','):
             if len(variant_dict[key]) > 1:
                 if int(variant_dict[key][1][2]) - int(variant_dict[key][0][1]) < 50:
                     continue
@@ -91,8 +94,9 @@ def main():
     print(args.liftover)
 
     if args.type == 'colo_truth':
-        parse_truthset(args.vcf, 'ONT', args.liftover)
-        parse_truthset(args.vcf, 'PB', args.liftover)
+        #parse_truthset(args.vcf, 'ONT', args.liftover)
+        #parse_truthset(args.vcf, 'PB', args.liftover)
+        parse_truthset(args.vcf, 'all', args.liftover)
 
 if __name__ == '__main__':
     main()
