@@ -35,6 +35,7 @@ truth_minda = {"chm13": "../2b.tumor_only_somatic_evaluation/output/truthset.col
                "grch38": "../2b.tumor_only_somatic_evaluation/output/truthset_somaticSVs_COLO829_hg38_chrprefix.vcf"}
 
 all_outputs_harmonized_minda = expand("{assembly}:{cellline}", assembly=minimap2_ASSEMBLY, cellline=CELLLINE)
+all_outputs_harmonized_truvari2 = expand("benchmark/truvari2_sniffles_{assembly}/{cellline}", assembly=minimap2_ASSEMBLY, cellline=CELLLINE)
 
 
 wildcard_constraints:
@@ -44,7 +45,7 @@ wildcard_constraints:
 
 rule all:
     input: 
-        all_outputs_harmonized_minda
+        all_outputs_harmonized_minda, all_outputs_harmonized_truvari2
 
 rule filter_vcf_blacklist:
     input:
@@ -99,20 +100,48 @@ rule minda:
        """
 
 rule truvari2:
+# refactor by rule inheritance later: https://snakemake.readthedocs.io/en/stable/snakefiles/rules.html
     input:
        our1=rules.filter_vcf_blacklist.output.tumor_pair_mgutil_linear_clean,
        our2=rules.filter_vcf_blacklist.output.tumor_pair_mgutil_graph_clean,
        severus=rules.filter_vcf_blacklist.output.severus_tumor_pair_clean,
-       #snf1=rules.filter_vcf_blacklist.output.sniffles_mosaic_clean,
        snf2=rules.filter_vcf_blacklist.output.sniffles_tumor_clean,
-       base=lambda wildcards: truth_minda[wildcards.assembly]
     output:
+       our1   =directory("benchmark/truvari2_mgutillinear{assembly}/{cellline}"),
+       our2   =directory("benchmark/truvari2_mgutilgraph{assembly}/{cellline}"),
+       severus=directory("benchmark/truvari2_severus_{assembly}/{cellline}"),
+       snf2   =directory("benchmark/truvari2_sniffles_{assembly}/{cellline}")
     shell:
-	"""
-        cat <(cat $vcf | grep "^#") \
-            <(cat $vcf | grep -vE "^#" | \
-              grep 'DUP\|INS\|DEL' | sed 's/DUP/INS/g' | sort -k1,1 -k2,2g) \
-            | bgzip -c > ${vcf/.vcf/_indel.vcf.gz}
-        tabix -p vcf ${vcf/.vcf/_indel.vcf.gz}
-        #truvari bench --passonly --dup-to-ins -r 1000 -p 0.00 -b ../2b.tumor_only_somatic_evaluation/output/truthset.colo829.out.chm13v2.crossmap_clean_sort.vcf.gz -c ${vcf/.vcf/_indel.vcf.gz} -o mgutils_test_truvari_clean
-        """
+       """
+       mkdir -p benchmark/truvari2_mgutillinear{wildcards.assembly}
+       mkdir -p benchmark/truvari2_mgutilgraph{wildcards.assembly}
+       mkdir -p benchmark/truvari2_severus_{wildcards.assembly}
+       mkdir -p benchmark/truvari2_sniffles_{wildcards.assembly}
+       cat <(cat {input.our1} | grep "^#") \
+           <(cat {input.our1} | grep -vE "^#" | \
+             grep 'DUP\|INS\|DEL' | sed 's/DUP/INS/g' | sort -k1,1 -k2,2g) \
+           | bgzip -c > {output.our1}.gz
+       tabix -p vcf {output.our1}.gz
+       truvari bench --passonly --dup-to-ins -r 1000 -p 0.00 -b ../2b.tumor_only_somatic_evaluation/output/truthset.colo829.out.chm13v2.crossmap_clean_sort.vcf.gz -c {output.our1}.gz -o {output.our1}
+
+       cat <(cat {input.our2} | grep "^#") \
+           <(cat {input.our2} | grep -vE "^#" | \
+             grep 'DUP\|INS\|DEL' | sed 's/DUP/INS/g' | sort -k1,1 -k2,2g) \
+           | bgzip -c > {output.our2}.gz
+       tabix -p vcf {output.our2}.gz
+       truvari bench --passonly --dup-to-ins -r 1000 -p 0.00 -b ../2b.tumor_only_somatic_evaluation/output/truthset.colo829.out.chm13v2.crossmap_clean_sort.vcf.gz -c {output.our2}.gz -o {output.our2}
+
+       cat <(cat {input.severus} | grep "^#") \
+           <(cat {input.severus} | grep -vE "^#" | \
+             grep 'DUP\|INS\|DEL' | sed 's/DUP/INS/g' | sort -k1,1 -k2,2g) \
+           | bgzip -c > {output.severus}.gz
+       tabix -p vcf {output.severus}.gz
+       truvari bench --passonly --dup-to-ins -r 1000 -p 0.00 -b ../2b.tumor_only_somatic_evaluation/output/truthset.colo829.out.chm13v2.crossmap_clean_sort.vcf.gz -c {output.severus}.gz -o {output.severus}
+
+       cat <(cat {input.snf2} | grep "^#") \
+           <(cat {input.snf2} | grep -vE "^#" | \
+             grep 'DUP\|INS\|DEL' | sed 's/DUP/INS/g' | sort -k1,1 -k2,2g) \
+           | bgzip -c > {output.snf2}.gz
+       tabix -p vcf {output.snf2}.gz
+       truvari bench --passonly --dup-to-ins -r 1000 -p 0.00 -b ../2b.tumor_only_somatic_evaluation/output/truthset.colo829.out.chm13v2.crossmap_clean_sort.vcf.gz -c {output.snf2}.gz -o {output.snf2}
+       """
