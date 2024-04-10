@@ -1,6 +1,7 @@
 from cyvcf2 import VCF
 import os
 import argparse
+import re
 from liftover import get_lifter
 from liftover import ChainFile
 
@@ -12,7 +13,23 @@ def get_liftover(liftover):
         return ChainFile(liftover, one_based=True)
 
 
-def parse_truthset(vcf, platform, liftover):
+def chr_prefix_truthset(vcf, platform, liftover=None):
+    output_bed = open(f"{vcf}_prefix.vcf", "w")
+    with open(vcf) as vcf_handler:
+        for line in vcf_handler:
+            line = line.strip()
+            if liftover is None:
+                if re.search(r"ID\=[XYMT0-9]+,", line):
+                    line = re.sub(r"ID=([XYMT\d]+),", "ID=chr\g<1>,", line)
+                # example: ]X:34041661]C
+                if re.search(r"[XYMT0-9]+:", line):
+                    line = re.sub(r"([XYMT0-9]+):", "chr\g<1>:", line)
+                if "#" not in line[0] and ('chr' not in line[0]):
+                    line = "chr" + line
+                print(line)
+
+
+def parse_truthset(vcf, platform, liftover, format='bed'):
     """
     Parse a truth set from a VCF file.
 
@@ -29,17 +46,16 @@ def parse_truthset(vcf, platform, liftover):
     ```
     """
     variant_dict = {}
+
     if liftover is None:
-        output_bed = open(f"{vcf}.{platform}.bed", "w")
+        output_bed = open(f"{vcf}.{platform}.{format}", "w")
     else:
-        output_bed = open(f"{vcf}.{platform}.{os.path.basename(liftover)}.bed", "w")
+        output_bed = open(f"{vcf}.{platform}.{os.path.basename(liftover)}.{format}", "w")
+
     liftover = get_liftover(liftover)
 
     for variant in VCF(vcf):
         variant_id = '_'.join(variant.ID.split('_')[0:2])
-        #if variant.INFO.get('SVTYPE') in ['BND', 'INV', 'DUP']:
-        #    continue
-
         if liftover is not None:
             print(variant.CHROM, variant.start)
             if len(liftover[f"chr{variant.CHROM}"][variant.start]) == 0 and len(liftover[f"chr{variant.CHROM}"][variant.end]) == 0:
@@ -80,24 +96,22 @@ def parse_truthset(vcf, platform, liftover):
             output_bed.write(f"{output_str}\n")
 
 
-def parse_gaftools(merged_bed):
-    return
-
-
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("-l", "--liftover", dest="liftover", help="chain file for liftover", metavar="<LIFTOVER>")
-    parser.add_argument("type", metavar="<input_category>", choices=['colo_truth', 'sniffles2', 'severus', 'wave'])
+    parser.add_argument("type", metavar="<input_category>", choices=['chr', 'colo_truth', 'sniffles2', 'severus', 'wave'])
     parser.add_argument("vcf", metavar="<input_vcf>")
 
     args = parser.parse_args()
-    print(args.liftover)
+
+    if args.type == 'chr':
+        chr_prefix_truthset(args.vcf, 'all', args.liftover)
 
     if args.type == 'colo_truth':
         #parse_truthset(args.vcf, 'ONT', args.liftover)
         #parse_truthset(args.vcf, 'PB', args.liftover)
         parse_truthset(args.vcf, 'all', args.liftover)
 
+
 if __name__ == '__main__':
     main()
-

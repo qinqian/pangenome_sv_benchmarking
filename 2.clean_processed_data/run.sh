@@ -44,7 +44,7 @@ clean_alignment_data() {
     mkdir -p data/minigraph/grch38linear
     mkdir -p data/minimap2/grch38
 
-    gsutil -m cp gs://fc-secure-062e6633-7a72-4623-9394-491e0ce6c324/submissions/d6f44772-38d8-4a28-95b4-851472c1662f/LineargenomeAlignment/6fcd2814-a615-42df-b465-83300b6a1c71/call-minimapTask/attempt-2/HG002_PACBIO_REVIO.paf data/minimap2/grch38
+    #gsutil -m cp gs://fc-secure-062e6633-7a72-4623-9394-491e0ce6c324/submissions/d6f44772-38d8-4a28-95b4-851472c1662f/LineargenomeAlignment/6fcd2814-a615-42df-b465-83300b6a1c71/call-minimapTask/attempt-2/HG002_PACBIO_REVIO.paf data/minimap2/grch38
 
     #mv ../../phaseA3_L1_TSD_polyA_SVA/minigraph_grch38_graph/*gaf data/minigraph/grch38graph
     #gsutil -m cp gs://fc-secure-062e6633-7a72-4623-9394-491e0ce6c324/submissions/0af12b88-d354-4448-81aa-a49078569d59/PangenomeAlignment/\*/call-minigraphTask/\*.gaf data/minigraph/grch38graph
@@ -108,13 +108,16 @@ clean_sniffles() {
     mkdir -p data/sniffles2/grch37
     mkdir -p data/sniffles2/grch38
     mkdir -p data/sniffles2/chm13
+    mkdir -p data/sniffles2/chm13_mosaic
+
+    gsutil cp gs://fc-secure-062e6633-7a72-4623-9394-491e0ce6c324/submissions/46e69bb0-a679-4b6f-8523-4433b98395d2/SNFWorkflow/fe2b15fd-ef69-4486-a83c-2b7f9846d339/call-SNFTask/attempt-2/COLO829.vcf.gz gs://fc-secure-062e6633-7a72-4623-9394-491e0ce6c324/submissions/46e69bb0-a679-4b6f-8523-4433b98395d2/SNFWorkflow/fe2b15fd-ef69-4486-a83c-2b7f9846d339/call-SNFTask/attempt-2/COLO829.vcf.gz.tbi data/sniffles2/chm13_mosaic
+    gsutil cp gs://fc-secure-062e6633-7a72-4623-9394-491e0ce6c324/submissions/46e69bb0-a679-4b6f-8523-4433b98395d2/SNFWorkflow/cf5b8c7b-4c4f-4998-bb2d-071ceb13e063/call-SNFTask/HCC1395.vcf.gz gs://fc-secure-062e6633-7a72-4623-9394-491e0ce6c324/submissions/46e69bb0-a679-4b6f-8523-4433b98395d2/SNFWorkflow/cf5b8c7b-4c4f-4998-bb2d-071ceb13e063/call-SNFTask/HCC1395.vcf.gz.tbi data/sniffles2/chm13_mosaic
 
     #tumor only mode
     #for vcf in gs://fc-secure-062e6633-7a72-4623-9394-491e0ce6c324/submissions/3a88f5a3-929f-439b-a5eb-2e43e3135e0d/SNFWorkflow/70ab025d-86cb-45b6-82d5-249a753f9136/call-SNFTask/COLO829.vcf.gz\* gs://fc-secure-062e6633-7a72-4623-9394-491e0ce6c324/submissions/3a88f5a3-929f-439b-a5eb-2e43e3135e0d/SNFWorkflow/8b548aea-be9b-40ea-a18d-eed14d415c1e/call-SNFTask/COLO829_ONT.vcf.gz\* gs://fc-secure-062e6633-7a72-4623-9394-491e0ce6c324/submissions/3a88f5a3-929f-439b-a5eb-2e43e3135e0d/SNFWorkflow/6ae133a0-5f03-46a4-b21f-432f70ee0eb7/call-SNFTask/HCC1395.vcf.gz\*; do
     #    gsutil -m cp $vcf data/sniffles2/grch37
     #done
 
-    ##hg002
     #for vcf in gs://fc-secure-062e6633-7a72-4623-9394-491e0ce6c324/submissions/3a88f5a3-929f-439b-a5eb-2e43e3135e0d/SNFWorkflow/8039e150-df3b-4391-9267-d778800a150d/call-SNFTask/attempt-2/HG002_ONT_sup.vcf.gz gs://fc-secure-062e6633-7a72-4623-9394-491e0ce6c324/submissions/3a88f5a3-929f-439b-a5eb-2e43e3135e0d/SNFWorkflow/8039e150-df3b-4391-9267-d778800a150d/call-SNFTask/attempt-2/HG002_ONT_sup.vcf.gz.tbi gs://fc-secure-062e6633-7a72-4623-9394-491e0ce6c324/submissions/3a88f5a3-929f-439b-a5eb-2e43e3135e0d/SNFWorkflow/e1a2ad0d-7e13-4f4e-b297-fb9adebe61f6/call-SNFTask/HG002_PACBIO_REVIO.vcf.gz.tbi gs://fc-secure-062e6633-7a72-4623-9394-491e0ce6c324/submissions/3a88f5a3-929f-439b-a5eb-2e43e3135e0d/SNFWorkflow/e1a2ad0d-7e13-4f4e-b297-fb9adebe61f6/call-SNFTask/HG002_PACBIO_REVIO.vcf.gz; do
     #    gsutil -m cp $vcf data/sniffles2/grch37
     #done
@@ -123,15 +126,13 @@ clean_sniffles() {
     #    gsutil -m cp $vcf data/sniffles2/grch38
     #done
 
-    #hg002
     #for vcf in gs://fc-secure-062e6633-7a72-4623-9394-491e0ce6c324/submissions/4ad27225-2824-47b5-a2a6-899185b3c298/SNFWorkflow/2347cd57-0ddc-4b93-859f-87f045d505f6/call-SNFTask/HG002_ONT_sup.vcf.gz.tbi gs://fc-secure-062e6633-7a72-4623-9394-491e0ce6c324/submissions/4ad27225-2824-47b5-a2a6-899185b3c298/SNFWorkflow/2347cd57-0ddc-4b93-859f-87f045d505f6/call-SNFTask/HG002_ONT_sup.vcf.gz gs://fc-secure-062e6633-7a72-4623-9394-491e0ce6c324/submissions/27981bb8-033a-456f-96c0-133c5a32f5dc/SNFWorkflow/9e6bac59-88f0-4ca4-a5ce-793603ede424/call-SNFTask/HG002_PACBIO_REVIO.vcf.gz.tbi gs://fc-secure-062e6633-7a72-4623-9394-491e0ce6c324/submissions/27981bb8-033a-456f-96c0-133c5a32f5dc/SNFWorkflow/9e6bac59-88f0-4ca4-a5ce-793603ede424/call-SNFTask/HG002_PACBIO_REVIO.vcf.gz; do
     #    gsutil -m cp $vcf data/sniffles2/grch38
     #done
 
-    #hg002
-    for vcf in gs://fc-secure-062e6633-7a72-4623-9394-491e0ce6c324/submissions/e64ded27-805b-443a-84db-1541c99c1dcf/SNFWorkflow/36eaf157-ab9c-4c4d-a977-cc0690297188/call-SNFTask/COLO829.vcf.gz gs://fc-secure-062e6633-7a72-4623-9394-491e0ce6c324/submissions/e64ded27-805b-443a-84db-1541c99c1dcf/SNFWorkflow/36eaf157-ab9c-4c4d-a977-cc0690297188/call-SNFTask/COLO829.vcf.gz.tbi gs://fc-secure-062e6633-7a72-4623-9394-491e0ce6c324/submissions/e64ded27-805b-443a-84db-1541c99c1dcf/SNFWorkflow/6c876fc0-6971-4347-b6ca-874685f64f9f/call-SNFTask/COLO829_ONT.vcf.gz gs://fc-secure-062e6633-7a72-4623-9394-491e0ce6c324/submissions/e64ded27-805b-443a-84db-1541c99c1dcf/SNFWorkflow/6c876fc0-6971-4347-b6ca-874685f64f9f/call-SNFTask/COLO829_ONT.vcf.gz.tbi gs://fc-secure-062e6633-7a72-4623-9394-491e0ce6c324/submissions/e64ded27-805b-443a-84db-1541c99c1dcf/SNFWorkflow/c6513cda-9366-4f0b-95e5-cc65af4655cb/call-SNFTask/attempt-2/HCC1395.vcf.gz gs://fc-secure-062e6633-7a72-4623-9394-491e0ce6c324/submissions/e64ded27-805b-443a-84db-1541c99c1dcf/SNFWorkflow/c6513cda-9366-4f0b-95e5-cc65af4655cb/call-SNFTask/attempt-2/HCC1395.vcf.gz.tbi; do
-	   gsutil -m cp $vcf data/sniffles2/chm13
-    done
+    #for vcf in gs://fc-secure-062e6633-7a72-4623-9394-491e0ce6c324/submissions/e64ded27-805b-443a-84db-1541c99c1dcf/SNFWorkflow/36eaf157-ab9c-4c4d-a977-cc0690297188/call-SNFTask/COLO829.vcf.gz gs://fc-secure-062e6633-7a72-4623-9394-491e0ce6c324/submissions/e64ded27-805b-443a-84db-1541c99c1dcf/SNFWorkflow/36eaf157-ab9c-4c4d-a977-cc0690297188/call-SNFTask/COLO829.vcf.gz.tbi gs://fc-secure-062e6633-7a72-4623-9394-491e0ce6c324/submissions/e64ded27-805b-443a-84db-1541c99c1dcf/SNFWorkflow/6c876fc0-6971-4347-b6ca-874685f64f9f/call-SNFTask/COLO829_ONT.vcf.gz gs://fc-secure-062e6633-7a72-4623-9394-491e0ce6c324/submissions/e64ded27-805b-443a-84db-1541c99c1dcf/SNFWorkflow/6c876fc0-6971-4347-b6ca-874685f64f9f/call-SNFTask/COLO829_ONT.vcf.gz.tbi gs://fc-secure-062e6633-7a72-4623-9394-491e0ce6c324/submissions/e64ded27-805b-443a-84db-1541c99c1dcf/SNFWorkflow/c6513cda-9366-4f0b-95e5-cc65af4655cb/call-SNFTask/attempt-2/HCC1395.vcf.gz gs://fc-secure-062e6633-7a72-4623-9394-491e0ce6c324/submissions/e64ded27-805b-443a-84db-1541c99c1dcf/SNFWorkflow/c6513cda-9366-4f0b-95e5-cc65af4655cb/call-SNFTask/attempt-2/HCC1395.vcf.gz.tbi; do
+    #       gsutil -m cp $vcf data/sniffles2/chm13
+    #done
 
     #for vcf in gs://fc-secure-062e6633-7a72-4623-9394-491e0ce6c324/submissions/e64ded27-805b-443a-84db-1541c99c1dcf/SNFWorkflow/5432c093-83d9-443b-b91d-ddfebf76fdd7/call-SNFTask/HG002_ONT_sup.vcf.gz gs://fc-secure-062e6633-7a72-4623-9394-491e0ce6c324/submissions/e64ded27-805b-443a-84db-1541c99c1dcf/SNFWorkflow/5432c093-83d9-443b-b91d-ddfebf76fdd7/call-SNFTask/HG002_ONT_sup.vcf.gz.tbi gs://fc-secure-062e6633-7a72-4623-9394-491e0ce6c324/submissions/e64ded27-805b-443a-84db-1541c99c1dcf/SNFWorkflow/e62925ea-3b69-499f-8401-ee3c16e5f569/call-SNFTask/HG002_PACBIO_REVIO.vcf.gz gs://fc-secure-062e6633-7a72-4623-9394-491e0ce6c324/submissions/e64ded27-805b-443a-84db-1541c99c1dcf/SNFWorkflow/e62925ea-3b69-499f-8401-ee3c16e5f569/call-SNFTask/HG002_PACBIO_REVIO.vcf.gz.tbi; do
     #    gsutil -m cp $vcf data/sniffles2/chm13
@@ -187,10 +188,10 @@ add_reference() {
 }
 
 main() {
-    clean_alignment_data
+    #clean_alignment_data
 
     #clean_severus
-    #clean_sniffles
+    clean_sniffles
     #add_reference
 }
 
