@@ -126,7 +126,9 @@ rule reformat_filter_sv_vcf:
     shell:
         """
         cat {input} | gaftools vcf - | awk '$1 ~ /^#/ {{print $0;next}} {{print $0 | "sort -k1,1 -k2,2n"}}' > {output.format_vcf}
+
         bgzip -c {output.format_vcf} > {output.format_vcf_gz}
+
         tabix -p vcf {output.format_vcf_gz}
         """
 

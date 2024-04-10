@@ -1,0 +1,118 @@
+import os
+import glob
+import sys
+import pandas as pd
+from snakemake.utils import validate
+
+configfile: "config.yaml"
+
+CELLLINE = ["COLO829", "COLO829_ONT"]
+ASSEMBLY = ["chm13linear", "chm13graph", 
+            "grch37graph", "grch37linear",
+            "grch38graph", "grch38linear"]
+minimap2_ASSEMBLY = ["chm13", "grch37", "grch38"]
+
+vntr = {"chm13linear": "../2.clean_processed_data/chm13v2.0.trf.bed", "chm13graph": "../2.clean_processed_data/chm13v2.0.trf.bed",
+        "grch37graph": "../2.clean_processed_data/human_hs37d5.trf.bed", "grch37linear": "../2.clean_processed_data/human_hs37d5.trf.bed",
+        "grch38linear": "../2.clean_processed_data/human_GRCh38_no_alt_analysis_set.trf.bed",
+        "grch38graph": "../2.clean_processed_data/human_GRCh38_no_alt_analysis_set.trf.bed", 
+        "chm13": "../2.clean_processed_data/chm13v2.0.trf.bed",
+        "grch38": "../2.clean_processed_data/human_GRCh38_no_alt_analysis_set.trf.bed",
+        "grch37": "../2.clean_processed_data/human_hs37d5.trf.bed"}
+
+centromere = {"chm13linear": "../../phaseA_minigraph_largedel/chm13v2.cen-mask.bed",
+              "chm13graph": "../../phaseA_minigraph_largedel/chm13v2.cen-mask.bed",
+              "chm13": "../../phaseA_minigraph_largedel/chm13v2.cen-mask.bed",
+              "grch38linear": "../../phaseA_minigraph_largedel/grch38_cen.bed",
+              "grch38graph": "../../phaseA_minigraph_largedel/grch38_cen.bed",
+              "grch38": "../../phaseA_minigraph_largedel/grch38_cen.bed",
+              "grch37": ".",
+              "grch37linear": ".",
+              "grch37graph": "."}
+
+truth_minda = {"chm13": "../2b.tumor_only_somatic_evaluation/output/truthset.colo829.out.chm13v2.crossmap_clean.vcf",
+               "grch37": "../2b.tumor_only_somatic_evaluation/output/truthset_somaticSVs_COLO829_hg19.vcf",
+               "grch38": "../2b.tumor_only_somatic_evaluation/output/truthset_somaticSVs_COLO829_hg38_chrprefix.vcf"}
+
+all_outputs_harmonized_minda = expand("{assembly}:{cellline}", assembly=minimap2_ASSEMBLY, cellline=CELLLINE)
+
+
+wildcard_constraints:
+    assembly  = "[a-zA-Z0-9]+",
+    cellline = "[a-zA-Z0-9_]+",
+    #mate   = "0|1",
+
+rule all:
+    input: 
+        all_outputs_harmonized_minda
+
+rule filter_vcf_blacklist:
+    input:
+        tumor_pair_mgutil_linear = "{assembly}linear_harmonize/{cellline}_filtered_format.vcf",
+        tumor_pair_mgutil_graph = "{assembly}graph_harmonize/{cellline}_filtered_format.vcf",
+        severus_tumor_pair = "../2.clean_processed_data/data/severus/{assembly}_pair/{cellline}_pair.vcf",
+        sniffles_tumor = "../2.clean_processed_data/data/sniffles2/{assembly}/{cellline}.vcf.gz",
+    params:
+        slop=500000,
+        centromere=lambda wildcards: f"{centromere[wildcards.assembly]}" if centromere[wildcards.assembly]!= "" else "not_exist",
+        tr=lambda wildcards: vntr[wildcards.assembly]
+    output:
+        tumor_pair_mgutil_linear_clean = "{assembly}linear_harmonize/{cellline}_filtered_format_clean.vcf",
+        tumor_pair_mgutil_graph_clean = "{assembly}graph_harmonize/{cellline}_filtered_format_clean.vcf",
+        severus_tumor_pair_clean = "../2.clean_processed_data/data/severus/{assembly}_pair/{cellline}_pair_clean.vcf",
+        sniffles_tumor_clean = "../2.clean_processed_data/data/sniffles2/{assembly}/{cellline}_clean.vcf",
+    message:
+        "running gaftools sv"
+    log:
+        "{assembly}_harmonize/{cellline}.logs"
+    threads:
+        1
+    shell:
+        """
+        mkdir -p {wildcards.assembly}_benchmark
+        if [ -f {params.centromere} ]; then
+            bedtools slop -b {params.slop} -g {wildcards.assembly}.sizes -i {params.centromere} | bedtools intersect -v -header -wa -a {input.tumor_pair_mgutil_graph} -b - > {output.tumor_pair_mgutil_graph_clean}
+            bedtools slop -b {params.slop} -g {wildcards.assembly}.sizes -i {params.centromere} | bedtools intersect -v -header -wa -a {input.tumor_pair_mgutil_linear} -b - > {output.tumor_pair_mgutil_linear_clean}
+            bedtools slop -b {params.slop} -g {wildcards.assembly}.sizes -i {params.centromere} | bedtools intersect -v -header -wa -a {input.severus_tumor_pair} -b - > {output.severus_tumor_pair_clean}
+            bedtools slop -b {params.slop} -g {wildcards.assembly}.sizes -i {params.centromere} | bedtools intersect -v -header -wa -a <(zcat {input.sniffles_tumor}) -b - > {output.sniffles_tumor_clean}
+        else
+            cp {input.tumor_pair_mgutil_graph} {output.tumor_pair_mgutil_graph_clean}
+            cp {input.tumor_pair_mgutil_linear} {output.tumor_pair_mgutil_linear_clean}
+            zcat {input.sniffles_tumor} > {output.sniffles_tumor_clean}
+            cp {input.severus_tumor_pair} {output.severus_tumor_pair_clean}
+        fi
+        """
+
+rule minda:
+    input: 
+       our1=rules.filter_vcf_blacklist.output.tumor_pair_mgutil_linear_clean,
+       our2=rules.filter_vcf_blacklist.output.tumor_pair_mgutil_graph_clean,
+       severus=rules.filter_vcf_blacklist.output.severus_tumor_pair_clean,
+       #snf1=rules.filter_vcf_blacklist.output.sniffles_mosaic_clean,
+       snf2=rules.filter_vcf_blacklist.output.sniffles_tumor_clean,
+       base=lambda wildcards: truth_minda[wildcards.assembly]
+    output:
+       directory("{assembly}:{cellline}")
+    shell:
+       """
+       ../minda/minda.py truthset --min_size 50 --filter PASS --base {input.base} --vcfs {input.our1} {input.our2} {input.severus} {input.snf2} --out_dir {output}
+       """
+
+rule truvari2:
+    input:
+       our1=rules.filter_vcf_blacklist.output.tumor_pair_mgutil_linear_clean,
+       our2=rules.filter_vcf_blacklist.output.tumor_pair_mgutil_graph_clean,
+       severus=rules.filter_vcf_blacklist.output.severus_tumor_pair_clean,
+       #snf1=rules.filter_vcf_blacklist.output.sniffles_mosaic_clean,
+       snf2=rules.filter_vcf_blacklist.output.sniffles_tumor_clean,
+       base=lambda wildcards: truth_minda[wildcards.assembly]
+    output:
+    shell:
+	"""
+        cat <(cat $vcf | grep "^#") \
+            <(cat $vcf | grep -vE "^#" | \
+              grep 'DUP\|INS\|DEL' | sed 's/DUP/INS/g' | sort -k1,1 -k2,2g) \
+            | bgzip -c > ${vcf/.vcf/_indel.vcf.gz}
+        tabix -p vcf ${vcf/.vcf/_indel.vcf.gz}
+        #truvari bench --passonly --dup-to-ins -r 1000 -p 0.00 -b ../2b.tumor_only_somatic_evaluation/output/truthset.colo829.out.chm13v2.crossmap_clean_sort.vcf.gz -c ${vcf/.vcf/_indel.vcf.gz} -o mgutils_test_truvari_clean
+        """
