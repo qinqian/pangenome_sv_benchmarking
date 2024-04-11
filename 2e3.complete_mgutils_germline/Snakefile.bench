@@ -59,7 +59,9 @@ rule all:
         expand("{assembly}:truvari2rawlinear:{cellline}", assembly=minimap2_ASSEMBLY, cellline=CELLLINE),
         expand("{assembly}:truvari2rawgraph:{cellline}", assembly=minimap2_ASSEMBLY, cellline=CELLLINE),
         expand("{assembly}:truvari2rawseverus:{cellline}", assembly=minimap2_ASSEMBLY, cellline=CELLLINE),
-        expand("{assembly}:truvari2rawsniffles2:{cellline}", assembly=minimap2_ASSEMBLY, cellline=CELLLINE)
+        expand("{assembly}:truvari2rawsniffles2:{cellline}", assembly=minimap2_ASSEMBLY, cellline=CELLLINE),
+        "aggregated/minda_tumornormalpair_overall.tsv",
+        "aggregated/minda_tumornormalpair_truepos.tsv"
 
 
 rule filter_vcf_blacklist:
@@ -198,6 +200,15 @@ use rule truvari2 as truvari2_raw_sniffles with:
        bed=lambda wildcards: truth_minda_bed[wildcards.assembly] 
     output:
        directory("{assembly}:truvari2rawsniffles2:{cellline}")
+
+rule aggregate_minda:
+    input:
+       all_outputs_harmonized_minda
+    output:
+       "aggregated/minda_tumornormalpair_overall.tsv",
+       "aggregated/minda_tumornormalpair_truepos.tsv"
+    script:
+       "../2e2.complete_mgutils_tumor_normal_pair/scripts/aggregate_minda.py"
 
 ## refactor by rule inheritance later: https://snakemake.readthedocs.io/en/stable/snakefiles/rules.html
 #       our2=rules.filter_vcf_blacklist.output.tumor_pair_mgutil_graph_clean,
