@@ -62,14 +62,14 @@ reformat_mgutil_benchmark() {
 }
 
 main() {
-    #snakemake --cores 16
+    #snakemake --cores 16 
     #clean_sniffles2
     #test_benchmark
     #reformat_mgutil_benchmark
 
     #../minda/minda.py truthset --min_size 50 --filter PASS --base ../2b.tumor_only_somatic_evaluation/output/truthset.colo829.out.chm13v2.crossmap_clean.vcf --vcfs chm13graph_harmonize/COLO829_filtered_format.vcf ../2.clean_processed_data/data/severus/chm13_pair/COLO829_ONT_pair.vcf ../2.clean_processed_data/data/sniffles2/chm13_mosaic/COLO829.vcf COLO829_sniffles_mosaic_clean.vcf ../2.clean_processed_data/data/sniffles2/chm13/COLO829.vcf --out_dir mgutils_test_minda_clean_colo829_chm13
 
-    snakemake -s Snakefile.bench --cores 16 --rerun-incomplete
+    snakemake -s Snakefile.bench --cores 4 --rerun-incomplete
 }
 
 main
