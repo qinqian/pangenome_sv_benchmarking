@@ -6,10 +6,12 @@ from snakemake.utils import validate
 
 configfile: "config.yaml"
 
-CELLLINE = ["COLO829", "COLO829_ONT"]
+CELLLINE = ["HG002_PACBIO_REVIO", "HG002_ONT_sup"]
 ASSEMBLY = ["chm13linear", "chm13graph", 
             "grch37graph", "grch37linear",
             "grch38graph", "grch38linear"]
+
+#CELLLINE = ["HG002_ONT_sup"]
 minimap2_ASSEMBLY = ["chm13", "grch37", "grch38"]
 
 vntr = {"chm13linear": "../2.clean_processed_data/chm13v2.0.trf.bed", "chm13graph": "../2.clean_processed_data/chm13v2.0.trf.bed",
@@ -30,12 +32,16 @@ centromere = {"chm13linear": "../../phaseA_minigraph_largedel/chm13v2.cen-mask.b
               "grch37linear": ".",
               "grch37graph": "."}
 
-truth_minda = {"chm13": "../2b.tumor_only_somatic_evaluation/output/truthset.colo829.out.chm13v2.crossmap_clean.vcf",
-               "grch37": "../2b.tumor_only_somatic_evaluation/output/truthset_somaticSVs_COLO829_hg19.vcf",
-               "grch38": "../2b.tumor_only_somatic_evaluation/output/truthset_somaticSVs_COLO829_hg38_chrprefix.vcf"}
+truth_minda = {"chm13": "../2a.germline_evaluation/giab/CHM13v2.0_HG2-T2TQ100-V1.0.vcf.gz",
+               "grch37": "../2a.germline_evaluation/giab/HG002_SVs_Tier1_v0.6.vcf.gz",
+               "grch38": "../2a.germline_evaluation/giab/GRCh38_HG2-T2TQ100-V1.0.vcf.gz"}
+
+truth_minda_bed = {"chm13": "../2a.germline_evaluation/giab/CHM13v2.0_HG2-T2TQ100-V1.0_stvar.benchmark.bed",
+                   "grch37": "../2a.germline_evaluation/giab/HG002_SVs_Tier1_v0.6.bed",
+                   "grch38": "../2a.germline_evaluation/giab/GRCh38_HG2-T2TQ100-V1.0_stvar.benchmark.bed"}
 
 all_outputs_harmonized_minda = expand("{assembly}:{cellline}", assembly=minimap2_ASSEMBLY, cellline=CELLLINE)
-#all_outputs_harmonized_truvari2 = expand("benchmark/truvari2_sniffles_{assembly}/{cellline}", assembly=minimap2_ASSEMBLY, cellline=CELLLINE)
+all_outputs_harmonized_minda_raw = expand("{assembly}:{cellline}_raw", assembly=minimap2_ASSEMBLY, cellline=CELLLINE)
 
 
 wildcard_constraints:
@@ -43,16 +49,24 @@ wildcard_constraints:
     cellline = "[a-zA-Z0-9_]+",
     #mate   = "0|1",
 
+
 rule all:
     input: 
-        all_outputs_harmonized_minda, #, all_outputs_harmonized_truvari2
-        "aggregated/minda_tumornormalpair.tsv"
+        all_outputs_harmonized_minda,
+        all_outputs_harmonized_minda_raw,
+        expand("truthset/{assembly}.flat.gz", assembly=minimap2_ASSEMBLY),
+        expand("{assembly}:truvari2:{cellline}", assembly=minimap2_ASSEMBLY, cellline=CELLLINE),
+        expand("{assembly}:truvari2rawlinear:{cellline}", assembly=minimap2_ASSEMBLY, cellline=CELLLINE),
+        expand("{assembly}:truvari2rawgraph:{cellline}", assembly=minimap2_ASSEMBLY, cellline=CELLLINE),
+        expand("{assembly}:truvari2rawseverus:{cellline}", assembly=minimap2_ASSEMBLY, cellline=CELLLINE),
+        expand("{assembly}:truvari2rawsniffles2:{cellline}", assembly=minimap2_ASSEMBLY, cellline=CELLLINE)
+
 
 rule filter_vcf_blacklist:
     input:
         tumor_pair_mgutil_linear = "{assembly}linear_harmonize/{cellline}_filtered_format.vcf",
         tumor_pair_mgutil_graph = "{assembly}graph_harmonize/{cellline}_filtered_format.vcf",
-        severus_tumor_pair = "../2.clean_processed_data/data/severus/{assembly}_pair/{cellline}_pair.vcf",
+        severus_tumor_pair = "../2.clean_processed_data/data/severus/{assembly}/{cellline}.vcf",
         sniffles_tumor = "../2.clean_processed_data/data/sniffles2/{assembly}/{cellline}.vcf.gz",
     params:
         slop=500000,
@@ -61,8 +75,9 @@ rule filter_vcf_blacklist:
     output:
         tumor_pair_mgutil_linear_clean = "{assembly}linear_harmonize/{cellline}_filtered_format_clean.vcf",
         tumor_pair_mgutil_graph_clean = "{assembly}graph_harmonize/{cellline}_filtered_format_clean.vcf",
-        severus_tumor_pair_clean = "../2.clean_processed_data/data/severus/{assembly}_pair/{cellline}_pair_clean.vcf",
+        severus_tumor_pair_clean = "../2.clean_processed_data/data/severus/{assembly}/{cellline}_clean.vcf",
         sniffles_tumor_clean = "../2.clean_processed_data/data/sniffles2/{assembly}/{cellline}_clean.vcf",
+        snf2_flat = "../2.clean_processed_data/data/sniffles2/{assembly}/{cellline}_flat.vcf"
     message:
         "running gaftools sv"
     log:
@@ -76,11 +91,13 @@ rule filter_vcf_blacklist:
             bedtools slop -b {params.slop} -g {wildcards.assembly}.sizes -i {params.centromere} | bedtools intersect -v -header -wa -a {input.tumor_pair_mgutil_graph} -b - > {output.tumor_pair_mgutil_graph_clean}
             bedtools slop -b {params.slop} -g {wildcards.assembly}.sizes -i {params.centromere} | bedtools intersect -v -header -wa -a {input.tumor_pair_mgutil_linear} -b - > {output.tumor_pair_mgutil_linear_clean}
             bedtools slop -b {params.slop} -g {wildcards.assembly}.sizes -i {params.centromere} | bedtools intersect -v -header -wa -a {input.severus_tumor_pair} -b - > {output.severus_tumor_pair_clean}
+            zcat {input.sniffles_tumor} > {output.snf2_flat}
             bedtools slop -b {params.slop} -g {wildcards.assembly}.sizes -i {params.centromere} | bedtools intersect -v -header -wa -a <(zcat {input.sniffles_tumor}) -b - > {output.sniffles_tumor_clean}
         else
             cp {input.tumor_pair_mgutil_graph} {output.tumor_pair_mgutil_graph_clean}
             cp {input.tumor_pair_mgutil_linear} {output.tumor_pair_mgutil_linear_clean}
             zcat {input.sniffles_tumor} > {output.sniffles_tumor_clean}
+            zcat {input.sniffles_tumor} > {output.snf2_flat}
             cp {input.severus_tumor_pair} {output.severus_tumor_pair_clean}
         fi
         """
@@ -92,30 +109,100 @@ rule minda:
        severus=rules.filter_vcf_blacklist.output.severus_tumor_pair_clean,
        #snf1=rules.filter_vcf_blacklist.output.sniffles_mosaic_clean,
        snf2=rules.filter_vcf_blacklist.output.sniffles_tumor_clean,
-       base=lambda wildcards: truth_minda[wildcards.assembly]
+       base=lambda wildcards: truth_minda[wildcards.assembly],
+       bed=lambda wildcards: truth_minda_bed[wildcards.assembly]
     output:
        directory("{assembly}:{cellline}")
     shell:
        """
-       ../minda/minda.py truthset --min_size 50 --filter PASS --base {input.base} --vcfs {input.our1} {input.our2} {input.severus} {input.snf2} --out_dir {output}
+       # -f .
+       bcftools view -i '(INFO/SVTYPE = "DEL" || INFO/SVTYPE = "INS") && (INFO/SVLEN >=50 || INFO/SVLEN <= -50)' -Ov -o  {input.base}.flat2 {input.base}
+
+       cat <(grep "#" {input.base}.flat2) <(grep -v  "#" {input.base}.flat2 | awk 'BEGIN {{ FS = \"\\t\"; OFS = \"\\t\"  }} {{$7=\"PASS\"; print $0}}') > {input.base}.flat3
+
+       ../minda/minda.py truthset --bed {input.bed} --min_size 50 --filter PASS --base {input.base}.flat3 --vcfs {input.our1} {input.our2} {input.severus} {input.snf2} --out_dir {output}
        """
 
-rule aggregate_minda:
-    input:
-       all_outputs_harmonized_minda
+use rule minda as minda_raw with:
+    input: 
+       our1 = "{assembly}linear_harmonize/{cellline}_filtered_format.vcf",
+       our2 = "{assembly}graph_harmonize/{cellline}_filtered_format.vcf",
+       severus = "../2.clean_processed_data/data/severus/{assembly}/{cellline}.vcf",
+       snf2 = rules.filter_vcf_blacklist.output.snf2_flat,
+       base=lambda wildcards: truth_minda[wildcards.assembly],
+       bed=lambda wildcards: truth_minda_bed[wildcards.assembly]
     output:
-       "aggregated/minda_tumornormalpair.tsv"
-    script:
-       "scripts/aggregate_minda.py"
+       directory("{assembly}:{cellline}_raw")
 
-#rule truvari2:
+
+rule reprocess_truthset:
+    input:
+       base=lambda wildcards: truth_minda[wildcards.assembly],
+    output:
+       truthset = "truthset/{assembly}.flat.gz"
+    shell:
+       """
+       cat <(zcat {input.base} | grep \"^#\") \
+           <(zcat {input.base} | grep -vE \"^#\" | \
+             grep 'DUP\|INS\|DEL' | sed 's/DUP/INS/g' | sort -k1,1 -k2,2g) \
+           | bgzip -c > {output.truthset}
+       tabix -f -p vcf {output.truthset}
+       """
+
+rule truvari2:
+    input:
+       vcf=rules.filter_vcf_blacklist.output.tumor_pair_mgutil_linear_clean,
+       base=rules.reprocess_truthset.output.truthset,
+       bed=lambda wildcards: truth_minda_bed[wildcards.assembly] 
+    output:
+       directory("{assembly}:truvari2:{cellline}")
+    shell:
+       """
+       rm -rf {output}
+       cat <(cat {input.vcf} | grep "^#") \
+           <(cat {input.vcf} | grep -vE "^#" | \
+             grep 'DUP\|INS\|DEL' | sed 's/DUP/INS/g' | sort -k1,1 -k2,2g) \
+           | bgzip -c > {input.vcf}.gz
+       tabix -f -p vcf {input.vcf}.gz
+       truvari bench --passonly --includebed {input.bed} --dup-to-ins -r 1000 -p 0.00 -b {input.base} -c {input.vcf}.gz -o {output}
+       """
+
+use rule truvari2 as truvari2_raw_linear with:
+    input:
+       vcf="{assembly}linear_harmonize/{cellline}_filtered_format.vcf",
+       base=rules.reprocess_truthset.output.truthset,
+       bed=lambda wildcards: truth_minda_bed[wildcards.assembly] 
+    output:
+       directory("{assembly}:truvari2rawlinear:{cellline}")
+
+use rule truvari2 as truvari2_raw_graph with:
+    input:
+       vcf="{assembly}graph_harmonize/{cellline}_filtered_format.vcf",
+       base=rules.reprocess_truthset.output.truthset,
+       bed=lambda wildcards: truth_minda_bed[wildcards.assembly] 
+    output:
+       directory("{assembly}:truvari2rawgraph:{cellline}")
+
+use rule truvari2 as truvari2_raw_severus with:
+    input:
+       vcf="../2.clean_processed_data/data/severus/{assembly}/{cellline}.vcf",
+       base=rules.reprocess_truthset.output.truthset,
+       bed=lambda wildcards: truth_minda_bed[wildcards.assembly] 
+    output:
+       directory("{assembly}:truvari2rawseverus:{cellline}")
+
+use rule truvari2 as truvari2_raw_sniffles with:
+    input:
+       vcf=rules.filter_vcf_blacklist.output.snf2_flat,
+       base=rules.reprocess_truthset.output.truthset,
+       bed=lambda wildcards: truth_minda_bed[wildcards.assembly] 
+    output:
+       directory("{assembly}:truvari2rawsniffles2:{cellline}")
+
 ## refactor by rule inheritance later: https://snakemake.readthedocs.io/en/stable/snakefiles/rules.html
-#    input:
-#       our1=rules.filter_vcf_blacklist.output.tumor_pair_mgutil_linear_clean,
 #       our2=rules.filter_vcf_blacklist.output.tumor_pair_mgutil_graph_clean,
 #       severus=rules.filter_vcf_blacklist.output.severus_tumor_pair_clean,
 #       snf2=rules.filter_vcf_blacklist.output.sniffles_tumor_clean,
-#       base=lambda wildcards: truth_minda[wildcards.assembly]
 #    output:
 #       our1   =directory("benchmark/truvari2_mgutillinear{assembly}/{cellline}"),
 #       our2   =directory("benchmark/truvari2_mgutilgraph{assembly}/{cellline}"),
@@ -127,38 +214,40 @@ rule aggregate_minda:
 #       mkdir -p benchmark/truvari2_mgutilgraph{wildcards.assembly}
 #       mkdir -p benchmark/truvari2_severus_{wildcards.assembly}
 #       mkdir -p benchmark/truvari2_sniffles_{wildcards.assembly}
+#       rm -rf benchmark/truvari2_mgutillinear{wildcards.assembly} benchmark/truvari2_mgutilgraph{wildcards.assembly} benchmark/truvari2_severus_{wildcards.assembly} benchmark/truvari2_sniffles_{wildcards.assembly} 
 #
-#       cat <(cat {input.base} | grep "^#") \
-#           <(cat {input.base} | grep -vE "^#" | \
-#             sed 's/DUP/INS/g' | sort -k1,1 -k2,2g) \
-#           | bgzip -c > {input.base}.gz
-#       tabix -f -p vcf {input.base}.gz
+#       cat <(zcat {input.base} | grep "^#") \
+#           <(zcat {input.base} | grep -vE "^#" | \
+#             grep 'DUP\|INS\|DEL' | sed 's/DUP/INS/g' | sort -k1,1 -k2,2g) \
+#           | bgzip -c > {input.base}.flat
+#       tabix -f -p vcf {input.base}.flat
 #
 #       cat <(cat {input.our1} | grep "^#") \
 #           <(cat {input.our1} | grep -vE "^#" | \
 #             grep 'DUP\|INS\|DEL' | sed 's/DUP/INS/g' | sort -k1,1 -k2,2g) \
 #           | bgzip -c > {output.our1}.gz
 #       tabix -f -p vcf {output.our1}.gz
-#       truvari bench --passonly --dup-to-ins -r 1000 -p 0.00 -b {input.base}.gz -c {output.our1}.gz -o {output.our1}
+#       truvari bench --passonly --includebed {input.bed} --dup-to-ins -r 1000 -p 0.00 -b {input.base}.flat -c {output.our1}.gz -o {output.our1}
 #
 #       cat <(cat {input.our2} | grep "^#") \
 #           <(cat {input.our2} | grep -vE "^#" | \
 #             grep 'DUP\|INS\|DEL' | sed 's/DUP/INS/g' | sort -k1,1 -k2,2g) \
 #           | bgzip -c > {output.our2}.gz
 #       tabix -f -p vcf {output.our2}.gz
-#       truvari bench --passonly --dup-to-ins -r 1000 -p 0.00 -b {input.base}.gz -c {output.our2}.gz -o {output.our2}
+#       truvari bench --passonly --includebed {input.bed} --dup-to-ins -r 1000 -p 0.00 -b {input.base}.flat -c {output.our2}.gz -o {output.our1}
 #
 #       cat <(cat {input.severus} | grep "^#") \
 #           <(cat {input.severus} | grep -vE "^#" | \
 #             grep 'DUP\|INS\|DEL' | sed 's/DUP/INS/g' | sort -k1,1 -k2,2g) \
 #           | bgzip -c > {output.severus}.gz
 #       tabix -f -p vcf {output.severus}.gz
-#       truvari bench --passonly --dup-to-ins -r 1000 -p 0.00 -b {input.base}.gz -c {output.severus}.gz -o {output.severus}
+#       truvari bench --passonly --includebed {input.bed} --dup-to-ins -r 1000 -p 0.00 -b {input.base}.flat -c {output.severus}.gz -o {output.severus}
 #
 #       cat <(cat {input.snf2} | grep "^#") \
 #           <(cat {input.snf2} | grep -vE "^#" | \
 #             grep 'DUP\|INS\|DEL' | sed 's/DUP/INS/g' | sort -k1,1 -k2,2g) \
 #           | bgzip -c > {output.snf2}.gz
 #       tabix -f -p vcf {output.snf2}.gz
-#       truvari bench --passonly --dup-to-ins -r 1000 -p 0.00 -b {input.base}.gz -c {output.snf2}.gz -o {output.snf2}
+#       truvari bench --passonly --includebed {input.bed} --dup-to-ins -r 1000 -p 0.00 -b {input.base}.flat -c {output.snf2}.gz -o {output.snf2}
 #       """
+
