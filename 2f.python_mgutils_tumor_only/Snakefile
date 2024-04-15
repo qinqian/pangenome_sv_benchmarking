@@ -57,7 +57,7 @@ rule all:
         all_outputs_harmonized, all_outputs_vcf,
         all_outputs_individual #, all_outputs_filtered, all_outputs_harmonized_minimap2, all_outputs_filtered_vcf, all_outputs_vcf
 
-rule gaftools:
+rule gafcall:
     input:
         alignment="../2.clean_processed_data/data/minigraph/{assembly}/{cellline}.gaf",
         l1=config["l1"],
@@ -78,17 +78,17 @@ rule gaftools:
         """
         ls {input.alignment}
         mkdir -p {wildcards.assembly}_harmonize
-        gaftools sv {params.centromere} {input.alignment} > {output[0]}
+        gafcall sv {params.centromere} {input.alignment} > {output[0]}
         """
 
-rule gaftools_merge:
+rule gafcall_merge:
     input:
         "{assembly}_harmonize/{cellline}_individual.bed",
     output:
         "{assembly}_harmonize/{cellline}_merged.bed",
     shell:
         """
-        sort -k1,1 -k2,2n {input[0]} | gaftools merge -  > {output[0]}
+        sort -k1,1 -k2,2n {input[0]} | gafcall merge -  > {output[0]}
         """
 
 rule sv2vcf:
@@ -100,7 +100,7 @@ rule sv2vcf:
         2
     shell:
         """
-        cat {input.bed} | gaftools mgutilvcf - > {output[0]}
+        cat {input.bed} | gafcall mgutilvcf - > {output[0]}
         """
 #
 #
@@ -125,7 +125,7 @@ rule sv2vcf:
 #        """
 # 
 #
-#rule gaftools_minimap2:
+#rule gafcall_minimap2:
 #    input:
 #        alignment="../2.clean_processed_data/data/minimap2/{assembly}/{cellline}.paf",
 #        l1=config["l1"],

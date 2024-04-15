@@ -79,8 +79,8 @@ rule gaftools:
     shell:
         """
         mkdir -p {wildcards.assembly}_harmonize
-echo  ../../phaseA_minigraph_largedel/k8-1.0/k8-x86_64-Linux ../../minigraph/misc/mgutils-es6.js getsv {params.centromere} {input.alignment}
-        ../../phaseA_minigraph_largedel/k8-1.0/k8-x86_64-Linux ../../minigraph/misc/mgutils-es6.js getsv {params.centromere} {input.alignment} > {output[0]}
+        echo  ../../phaseA_minigraph_largedel/k8-1.0/k8-x86_64-Linux /home/ubuntu/gaftools/js/gafcall.js getsv {params.centromere} {input.alignment}
+        ../../phaseA_minigraph_largedel/k8-1.0/k8-x86_64-Linux /home/ubuntu/gaftools/js/gafcall.js getsv {params.centromere} {input.alignment} > {output[0]}
         """
 
 rule gaftools_merge:
@@ -90,7 +90,7 @@ rule gaftools_merge:
         "{assembly}_harmonize/{cellline}_merged.bed"
     shell:
         """
-        sort -k1,1 -k2,2n {input.bed} | ../../phaseA_minigraph_largedel/k8-1.0/k8-x86_64-Linux ../../minigraph/misc/mgutils-es6.js mergesv - > {output[0]}
+        sort -k1,1 -k2,2n {input.bed} | ../../phaseA_minigraph_largedel/k8-1.0/k8-x86_64-Linux /home/ubuntu/gaftools/js/gafcall.js mergesv - > {output[0]}
         """
 
 rule filter_sv:
@@ -100,7 +100,7 @@ rule filter_sv:
         "{assembly}_harmonize/{cellline}_filtered.bed"
     shell:
         """
-        grep -v "#" {input[0]} | grep -E -v "^[<>]" > {output[0]}
+        cat {input[0]} | grep -E -v "^[<>]" > {output[0]}
         """
 
 
@@ -123,10 +123,12 @@ rule reformat_filter_sv_vcf:
         format_vcf_gz_tbi="{assembly}_harmonize/{cellline}_filtered_format.vcf.gz.tbi"
     shell:
         """
-        cat {input} | gaftools vcf - | awk '$1 ~ /^#/ {{print $0;next}} {{print $0 | "sort -k1,1 -k2,2n"}}' > {output.format_vcf}
+        cat {input} | awk '$1 ~ /^#/ {{print $0;next}} {{print $0 | "sort -k1,1 -k2,2n"}}' > {output.format_vcf}
         bgzip -c {output.format_vcf} > {output.format_vcf_gz}
         tabix -p vcf {output.format_vcf_gz}
         """
+
+#cat {input} | gafcall vcf - | awk '$1 ~ /^#/ {{print $0;next}} {{print $0 | "sort -k1,1 -k2,2n"}}' > {output.format_vcf}
 
 #rule gaftools_minimap2:
 #    input:
