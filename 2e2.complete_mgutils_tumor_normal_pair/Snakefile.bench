@@ -11,6 +11,9 @@ ASSEMBLY = ["chm13linear", "chm13graph",
             "grch37graph", "grch37linear",
             "grch38graph", "grch38linear"]
 minimap2_ASSEMBLY = ["chm13", "grch37", "grch38"]
+fasta = {'grch37': '../../reference/hs37d5.fa',
+         'grch38': '../../reference/GCA_000001405.15_GRCh38_no_alt_analysis_set.fna',
+         'chm13':  '../../reference/chm13v2.0.fa'}
 
 vntr = {"chm13linear": "../2.clean_processed_data/chm13v2.0.trf.bed", "chm13graph": "../2.clean_processed_data/chm13v2.0.trf.bed",
         "grch37graph": "../2.clean_processed_data/human_hs37d5.trf.bed", "grch37linear": "../2.clean_processed_data/human_hs37d5.trf.bed",
@@ -37,6 +40,10 @@ truth_minda = {"chm13": "../2b.tumor_only_somatic_evaluation/output/truthset.col
 all_outputs_harmonized_minda = expand("{assembly}:{cellline}", assembly=minimap2_ASSEMBLY, cellline=CELLLINE)
 #all_outputs_harmonized_truvari2 = expand("benchmark/truvari2_sniffles_{assembly}/{cellline}", assembly=minimap2_ASSEMBLY, cellline=CELLLINE)
 
+all_outputs_harmonized_linear_gafcall = expand("gafcalleval/{assembly}_{cellline}_linear_gafcalleval.tsv", assembly=minimap2_ASSEMBLY, cellline=CELLLINE)
+all_outputs_harmonized_severus_gafcall = expand("gafcalleval/{assembly}_{cellline}_severus_gafcalleval.tsv", assembly=minimap2_ASSEMBLY, cellline=CELLLINE)
+all_outputs_harmonized_graph_gafcall = expand("gafcalleval/{assembly}_{cellline}_graph_gafcalleval.tsv", assembly=minimap2_ASSEMBLY, cellline=CELLLINE)
+all_outputs_harmonized_sniffles_gafcall = expand("gafcalleval/{assembly}_{cellline}_sniffles2_gafcalleval.tsv", assembly=minimap2_ASSEMBLY, cellline=CELLLINE)
 
 wildcard_constraints:
     assembly  = "[a-zA-Z0-9]+",
@@ -47,7 +54,9 @@ rule all:
     input: 
         all_outputs_harmonized_minda, #, all_outputs_harmonized_truvari2
         "aggregated/minda_tumornormalpair_overall.tsv",
-        "aggregated/minda_tumornormalpair_truepos.tsv"
+        "aggregated/minda_tumornormalpair_truepos.tsv",
+        #"aggregated/truvari2_tumornormalpair_overall.tsv",
+        "aggregated/gafcalleval_tumornormalpair_overall.tsv"
 
 rule filter_vcf_blacklist:
     input:
@@ -110,57 +119,118 @@ rule aggregate_minda:
     script:
        "scripts/aggregate_minda.py"
 
+rule gafcalleval:
+    input: 
+       vcf=rules.filter_vcf_blacklist.output.tumor_pair_mgutil_linear_clean,
+       base=lambda wildcards: truth_minda[wildcards.assembly]
+    output:
+       out1="gafcalleval/{assembly}_{cellline}_linear_gafcalleval.tsv"
+    shell:
+       """
+       ../../phaseA_minigraph_largedel/k8-1.0/k8-x86_64-Linux ~/gaftools/js/gafcall.js eval {input.base} {input.vcf} > {output.out1}
+       """
+
+use rule gafcalleval as gafcalleval_severus with:
+    input: 
+       #vcf="../2.clean_processed_data/data/severus/{assembly}/{cellline}.vcf",
+       vcf=rules.filter_vcf_blacklist.output.severus_tumor_pair_clean,
+       base=lambda wildcards: truth_minda[wildcards.assembly]
+    output:
+       out1="gafcalleval/{assembly}_{cellline}_severus_gafcalleval.tsv"
+
+use rule gafcalleval as gafcalleval_graph with:
+    input: 
+       #vcf="../2.clean_processed_data/data/severus/{assembly}/{cellline}.vcf",
+       vcf=rules.filter_vcf_blacklist.output.tumor_pair_mgutil_graph_clean,
+       base=lambda wildcards: truth_minda[wildcards.assembly]
+    output:
+       out1="gafcalleval/{assembly}_{cellline}_graph_gafcalleval.tsv"
+
+use rule gafcalleval as gafcalleval_snf with:
+    input: 
+       #vcf="../2.clean_processed_data/data/severus/{assembly}/{cellline}.vcf",
+       vcf=rules.filter_vcf_blacklist.output.sniffles_tumor_clean,
+       base=lambda wildcards: truth_minda[wildcards.assembly]
+    output:
+       out1="gafcalleval/{assembly}_{cellline}_sniffles2_gafcalleval.tsv"
+
+rule reprocess_truthset:
+    input:
+       base=lambda wildcards: truth_minda[wildcards.assembly],
+    output:
+       truthset = "truthset/{assembly}.flat.gz"
+    shell:
+       """
+       cat <(cat {input.base} | grep \"^#\") \
+           <(cat {input.base} | grep -vE \"^#\" | \
+            sed 's/DUP/INS/g' | sort -k1,1 -k2,2g) \
+           | bgzip -c > {output.truthset}
+       tabix -f -p vcf {output.truthset}
+       """
+
 #rule truvari2:
-## refactor by rule inheritance later: https://snakemake.readthedocs.io/en/stable/snakefiles/rules.html
 #    input:
-#       our1=rules.filter_vcf_blacklist.output.tumor_pair_mgutil_linear_clean,
-#       our2=rules.filter_vcf_blacklist.output.tumor_pair_mgutil_graph_clean,
-#       severus=rules.filter_vcf_blacklist.output.severus_tumor_pair_clean,
-#       snf2=rules.filter_vcf_blacklist.output.sniffles_tumor_clean,
-#       base=lambda wildcards: truth_minda[wildcards.assembly]
+#       vcf=rules.filter_vcf_blacklist.output.tumor_pair_mgutil_linear_clean,
+#       base=rules.reprocess_truthset.output.truthset,
+#       fa=lambda wildcards: fasta[wildcards.assembly] 
 #    output:
-#       our1   =directory("benchmark/truvari2_mgutillinear{assembly}/{cellline}"),
-#       our2   =directory("benchmark/truvari2_mgutilgraph{assembly}/{cellline}"),
-#       severus=directory("benchmark/truvari2_severus_{assembly}/{cellline}"),
-#       snf2   =directory("benchmark/truvari2_sniffles_{assembly}/{cellline}")
+#       directory("{assembly}:truvari2:{cellline}")
 #    shell:
 #       """
-#       mkdir -p benchmark/truvari2_mgutillinear{wildcards.assembly}
-#       mkdir -p benchmark/truvari2_mgutilgraph{wildcards.assembly}
-#       mkdir -p benchmark/truvari2_severus_{wildcards.assembly}
-#       mkdir -p benchmark/truvari2_sniffles_{wildcards.assembly}
-#
-#       cat <(cat {input.base} | grep "^#") \
-#           <(cat {input.base} | grep -vE "^#" | \
-#             sed 's/DUP/INS/g' | sort -k1,1 -k2,2g) \
-#           | bgzip -c > {input.base}.gz
-#       tabix -f -p vcf {input.base}.gz
-#
-#       cat <(cat {input.our1} | grep "^#") \
-#           <(cat {input.our1} | grep -vE "^#" | \
+#       rm -rf {output}
+#       cat <(cat {input.vcf} | grep "^#") \
+#           <(cat {input.vcf} | grep -vE "^#" | \
 #             grep 'DUP\|INS\|DEL' | sed 's/DUP/INS/g' | sort -k1,1 -k2,2g) \
-#           | bgzip -c > {output.our1}.gz
-#       tabix -f -p vcf {output.our1}.gz
-#       truvari bench --passonly --dup-to-ins -r 1000 -p 0.00 -b {input.base}.gz -c {output.our1}.gz -o {output.our1}
-#
-#       cat <(cat {input.our2} | grep "^#") \
-#           <(cat {input.our2} | grep -vE "^#" | \
-#             grep 'DUP\|INS\|DEL' | sed 's/DUP/INS/g' | sort -k1,1 -k2,2g) \
-#           | bgzip -c > {output.our2}.gz
-#       tabix -f -p vcf {output.our2}.gz
-#       truvari bench --passonly --dup-to-ins -r 1000 -p 0.00 -b {input.base}.gz -c {output.our2}.gz -o {output.our2}
-#
-#       cat <(cat {input.severus} | grep "^#") \
-#           <(cat {input.severus} | grep -vE "^#" | \
-#             grep 'DUP\|INS\|DEL' | sed 's/DUP/INS/g' | sort -k1,1 -k2,2g) \
-#           | bgzip -c > {output.severus}.gz
-#       tabix -f -p vcf {output.severus}.gz
-#       truvari bench --passonly --dup-to-ins -r 1000 -p 0.00 -b {input.base}.gz -c {output.severus}.gz -o {output.severus}
-#
-#       cat <(cat {input.snf2} | grep "^#") \
-#           <(cat {input.snf2} | grep -vE "^#" | \
-#             grep 'DUP\|INS\|DEL' | sed 's/DUP/INS/g' | sort -k1,1 -k2,2g) \
-#           | bgzip -c > {output.snf2}.gz
-#       tabix -f -p vcf {output.snf2}.gz
-#       truvari bench --passonly --dup-to-ins -r 1000 -p 0.00 -b {input.base}.gz -c {output.snf2}.gz -o {output.snf2}
+#           | bgzip -c > {input.vcf}.gz
+#       tabix -f -p vcf {input.vcf}.gz
+#       echo truvari bench --dup-to-ins -r 1000 -p 0.00 -b {input.base} -c {input.vcf}.gz -o {output}
+#       truvari bench --passonly --dup-to-ins -r 1000 -p 0.00 -b {input.base} -f {input.fa} -c {input.vcf}.gz -o {output}
 #       """
+#
+#use rule truvari2 as truvari2_raw_linear with:
+#    input:
+#       vcf=rules.filter_vcf_blacklist.output.tumor_pair_mgutil_linear_clean,
+#       base=rules.reprocess_truthset.output.truthset,
+#       fa=lambda wildcards: fasta[wildcards.assembly] 
+#    output:
+#       directory("{assembly}:truvari2rawlinear:{cellline}")
+#
+#use rule truvari2 as truvari2_raw_graph with:
+#    input:
+#       vcf=rules.filter_vcf_blacklist.output.tumor_pair_mgutil_graph_clean,
+#       base=rules.reprocess_truthset.output.truthset,
+#       fa=lambda wildcards: fasta[wildcards.assembly] 
+#    output:
+#       directory("{assembly}:truvari2rawgraph:{cellline}")
+#
+#use rule truvari2 as truvari2_raw_severus with:
+#    input:
+#       vcf=rules.filter_vcf_blacklist.output.severus_tumor_pair_clean,
+#       base=rules.reprocess_truthset.output.truthset,
+#       fa=lambda wildcards: fasta[wildcards.assembly] 
+#    output:
+#       directory("{assembly}:truvari2rawseverus:{cellline}")
+#
+#use rule truvari2 as truvari2_raw_sniffles with:
+#    input:
+#       vcf=rules.filter_vcf_blacklist.output.sniffles_tumor_clean,
+#       base=rules.reprocess_truthset.output.truthset,
+#       fa=lambda wildcards: fasta[wildcards.assembly]
+#    output:
+#       directory("{assembly}:truvari2rawsniffles2:{cellline}")
+
+rule aggregate_truvari2:
+    input:
+        #linear=expand("{assembly}:truvari2rawlinear:{cellline}", assembly=minimap2_ASSEMBLY, cellline=CELLLINE),
+        #graph=expand("{assembly}:truvari2rawgraph:{cellline}", assembly=minimap2_ASSEMBLY, cellline=CELLLINE),
+        #severus=expand("{assembly}:truvari2rawseverus:{cellline}", assembly=minimap2_ASSEMBLY, cellline=CELLLINE),
+        #sniffles=expand("{assembly}:truvari2rawsniffles2:{cellline}", assembly=minimap2_ASSEMBLY, cellline=CELLLINE),
+        lineareval=all_outputs_harmonized_linear_gafcall,
+        grapheval=all_outputs_harmonized_graph_gafcall,
+        severuseval=all_outputs_harmonized_severus_gafcall,
+        sniffleseval=all_outputs_harmonized_sniffles_gafcall
+    output:
+       #"aggregated/truvari2_tumornormalpair_overall.tsv",
+       "aggregated/gafcalleval_tumornormalpair_overall.tsv",
+    script:
+       "../2e2.complete_mgutils_tumor_normal_pair/scripts/aggregate_truvari2.py"

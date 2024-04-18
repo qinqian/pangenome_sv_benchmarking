@@ -79,8 +79,8 @@ rule gaftools:
     shell:
         """
         mkdir -p {wildcards.assembly}_harmonize
-        echo  ../../phaseA_minigraph_largedel/k8-1.0/k8-x86_64-Linux /home/ubuntu/gaftools/js/gafcall.js getsv {params.centromere} {input.alignment}
-        ../../phaseA_minigraph_largedel/k8-1.0/k8-x86_64-Linux /home/ubuntu/gaftools/js/gafcall.js getsv {params.centromere} {input.alignment} > {output[0]}
+        echo  ../../phaseA_minigraph_largedel/k8-1.0/k8-x86_64-Linux /home/ubuntu/gafcall_js/js/gafcall.js getsv {params.centromere} {input.alignment}
+        ../../phaseA_minigraph_largedel/k8-1.0/k8-x86_64-Linux /home/ubuntu/gafcall_js/js/gafcall.js getsv {params.centromere} {input.alignment} > {output[0]}
         """
 
 rule gaftools_merge:
@@ -90,7 +90,7 @@ rule gaftools_merge:
         "{assembly}_harmonize/{cellline}_merged.bed"
     shell:
         """
-        sort -k1,1 -k2,2n {input.bed} | ../../phaseA_minigraph_largedel/k8-1.0/k8-x86_64-Linux /home/ubuntu/gaftools/js/gafcall.js mergesv - > {output[0]}
+        sort -k1,1 -k2,2n {input.bed} | ../../phaseA_minigraph_largedel/k8-1.0/k8-x86_64-Linux /home/ubuntu/gafcall_js/js/gafcall.js mergesv - > {output[0]}
         """
 
 rule filter_sv:

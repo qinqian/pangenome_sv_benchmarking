@@ -77,10 +77,10 @@ rule gaftools:
     shell:
         """
         mkdir -p {wildcards.assembly}_harmonize
-        ../../phaseA_minigraph_largedel/k8-1.0/k8-x86_64-Linux ../../minigraph/misc/mgutils-es6.js getsv -n tumor {params.centromere} {input.tumor_alignment} > {output.tumor}
-        ../../phaseA_minigraph_largedel/k8-1.0/k8-x86_64-Linux ../../minigraph/misc/mgutils-es6.js getsv -n normal {params.centromere} {input.normal_alignment} > {output.normal}
+        ../../phaseA_minigraph_largedel/k8-1.0/k8-x86_64-Linux /home/ubuntu/gafcall_js/js/gafcall.js getsv -n tumor {params.centromere} {input.tumor_alignment} > {output.tumor}
+        ../../phaseA_minigraph_largedel/k8-1.0/k8-x86_64-Linux /home/ubuntu/gafcall_js/js/gafcall.js getsv -n normal {params.centromere} {input.normal_alignment} > {output.normal}
 
-        cat {output.tumor} {output.normal} | sort -k1,1 -k2,2n - | ../../phaseA_minigraph_largedel/k8-1.0/k8-x86_64-Linux ../../minigraph/misc/mgutils-es6.js mergesv - > {output.merged}
+        cat {output.tumor} {output.normal} | sort -k1,1 -k2,2n - | ../../phaseA_minigraph_largedel/k8-1.0/k8-x86_64-Linux /home/ubuntu/gafcall_js/js/gafcall.js mergesv - > {output.merged}
         """
 
 
@@ -114,7 +114,7 @@ rule reformat_filter_sv_vcf:
         format_vcf_gz_tbi="{assembly}_harmonize/{cellline}_filtered_format.vcf.gz.tbi"
     shell:
         """
-        cat {input} | gaftools vcf - | awk '$1 ~ /^#/ {{print $0;next}} {{print $0 | "sort -k1,1 -k2,2n"}}' > {output.format_vcf}
+        cat {input} | gafcall vcf - | awk '$1 ~ /^#/ {{print $0;next}} {{print $0 | "sort -k1,1 -k2,2n"}}' > {output.format_vcf}
         bgzip -c {output.format_vcf} > {output.format_vcf_gz}
         tabix -p vcf {output.format_vcf_gz}
         """
