@@ -23,7 +23,7 @@ workflow SeverusWorkflow {
 
         File assembly
         File assembly_index
-        String docker_image="qianqin/severus"
+        String docker_image="qianqin/severus:1.0"
 
         Int preemptible=3
         Int boot_disk_size=20
