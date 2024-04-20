@@ -1,0 +1,20 @@
+prefix: /hlilab/21data/collections/cancer-pair/
+
+samples:
+  tumor:
+      - COLO829T.ont1
+      - COLO829T.ont2
+      - HCC1937T.hifi1
+      - HCC1954T.hifi1
+      - NCI1437T.hifi1
+      - NCI2009T.hifi1
+  normal:
+      - COLO829BL.ont1
+      - COLO829BL.ont2
+      - HCC1937BL.hifi1
+      - HCC1954BL.hifi1
+      - NCI1437BL.hifi1
+      - NCI2009BL.hifi1
+
+assembly:
+  - chm13v2.0

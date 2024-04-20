@@ -1,0 +1,7 @@
+name: clair3
+channels:
+  - bioconda
+  - conda-forge
+dependencies:
+  - python=3.9.0
+  - clair3==1.0.7

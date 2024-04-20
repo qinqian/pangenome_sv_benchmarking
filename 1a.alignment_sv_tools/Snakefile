@@ -1,0 +1,38 @@
+import os
+import glob
+import sys
+import pandas as pd
+from snakemake.utils import validate
+
+configfile: "config.yaml"
+print(config)
+tumor_files = expand("{assembly}_T/{tumor_cell_line}.cram", assembly=config['assembly'], tumor_cell_line=config['samples']['tumor']),
+normal_files = expand("{assembly}_N/{normal_cell_line}.cram", assembly=config['assembly'], normal_cell_line=config['samples']['normal']),
+print(tumor_files, normal_files)
+
+module aligner_workflow:
+    snakefile: "rules/minimap2.smk"
+
+rule all:
+    input:
+        tumor_files, normal_files
+
+use rule minimap2 from aligner_workflow as mm2_T with:
+    input:
+         assembly = "{assembly}.fa.gz",
+         fastq = os.path.join(config['prefix'], "{tumor_cell_line}.fastq.gz")
+    output:
+         cram = "{assembly}_T/{tumor_cell_line}.cram",
+         crai = "{assembly}_T/{tumor_cell_line}.crai"
+    resources:
+        mem_mb=64000
+
+use rule minimap2 from aligner_workflow as mm2_N with:
+    input:
+         assembly = "{assembly}.fa.gz",
+         fastq = os.path.join(config['prefix'], "{normal_cell_line}.fastq.gz")
+    output:
+         cram = "{assembly}_N/{normal_cell_line}.cram",
+         crai = "{assembly}_N/{normal_cell_line}.crai"
+    resources:
+        mem_mb=64000
