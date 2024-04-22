@@ -5,34 +5,31 @@ import pandas as pd
 from snakemake.utils import validate
 
 configfile: "config.yaml"
-print(config)
-tumor_files = expand("{assembly}_T/{tumor_cell_line}.cram", assembly=config['assembly'], tumor_cell_line=config['samples']['tumor']),
-normal_files = expand("{assembly}_N/{normal_cell_line}.cram", assembly=config['assembly'], normal_cell_line=config['samples']['normal']),
-print(tumor_files, normal_files)
+
+sniffles_files  = expand(expand("output/sniffles/{cell_line}_{platform}/{{pair}}/{{assembly}}.vcf.gz", zip, cell_line=config['samples']['tumor'], platform=config['samples']['platform']), pair=["T", "BL"], assembly=config['assembly'])
+sniffles_tbi_files  = expand(expand("output/sniffles/{cell_line}_{platform}/{{pair}}/{{assembly}}.vcf.gz.tbi", zip, cell_line=config['samples']['tumor'], platform=config['samples']['platform']), pair=["T", "BL"], assembly=config['assembly'])
+clair3_outdir  = expand(expand("output/clair3/{cell_line}_{platform}/{{pair}}/{{assembly}}/", zip, cell_line=config['samples']['tumor'], platform=config['samples']['platform']), pair=["T", "BL"], assembly=config['assembly'])
+savana_outdir  = expand(expand("output/savana/{cell_line}_{platform}/{{assembly}}", zip, cell_line=config['samples']['tumor'], platform=config['samples']['platform']), assembly=config['assembly'])
+
+
+wildcard_constraints:
+    cell_line = "[A-Za-z0-9]+",
+    pair = "BL|T",
+    assembly = "chm13"
 
 module aligner_workflow:
     snakefile: "rules/minimap2.smk"
+    config: config
+
+use rule * from aligner_workflow as minimap2_workflow_*
+
+include: "rules/sniffles2.smk"
+include: "rules/savana.smk"
+include: "rules/clair3.smk"
 
 rule all:
     input:
-        tumor_files, normal_files
-
-use rule minimap2 from aligner_workflow as mm2_T with:
-    input:
-         assembly = "{assembly}.fa.gz",
-         fastq = os.path.join(config['prefix'], "{tumor_cell_line}.fastq.gz")
-    output:
-         cram = "{assembly}_T/{tumor_cell_line}.cram",
-         crai = "{assembly}_T/{tumor_cell_line}.crai"
-    resources:
-        mem_mb=64000
-
-use rule minimap2 from aligner_workflow as mm2_N with:
-    input:
-         assembly = "{assembly}.fa.gz",
-         fastq = os.path.join(config['prefix'], "{normal_cell_line}.fastq.gz")
-    output:
-         cram = "{assembly}_N/{normal_cell_line}.cram",
-         crai = "{assembly}_N/{normal_cell_line}.crai"
-    resources:
-        mem_mb=64000
+        rules.minimap2_workflow_all.input,
+        sniffles_files, sniffles_tbi_files,
+        savana_outdir, clair3_outdir
+    default_target: True 

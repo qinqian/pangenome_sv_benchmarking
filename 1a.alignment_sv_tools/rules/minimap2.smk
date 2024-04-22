@@ -1,4 +1,21 @@
+idx_files  = expand(expand("output/align/{cell_line}_{platform}/{{pair}}/{{assembly}}.cram.crai", zip, cell_line=config['samples']['tumor'], platform=config['samples']['platform']), pair=["T", "BL"], assembly=config['assembly'])
+files  = expand(expand("output/align/{cell_line}_{platform}/{{pair}}/{{assembly}}.cram", zip, cell_line=config['samples']['tumor'], platform=config['samples']['platform']), pair=["T", "BL"], assembly=config['assembly'])
+print(idx_files)
+
+rule all:
+    input:
+        idx_files,
+        files
+
 rule minimap2:
+    input:
+         assembly = "{assembly}.fa.gz",
+         fastq = os.path.join(config['prefix'], "{cell_line}{pair}.{platform}.fastq.gz")
+    output:
+         cram = "output/align/{cell_line}_{platform}/{pair}/{assembly}.cram",
+         crai = "output/align/{cell_line}_{platform}/{pair}/{assembly}.cram.crai"
+    resources:
+         mem_mb=64000
     threads: 24
     shell:
         """
