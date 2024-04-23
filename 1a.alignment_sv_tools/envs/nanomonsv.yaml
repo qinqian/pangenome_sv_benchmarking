@@ -1,0 +1,9 @@
+name: sniffles2
+channels:
+  - bioconda
+dependencies:
+  - python=3.10
+  - nanomonsv
+  - mafft
+  - racon
+  - tabix

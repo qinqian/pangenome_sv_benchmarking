@@ -1,6 +1,11 @@
 idx_files  = expand(expand("output/align/{cell_line}_{platform}/{{pair}}/{{assembly}}.cram.crai", zip, cell_line=config['samples']['tumor'], platform=config['samples']['platform']), pair=["T", "BL"], assembly=config['assembly'])
 files  = expand(expand("output/align/{cell_line}_{platform}/{{pair}}/{{assembly}}.cram", zip, cell_line=config['samples']['tumor'], platform=config['samples']['platform']), pair=["T", "BL"], assembly=config['assembly'])
-print(idx_files)
+
+wildcard_constraints:
+    cell_line = "[A-Za-z0-9]+",
+    pair = "BL|T",
+    assembly = "chm13|grch38",
+    platform = "ont1|ont2|hifi1"
 
 rule all:
     input:

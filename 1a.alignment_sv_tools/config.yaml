@@ -3,7 +3,8 @@ prefix: /hlilab/21data/collections/cancer-pair/
 
 samples:
   tumor:
-      #- 1
+      - HCC1395
+      - COLO829
       - COLO829
       - COLO829
       - HCC1937
@@ -11,6 +12,8 @@ samples:
       - NCI1437
       - NCI2009
   platform:
+      - hifi1
+      - hifi1
       - ont1
       - ont2
       - hifi1
@@ -20,5 +23,6 @@ samples:
 
 assembly:
   - chm13
+  - grch38
 
 mosaic: False
