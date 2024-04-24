@@ -78,7 +78,7 @@ clean_performance_table() {
   grep "f1" ../2.clean_processed_data/data/*/*/*truvari/summary.json
 }
 
-#download_giab
-benchmark
+download_giab
+#benchmark
 #clean_performance_table
 

@@ -83,6 +83,7 @@ RUN /bin/bash -c "curl -L https://github.com/conda-forge/miniforge/releases/late
     bash mambaforge.sh -b -p /opt/conda && \
     rm mambaforge.sh"
 
-RUN /bin/bash -c "mamba create -q -y -c bioconda -n severus_env severus==0.1.2 whatshap==2.2"
+#RUN /bin/bash -c "mamba create -q -y -c bioconda -n severus_env severus==0.1.2 whatshap==2.2"
+RUN /bin/bash -c "mamba create -q -y -c bioconda -n severus_env severus==1.0 whatshap==2.2"
 RUN echo "source activate severus_env" > ~/.bashrc
 ENV PATH /opt/conda/envs/severus_env/bin:${PATH}

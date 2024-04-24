@@ -65,6 +65,7 @@ rule filter_vcf_blacklist:
         tumor_pair_mgutil_graph_clean = "{assembly}graph_harmonize/{cellline}_filtered_format_clean.vcf",
         severus_tumor_pair_clean = "../2.clean_processed_data/data/severus/{assembly}/{cellline}_clean.vcf",
         sniffles_tumor_clean = "../2.clean_processed_data/data/sniffles2/{assembly}/{cellline}_clean.vcf",
+        snf2_flat = "../2.clean_processed_data/data/sniffles2/{assembly}/{cellline}_flat.vcf"
     message:
         "running gaftools sv"
     log:
@@ -78,11 +79,13 @@ rule filter_vcf_blacklist:
             bedtools slop -b {params.slop} -g {wildcards.assembly}.sizes -i {params.centromere} | bedtools intersect -v -header -wa -a {input.tumor_pair_mgutil_graph} -b - > {output.tumor_pair_mgutil_graph_clean}
             bedtools slop -b {params.slop} -g {wildcards.assembly}.sizes -i {params.centromere} | bedtools intersect -v -header -wa -a {input.tumor_pair_mgutil_linear} -b - > {output.tumor_pair_mgutil_linear_clean}
             bedtools slop -b {params.slop} -g {wildcards.assembly}.sizes -i {params.centromere} | bedtools intersect -v -header -wa -a {input.severus_tumor_pair} -b - > {output.severus_tumor_pair_clean}
+            zcat {input.sniffles_tumor} > {output.snf2_flat}
             bedtools slop -b {params.slop} -g {wildcards.assembly}.sizes -i {params.centromere} | bedtools intersect -v -header -wa -a <(zcat {input.sniffles_tumor}) -b - > {output.sniffles_tumor_clean}
         else
             cp {input.tumor_pair_mgutil_graph} {output.tumor_pair_mgutil_graph_clean}
             cp {input.tumor_pair_mgutil_linear} {output.tumor_pair_mgutil_linear_clean}
             zcat {input.sniffles_tumor} > {output.sniffles_tumor_clean}
+            zcat {input.sniffles_tumor} > {output.snf2_flat}
             cp {input.severus_tumor_pair} {output.severus_tumor_pair_clean}
         fi
         """

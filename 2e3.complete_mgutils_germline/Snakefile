@@ -7,9 +7,9 @@ from snakemake.utils import validate
 configfile: "config.yaml"
 print(config)
 
-CELLLINE = ["HG002_PACBIO_REVIO", "HG002_ONT_sup"]
+CELLLINE = ["HG002_PACBIO_REVIO", "HG002_ONT_sup", "COLO829-BL", "COLO829_ONT-BL", "HCC1395-BL"]
 ASSEMBLY = ["chm13linear", "chm13graph", 
-            "grch37graph", "grch37linear",
+            #"grch37graph", "grch37linear",
             "grch38graph", "grch38linear"]
 
 #CELLLINE = ["HG002_ONT_sup"]
@@ -64,10 +64,6 @@ rule gaftools:
         l1=config["l1"],
         tr=lambda wildcards: vntr[wildcards.assembly],
     params:
-        mapq=5,
-        indel_len=50,
-        support_read=2,
-        maplen=2000,
         prefix=lambda wildcards, output: output[0][:-19],
         centromere=lambda wildcards: f" -b {centromere[wildcards.assembly]} " if centromere[wildcards.assembly]!= "" else ""
     output:
@@ -78,9 +74,11 @@ rule gaftools:
         1
     shell:
         """
+
         mkdir -p {wildcards.assembly}_harmonize
         echo  ../../phaseA_minigraph_largedel/k8-1.0/k8-x86_64-Linux /home/ubuntu/gafcall_js/js/gafcall.js getsv {params.centromere} {input.alignment}
-        ../../phaseA_minigraph_largedel/k8-1.0/k8-x86_64-Linux /home/ubuntu/gafcall_js/js/gafcall.js getsv {params.centromere} {input.alignment} > {output[0]}
+        ../../phaseA_minigraph_largedel/k8-1.0/k8-x86_64-Linux /home/ubuntu/gafcall_js/js/gafcall.js getsv -l 100 {params.centromere} {input.alignment} > {output[0]}
+
         """
 
 rule gaftools_merge:
@@ -90,7 +88,9 @@ rule gaftools_merge:
         "{assembly}_harmonize/{cellline}_merged.bed"
     shell:
         """
+
         sort -k1,1 -k2,2n {input.bed} | ../../phaseA_minigraph_largedel/k8-1.0/k8-x86_64-Linux /home/ubuntu/gafcall_js/js/gafcall.js mergesv - > {output[0]}
+
         """
 
 rule filter_sv:
@@ -111,7 +111,9 @@ rule filter_sv_vcf:
         "{assembly}_harmonize/{cellline}_filtered.vcf"
     shell:
         """
+
         ../../phaseA_minigraph_largedel/k8-1.0/k8-x86_64-Linux ../../minigraph/misc/mgutils-es6.js sv2vcf {input[0]} > {output[0]}
+
         """
 
 rule reformat_filter_sv_vcf:
@@ -123,12 +125,12 @@ rule reformat_filter_sv_vcf:
         format_vcf_gz_tbi="{assembly}_harmonize/{cellline}_filtered_format.vcf.gz.tbi"
     shell:
         """
+
         cat {input} | awk '$1 ~ /^#/ {{print $0;next}} {{print $0 | "sort -k1,1 -k2,2n"}}' > {output.format_vcf}
         bgzip -c {output.format_vcf} > {output.format_vcf_gz}
         tabix -p vcf {output.format_vcf_gz}
-        """
 
-#cat {input} | gafcall vcf - | awk '$1 ~ /^#/ {{print $0;next}} {{print $0 | "sort -k1,1 -k2,2n"}}' > {output.format_vcf}
+        """
 
 #rule gaftools_minimap2:
 #    input:

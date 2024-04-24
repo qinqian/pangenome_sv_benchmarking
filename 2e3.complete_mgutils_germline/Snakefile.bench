@@ -129,8 +129,9 @@ rule process_flat_truthvcf:
        flat="{assembly}.flat.vcf"
     shell:
        """
-       bcftools view -i '(INFO/SVTYPE = "DEL" || INFO/SVTYPE = "INS") && (INFO/SVLEN >=30 || INFO/SVLEN <= -30)' -Ov -o {input.base}.flat2 {input.base}
-       cat <(grep "#" {input.base}.flat2) <(grep -v  "#" {input.base}.flat2 | awk 'BEGIN {{ FS = \"\\t\"; OFS = \"\\t\"  }} {{$7=\"PASS\"; print $0}}') > {output.flat}
+       zcat {input.base} > {input.base}.flat2 
+       #cat <(grep "#" {input.base}.flat2) <(grep -v  "#" {input.base}.flat2 | awk 'BEGIN {{ FS = \"\\t\"; OFS = \"\\t\"  }} {{$7=\"PASS\"; print $0}}') > {output.flat}
+       cat {input.base}.flat2 > {output.flat}
        """
 
 rule minda:
@@ -199,19 +200,23 @@ rule truvari2:
 rule gafcalleval:
     input: 
        vcf=rules.filter_vcf_blacklist.output.tumor_pair_mgutil_linear_clean,
-       base=rules.process_flat_truthvcf.output.flat
+       base=rules.process_flat_truthvcf.output.flat,
+       bed=lambda wildcards: truth_minda_bed[wildcards.assembly],
     output:
        out1="gafcalleval/{assembly}_{cellline}_linear_gafcalleval.tsv"
     shell:
        """
-       ../../phaseA_minigraph_largedel/k8-1.0/k8-x86_64-Linux ~/gaftools/js/gafcall.js eval {input.base} {input.vcf} > {output.out1}
+       echo ../../phaseA_minigraph_largedel/k8-1.0/k8-x86_64-Linux ~/gafcall_js/js/gafcall.js eval -l100 -w 500 -b {input.bed} {input.base} {input.vcf} > {output.out1}
+       ../../phaseA_minigraph_largedel/k8-1.0/k8-x86_64-Linux ~/gafcall_js/js/gafcall.js eval -l100 -w 500 -b {input.bed} {input.base} {input.vcf} > {output.out1}
+
        """
 
 use rule gafcalleval as gafcalleval_severus with:
     input: 
        #vcf="../2.clean_processed_data/data/severus/{assembly}/{cellline}.vcf",
        vcf=rules.filter_vcf_blacklist.output.severus_tumor_pair_clean,
-       base=rules.process_flat_truthvcf.output.flat
+       base=rules.process_flat_truthvcf.output.flat,
+       bed=lambda wildcards: truth_minda_bed[wildcards.assembly]
     output:
        out1="gafcalleval/{assembly}_{cellline}_severus_gafcalleval.tsv"
 
@@ -219,6 +224,7 @@ use rule gafcalleval as gafcalleval_graph with:
     input: 
        #vcf="../2.clean_processed_data/data/severus/{assembly}/{cellline}.vcf",
        vcf=rules.filter_vcf_blacklist.output.tumor_pair_mgutil_graph_clean,
+       bed=lambda wildcards: truth_minda_bed[wildcards.assembly],
        base=rules.process_flat_truthvcf.output.flat
     output:
        out1="gafcalleval/{assembly}_{cellline}_graph_gafcalleval.tsv"
@@ -227,6 +233,7 @@ use rule gafcalleval as gafcalleval_snf with:
     input: 
        #vcf="../2.clean_processed_data/data/severus/{assembly}/{cellline}.vcf",
        vcf=rules.filter_vcf_blacklist.output.sniffles_tumor_clean,
+       bed=lambda wildcards: truth_minda_bed[wildcards.assembly],
        base=rules.process_flat_truthvcf.output.flat
     output:
        out1="gafcalleval/{assembly}_{cellline}_sniffles2_gafcalleval.tsv"
@@ -295,4 +302,4 @@ rule aggregate_truvari2:
        "aggregated/truvari2_tumornormalpair_overall.tsv",
        "aggregated/gafcalleval_tumornormalpair_overall.tsv",
     script:
-       "../2e2.complete_mgutils_tumor_normal_pair/scripts/aggregate_truvari2.py"
+       "../2e2.complete_mgutils_tumor_normal_pair/scripts/aggregate_truvari2_germline.py"

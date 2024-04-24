@@ -79,8 +79,12 @@ rule gaftools:
         """
         ls {input.alignment}
         mkdir -p {wildcards.assembly}_harmonize
+
         ../../phaseA_minigraph_largedel/k8-1.0/k8-x86_64-Linux /home/ubuntu/gafcall_js/js/gafcall.js getsv {params.centromere} {input.alignment} > {output[0]}
+
         sort -k1,1 -k2,2n {output[0]} | ../../phaseA_minigraph_largedel/k8-1.0/k8-x86_64-Linux /home/ubuntu/gafcall_js/js/gafcall.js mergesv - > {output[1]}
+
+
         """
 
 rule sv2vcf:
@@ -92,7 +96,9 @@ rule sv2vcf:
         2
     shell:
         """
+
         ../../phaseA_minigraph_largedel/k8-1.0/k8-x86_64-Linux ../../minigraph/misc/mgutils-es6.js sv2vcf {input.bed} > {output[0]}
+
         """
 
 
@@ -153,8 +159,8 @@ rule gaftools_minimap2:
         2
     shell:
         """
-        ls {input.alignment}
-        mkdir -p {wildcards.assembly}_harmonize
-        ../../phaseA_minigraph_largedel/k8-1.0/k8-x86_64-Linux ../../minigraph/misc/mgutils-es6.js getsv {params.centromere} {input.alignment} > {output[0]}
-        sort -k1,1 -k2,2n {output[0]} | ../../phaseA_minigraph_largedel/k8-1.0/k8-x86_64-Linux ../../minigraph/misc/mgutils-es6.js mergesv - > {output[1]}
+
+        ../../phaseA_minigraph_largedel/k8-1.0/k8-x86_64-Linux /home/ubuntu/gafcall_js/js/gafcall.js getsv {params.centromere} {input.alignment} > {output[0]}
+        sort -k1,1 -k2,2n {output[0]} | ../../phaseA_minigraph_largedel/k8-1.0/k8-x86_64-Linux /home/ubuntu/gafcall_js/js/gafcall.js mergesv - > {output[1]}
+
         """
