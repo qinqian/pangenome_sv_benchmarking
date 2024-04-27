@@ -1,0 +1,57 @@
+import os
+configfile: "config.yaml"
+
+assembly_prefix = "/hlilab/hli/gafcall/asm/"
+fastq_prefix = "/hlilab/21data/collections/cancer-pair/"
+hprc_prefix = "/hlilab/hli/gafcall/HPRC-normal/"
+
+rule all:
+    input:
+        #/hlilab/hli/gafcall/asm/COLO829BL.asm.bp.hap1.p_ctg.gfa
+        expand("{cell_line}.asm.bp.hap{hap}.fa.gz", cell_line=config['samples'], hap=[1,2]),
+        expand("{cell_line}_asm.paf.gz", cell_line=config['samples']),
+        expand("{cell_line}_asm_extract.gsv.gz", cell_line=config['samples'])
+
+
+rule gfa2fa:
+    input:
+         os.path.join(assembly_prefix, "{cell_line}.asm.bp.hap{hap}.p_ctg.gfa")
+    output:
+         "{cell_line}.asm.bp.hap{hap}.fa.gz"
+    shell:
+         """
+         gfatools/gfatools gfa2fa {input} | bgzip -c - > {output}
+         """
+
+def input_fastq(wildcards):
+    if 'HG' in wildcards.cell_line or 'NA' in wildcards.cell_line:
+        prefix = wildcards.cell_line.split('.')[0]
+        return os.path.join(hprc_prefix, "{prefix}.fastq.gz".format(prefix=prefix))
+    else:
+        return os.path.join(fastq_prefix, "{wildcards.cell_line}.hifi1.fastq.gz".format(wildcards=wildcards))
+
+rule minimap2:
+    input:
+        hap = expand("{{cell_line}}.asm.bp.hap{hap}.fa.gz", hap=[1,2]),
+        fastq = input_fastq
+    output:
+        paf = "{cell_line}_asm.paf.gz"
+    threads: 24
+    resources:
+        mem_mb=64000
+    shell:
+        """
+        # -I100g for very large assembly
+        ../1a.alignment_sv_tools/minimap2/minimap2 -t {threads} -cxmap-hifi -s50 <(zcat ../1a.alignment_sv_tools/chm13.fa.gz {input.hap}) -I100g --secondary=no {input.fastq} | gzip - > {output.paf}
+        """
+
+
+rule gafcall:
+    input:
+        paf = "{cell_line}_asm.paf.gz"
+    output:
+        gsv = "{cell_line}_asm_extract.gsv.gz"
+    shell:
+        """
+        zcat {input.paf} | ../gafcall/js/gafcall.js extract -q0 -Q0 - | gzip - > {output.gsv}
+        """

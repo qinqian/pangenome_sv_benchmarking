@@ -32,13 +32,14 @@ use rule * from aligner_workflow as minimap2_workflow_*
 include: "rules/sniffles2.smk"
 include: "rules/savana.smk"
 include: "rules/clair3.smk"
-include: "rules/nanomonsv.smk"
 
 module severus_workflow:
     snakefile: "rules/severus.smk"
     config: config
 
 use rule * from severus_workflow as severus_workflow_*
+
+include: "rules/nanomonsv.smk"
 
 rule all:
     input:
@@ -47,5 +48,6 @@ rule all:
         sniffles_files, sniffles_tbi_files,
         sniffles_multi_files, sniffles_multi_vcf_files,
         savana_outdir, clair3_outdir, 
-        nanomonsv_files, severus_outdir
+        severus_outdir,
+        nanomonsv_files
     default_target: True 

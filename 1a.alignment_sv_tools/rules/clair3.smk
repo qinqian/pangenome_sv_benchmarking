@@ -1,5 +1,7 @@
 rule clair3:
     threads: 24
+    resources:
+        mem_mb=96000
     input:
         cram = "output/align/{cell_line}_{platform}/{pair}/{assembly}.cram"
     output:
