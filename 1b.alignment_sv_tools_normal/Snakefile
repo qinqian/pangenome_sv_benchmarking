@@ -1,0 +1,42 @@
+import os
+import glob
+import sys
+import pandas as pd
+from snakemake.utils import validate
+
+configfile: "config.yaml"
+
+clair3_outdir  = expand("output/clair3/{cell_line}/{assembly}/", cell_line=config['samples']['normal'], assembly=config['assembly'])
+sniffles_files  = expand("output/sniffles/{cell_line}/{assembly}.vcf.gz", cell_line=config['samples']['normal'], assembly=config['assembly'])
+sniffles_tbi_files  = expand("output/sniffles/{cell_line}/{assembly}.vcf.gz.tbi", cell_line=config['samples']['normal'], assembly=config['assembly'])
+cutesv_files  = expand("output/cutesv/{cell_line}/{assembly}.vcf.gz", cell_line=config['samples']['normal'], assembly=config['assembly'])
+
+wildcard_constraints:
+    cell_line = "[A-Za-z0-9]+",
+    assembly = "chm13|grch38",
+
+module aligner_workflow:
+    snakefile: "rules/minimap2.smk"
+    config: config
+
+use rule * from aligner_workflow as minimap2_workflow_*
+
+include: "rules/sniffles2.smk"
+
+include: "rules/clair3.smk"
+
+module severus_workflow:
+    snakefile: "rules/severus.smk"
+    config: config
+
+use rule * from severus_workflow as severus_workflow_*
+
+include: "rules/cutesv.smk"
+
+rule all:
+    input:
+        rules.minimap2_workflow_all.input,
+        rules.severus_workflow_all.input,
+        sniffles_files, sniffles_tbi_files,
+        cutesv_files
+    default_target: True 

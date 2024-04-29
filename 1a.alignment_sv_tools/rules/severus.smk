@@ -18,8 +18,8 @@ rule haplotag:
          cram = "output/align/{cell_line}_{platform}/{pair}/{assembly}.cram",
          crai = "output/align/{cell_line}_{platform}/{pair}/{assembly}.cram.crai"
     output:
-         haplotag_cram = "output/align/{cell_line}_{platform}/{pair}/{assembly}_tag.cram",
-         haplotag_crai = "output/align/{cell_line}_{platform}/{pair}/{assembly}_tag.cram.crai"
+         haplotag_cram = os.path.join(config['pwd'], "output/align/{cell_line}_{platform}/{pair}/{assembly}_tag.cram"),
+         haplotag_crai = os.path.join(config['pwd'], "output/align/{cell_line}_{platform}/{pair}/{assembly}_tag.cram.crai")
     resources:
          mem_mb=64000
     conda: "clair3"
@@ -30,18 +30,37 @@ rule haplotag:
         samtools/samtools index {output.haplotag_cram}
         """
 
+
+rule severus_linktag:
+    input:
+        crams = os.path.join(config['pwd'],"output/align/{cell_line}_{platform}/{pair}/{assembly}_tag.cram"),
+        crais = os.path.join(config['pwd'],"output/align/{cell_line}_{platform}/{pair}/{assembly}_tag.cram.crai")
+    output:
+        crams = os.path.join(config['pwd'], "output/align/{cell_line}_{platform}/{pair}/{assembly}_{pair}_tag.cram"),
+        crais = os.path.join(config['pwd'], "output/align/{cell_line}_{platform}/{pair}/{assembly}_{pair}_tag.cram.crai")
+    shell:
+        """
+
+        ln -s {input.crams} {output.crams}
+        ln -s {input.crais} {output.crais}
+        ls {output.crams} {output.crais}
+
+        """
+
 rule severus_tumor_normal_pair:
     input:
-        crams = expand("output/align/{{cell_line}}_{{platform}}/{pair}/{{assembly}}_tag.cram", pair=["T", "BL"]),
-        crais = expand("output/align/{{cell_line}}_{{platform}}/{pair}/{{assembly}}_tag.cram.crai", pair=["T", "BL"]),
+        crams = expand(os.path.join(config['pwd'],"output/align/{{cell_line}}_{{platform}}/{pair}/{{assembly}}_{pair}_tag.cram"), pair=["T", "BL"]),
+        crais = expand(os.path.join(config['pwd'],"output/align/{{cell_line}}_{{platform}}/{pair}/{{assembly}}_{pair}_tag.cram.crai"), pair=["T", "BL"]),
         phased_vcf = expand("output/clair3/{{cell_line}}_{{platform}}/{pair}/{{assembly}}", pair=["T", "BL"])
     output:
         outdir = directory("output/severus/{cell_line}_{platform}/{assembly}")
     conda: "severus"
-    threads: 24
+    threads: 12
     resources:
-        mem_mb=64000
+        mem_mb=48000
     shell:
         """
+
         python Severus-1.0/severus.py --target-bam {input.crams[0]} --control-bam {input.crams[1]} --out-dir {output.outdir} -t {threads} --phasing-vcf {input.phased_vcf[1]}/phased_merge_output.vcf.gz --vntr-bed {wildcards.assembly}_vntrs.bed
+
         """

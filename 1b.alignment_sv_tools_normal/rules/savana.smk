@@ -7,8 +7,7 @@ rule savana:
     conda: "savana"
     threads: 24
     resources:
-        mem_mb=96000,
-        tmpdir="local_tmp/"
+        mem_mb=80000
     shell:
         """
         if [[ {input.crams[0]} =~ "hifi" ]]; then
