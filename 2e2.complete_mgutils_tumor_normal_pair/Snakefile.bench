@@ -8,7 +8,7 @@ configfile: "config.yaml"
 
 CELLLINE = ["COLO829", "COLO829_ONT"]
 ASSEMBLY = ["chm13linear", "chm13graph", 
-            "grch37graph", "grch37linear",
+            #"grch37graph", "grch37linear",
             "grch38graph", "grch38linear"]
 minimap2_ASSEMBLY = ["chm13", "grch37", "grch38"]
 fasta = {'grch37': '../../reference/hs37d5.fa',
@@ -26,12 +26,9 @@ vntr = {"chm13linear": "../2.clean_processed_data/chm13v2.0.trf.bed", "chm13grap
 centromere = {"chm13linear": "../../phaseA_minigraph_largedel/chm13v2.cen-mask.bed",
               "chm13graph": "../../phaseA_minigraph_largedel/chm13v2.cen-mask.bed",
               "chm13": "../../phaseA_minigraph_largedel/chm13v2.cen-mask.bed",
-              "grch38linear": "../../phaseA_minigraph_largedel/grch38_cen.bed",
-              "grch38graph": "../../phaseA_minigraph_largedel/grch38_cen.bed",
-              "grch38": "../../phaseA_minigraph_largedel/grch38_cen.bed",
-              "grch37": ".",
-              "grch37linear": ".",
-              "grch37graph": "."}
+              "grch38linear": "/home/ubuntu/hs38.reg.bed",
+              "grch38graph": "/home/ubuntu/hs38.reg.bed",
+              "grch38": "/home/ubuntu/hs38.reg.bed"}
 
 truth_minda = {"chm13": "../2b.tumor_only_somatic_evaluation/output/truthset.colo829.out.chm13v2.crossmap_clean.vcf",
                "grch37": "../2b.tumor_only_somatic_evaluation/output/truthset_somaticSVs_COLO829_hg19.vcf",
@@ -48,7 +45,6 @@ all_outputs_harmonized_sniffles_gafcall = expand("gafcalleval/{assembly}_{cellli
 wildcard_constraints:
     assembly  = "[a-zA-Z0-9]+",
     cellline = "[a-zA-Z0-9_]+",
-    #mate   = "0|1",
 
 rule all:
     input: 

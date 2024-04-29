@@ -1,0 +1,72 @@
+import os
+import glob
+import sys
+import pandas as pd
+from snakemake.utils import validate
+
+configfile: "config.yaml"
+print(config)
+
+CELLLINE = ["HCC1395", "COLO829"]
+ASSEMBLY = ["hg002"]
+minimap2_ASSEMBLY = ["hg002"]
+
+vntr = {"chm13linear": "../2.clean_processed_data/chm13v2.0.trf.bed", "chm13graph": "../2.clean_processed_data/chm13v2.0.trf.bed",
+        "grch37graph": "../2.clean_processed_data/human_hs37d5.trf.bed", "grch37linear": "../2.clean_processed_data/human_hs37d5.trf.bed",
+        "grch38linear": "../2.clean_processed_data/human_GRCh38_no_alt_analysis_set.trf.bed",
+        "grch38graph": "../2.clean_processed_data/human_GRCh38_no_alt_analysis_set.trf.bed", 
+        "hg002": ""}
+
+centromere = {"chm13linear": "../../phaseA_minigraph_largedel/chm13v2.cen-mask.bed",
+              "chm13graph": "../../phaseA_minigraph_largedel/chm13v2.cen-mask.bed",
+              "grch38linear": "../../phaseA_minigraph_largedel/grch38_cen.bed",
+              "grch38graph": "../../phaseA_minigraph_largedel/grch38_cen.bed",
+              "grch37linear": "",
+              "grch37graph": "",
+              "hg002": ""}
+
+truth = {"chm13linear": "output/truthset.colo829.out.chm13v2.crossmap.vcf.PB.bed",
+         "chm13graph": "output/truthset.colo829.out.chm13v2.crossmap.vcf.PB.bed",
+         "grch37graph": "output/truthset_somaticSVs_COLO829_hg19_sort.vcf.gz.PB.bed",
+         "grch37linear": "output/truthset_somaticSVs_COLO829_hg19_sort.vcf.gz.PB.bed",
+         "grch38linear": "output/truthset_somaticSVs_COLO829_hg38_sort.vcf.gz.PB.bed",
+         "grch38graph": "output/truthset_somaticSVs_COLO829_hg38_sort.vcf.gz.PB.bed"}
+
+all_outputs = expand("{assembly}_minimap2_harmonize/{cellline}_mapq5_mlen50_support2_maplen2000_mergedindel.bed.gz", assembly=ASSEMBLY, cellline=CELLLINE)
+all_outputs_brk = expand("{assembly}_minimap2_harmonize/{cellline}_mapq5_mlen50_support2_maplen2000_mergedbreaks.bed.gz", assembly=ASSEMBLY, cellline=CELLLINE)
+all_outputs_harmonized_minimap2 = expand("{assembly}_minimap2_harmonize/{cellline}_mapq5_mlen50_support2_maplen2000_harmonized.bed.gz", assembly=minimap2_ASSEMBLY, cellline=CELLLINE)
+print(len(all_outputs))
+
+
+rule all:
+    input: 
+        all_outputs,
+        all_outputs_brk,
+        all_outputs_harmonized_minimap2
+
+
+rule gaftools_minimap2:
+    input:
+        tumor_alignment="../2.clean_processed_data/data/minimap2/{assembly}/{cellline}.paf",
+        normal_alignment="../2.clean_processed_data/data/minimap2/{assembly}/{cellline}-BL.paf",
+        l1=config["l1"]
+    params:
+        mapq=5,
+        indel_len=50,
+        support_read=2,
+        maplen=2000,
+        prefix=lambda wildcards, output: output[0][:-19],
+        centromere=lambda wildcards: f" --cent {centromere[wildcards.assembly]} " if centromere[wildcards.assembly]!= "" else "",
+        tr=lambda wildcards: f" --vntr {vntr[wildcards.assembly]} " if vntr[wildcards.assembly]!= "" else ""
+    output:
+        "{assembly}_minimap2_harmonize/{cellline}_mapq5_mlen50_support2_maplen2000_mergedindel.bed.gz",
+        "{assembly}_minimap2_harmonize/{cellline}_mapq5_mlen50_support2_maplen2000_mergedbreaks.bed.gz",
+        "{assembly}_minimap2_harmonize/{cellline}_mapq5_mlen50_support2_maplen2000_harmonized.bed.gz"
+    log:
+        "{assembly}_minimap2_harmonize/{cellline}.logs"
+    threads:
+        2
+    shell:
+        """
+        gaftools getsv -c {threads} -m {params.mapq} -l {params.indel_len} --input {input.tumor_alignment} --normal {input.normal_alignment} -r {params.support_read} -p {params.prefix} {params.tr} --l1 {input.l1} -a {params.maplen} -s {wildcards.assembly} --ds {params.centromere}
+        """

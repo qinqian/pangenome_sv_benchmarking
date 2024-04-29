@@ -9,7 +9,6 @@ print(config)
 
 CELLLINE = ["HCC1395", "COLO829", "COLO829_ONT"]
 ASSEMBLY = ["chm13linear", "chm13graph", 
-            ##"grch37graph", "grch37linear",
             "grch38graph", "grch38linear"]
 
 minimap2_ASSEMBLY = ["chm13", "grch37", "grch38"]
@@ -71,11 +70,9 @@ rule gaftools:
         1
     shell:
         """
-
-        ../../phaseA_minigraph_largedel/k8-1.0/k8-x86_64-Linux /home/ubuntu/gafcall_js/js/gafcall.js getsv -l 100 -n tumor {params.centromere} {input.tumor_alignment} > {output.tumor}
-        ../../phaseA_minigraph_largedel/k8-1.0/k8-x86_64-Linux /home/ubuntu/gafcall_js/js/gafcall.js getsv -l 100 -n normal {params.centromere} {input.normal_alignment} > {output.normal}
-        cat {output.tumor} {output.normal} | sort -k1,1 -k2,2n - | ../../phaseA_minigraph_largedel/k8-1.0/k8-x86_64-Linux /home/ubuntu/gafcall_js/js/gafcall.js mergesv - > {output.merged}
-
+        gafcall sv -l 100 -n tumor {params.centromere} {input.tumor_alignment} > {output.tumor}
+        gafcall sv -l 100 -n normal {params.centromere} {input.normal_alignment} > {output.normal}
+        cat {output.tumor} {output.normal} | sort -k1,1 -k2,2n - | gafcall merge - > {output.merged}
         """
 
 
@@ -86,9 +83,7 @@ rule filter_sv:
         "{assembly}_harmonize/{cellline}_filtered.bed"
     shell:
         """
-
         cat {input} | grep -v "normal" > {output}
-
         """
 
 rule filter_sv_vcf:
@@ -98,9 +93,7 @@ rule filter_sv_vcf:
         "{assembly}_harmonize/{cellline}_filtered.vcf"
     shell:
         """
-
         ../../phaseA_minigraph_largedel/k8-1.0/k8-x86_64-Linux ../../minigraph/misc/mgutils-es6.js sv2vcf {input[0]} > {output[0]}
-
         """
 
 
@@ -113,7 +106,6 @@ rule reformat_filter_sv_vcf:
         format_vcf_gz_tbi="{assembly}_harmonize/{cellline}_filtered_format.vcf.gz.tbi"
     shell:
         """
-
         cat {input} | gafcall vcf - | awk '$1 ~ /^#/ {{print $0;next}} {{print $0 | "sort -k1,1 -k2,2n"}}' > {output.format_vcf}
         bgzip -c {output.format_vcf} > {output.format_vcf_gz}
         tabix -p vcf {output.format_vcf_gz}

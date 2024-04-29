@@ -7,7 +7,7 @@ from snakemake.utils import validate
 configfile: "config.yaml"
 print(config)
 
-CELLLINE = ["HCC1395", "COLO829", "COLO829_ONT"]
+CELLLINE = ["HG002_PACBIO_REVIO", "HG002_ONT_sup", "COLO829-BL", "COLO829_ONT-BL", "HCC1395-BL"]
 ASSEMBLY = ["chm13linear", "chm13graph", 
             "grch38graph", "grch38linear"]
 
