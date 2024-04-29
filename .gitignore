@@ -9,3 +9,11 @@ _LAST
 *.gaf
 *.paf
 *.vcf
+*.gsv.gz
+*.gsv
+*fa
+*fa.gz
+*paf
+*paf.gz
+*cram
+*cram.crai

@@ -5,6 +5,7 @@ assembly_prefix = "/hlilab/hli/gafcall/asm/"
 fastq_prefix = "/hlilab/21data/collections/cancer-pair/"
 hprc_prefix = "/hlilab/hli/gafcall/HPRC-normal/"
 
+
 rule all:
     input:
         #/hlilab/hli/gafcall/asm/COLO829BL.asm.bp.hap1.p_ctg.gfa
@@ -29,6 +30,7 @@ def input_fastq(wildcards):
         return os.path.join(hprc_prefix, "{prefix}.fastq.gz".format(prefix=prefix))
     else:
         return os.path.join(fastq_prefix, "{wildcards.cell_line}.hifi1.fastq.gz".format(wildcards=wildcards))
+
 
 rule minimap2:
     input:

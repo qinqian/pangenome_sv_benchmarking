@@ -1,0 +1,45 @@
+import os
+configfile: "config.yaml"
+
+assembly_prefix = "/hlilab/hli/gafcall/asm/"
+fastq_prefix = "/hlilab/21data/collections/cancer-pair/"
+hprc_prefix = "/hlilab/hli/gafcall/HPRC-normal/"
+
+cell_line = [sample.replace("BL", "") for sample in config['samples'] if not ('HG' in sample or 'NA' in sample)]
+print(cell_line)
+
+
+rule all:
+    input:
+        expand("{cell_line}T_asm.paf.gz", cell_line=cell_line),
+        expand("{cell_line}T_asm_extract.gsv.gz", cell_line=cell_line)
+
+
+def input_fastq(wildcards):
+    return os.path.join(fastq_prefix, "{wildcards.cell_line}T.hifi1.fastq.gz".format(wildcards=wildcards))
+
+rule minimap2:
+    input:
+        hap = expand("{{cell_line}}BL.asm.bp.hap{hap}.fa.gz", hap=[1,2]),
+        fastq = input_fastq
+    output:
+        paf = "{cell_line}T_asm.paf.gz"
+    threads: 24
+    resources:
+        mem_mb=64000
+    shell:
+        """
+        # -I100g for very large assembly
+        ../1a.alignment_sv_tools/minimap2/minimap2 -t {threads} -cxmap-hifi -s50 <(zcat ../1a.alignment_sv_tools/chm13.fa.gz {input.hap}) -I100g --secondary=no {input.fastq} | gzip - > {output.paf}
+        """
+
+
+rule gafcall:
+    input:
+        paf = "{cell_line}T_asm.paf.gz"
+    output:
+        gsv = "{cell_line}T_asm_extract.gsv.gz"
+    shell:
+        """
+        zcat {input.paf} | ../gafcall/js/gafcall.js extract -q0 -Q0 - | gzip - > {output.gsv}
+        """

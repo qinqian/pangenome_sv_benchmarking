@@ -9,6 +9,8 @@ configfile: "config.yaml"
 clair3_outdir  = expand(expand("output/clair3/{cell_line}_{platform}/{{pair}}/{{assembly}}/", zip, cell_line=config['samples']['tumor'], platform=config['samples']['platform']), pair=["T", "BL"], assembly=config['assembly'])
 sniffles_files  = expand(expand("output/sniffles/{cell_line}_{platform}/{{pair}}/{{assembly}}.vcf.gz", zip, cell_line=config['samples']['tumor'], platform=config['samples']['platform']), pair=["T", "BL"], assembly=config['assembly'])
 sniffles_tbi_files  = expand(expand("output/sniffles/{cell_line}_{platform}/{{pair}}/{{assembly}}.vcf.gz.tbi", zip, cell_line=config['samples']['tumor'], platform=config['samples']['platform']), pair=["T", "BL"], assembly=config['assembly'])
+sniffles_mosaic_files  = expand(expand("output/sniffles_mosaic/{cell_line}_{platform}/{{pair}}/{{assembly}}.vcf.gz", zip, cell_line=config['samples']['tumor'], platform=config['samples']['platform']), pair=["T", "BL"], assembly=config['assembly'])
+sniffles_mosaic_tbi_files  = expand(expand("output/sniffles_mosaic/{cell_line}_{platform}/{{pair}}/{{assembly}}.vcf.gz.tbi", zip, cell_line=config['samples']['tumor'], platform=config['samples']['platform']), pair=["T", "BL"], assembly=config['assembly'])
 sniffles_multi_files  = expand(expand("output/sniffles/{cell_line}_{platform}/{{pair}}/{{assembly}}.snf", zip, cell_line=config['samples']['tumor'], platform=config['samples']['platform']), pair=["T", "BL"], assembly=config['assembly'])
 "output/sniffles/{cell_line}_{platform}/{assembly}_multi.vcf.gz"
 sniffles_multi_vcf_files  = expand(expand("output/sniffles/{cell_line}_{platform}/{{assembly}}_multi.vcf.gz", zip, cell_line=config['samples']['tumor'], platform=config['samples']['platform']), assembly=config['assembly'])
@@ -46,8 +48,9 @@ rule all:
         rules.minimap2_workflow_all.input,
         rules.severus_workflow_all.input,
         sniffles_files, sniffles_tbi_files,
+        sniffles_mosaic_files, sniffles_mosaic_tbi_files,
         sniffles_multi_files, sniffles_multi_vcf_files,
         savana_outdir, clair3_outdir, 
         severus_outdir,
-        nanomonsv_files
+        nanomonsv_files,
     default_target: True 
