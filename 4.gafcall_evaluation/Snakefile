@@ -123,7 +123,7 @@ rule gafcalleval:
        out1="gafcalleval/{assembly}_{cellline}_linear_gafcalleval.tsv"
     shell:
        """
-       ../../phaseA_minigraph_largedel/k8-1.0/k8-x86_64-Linux ~/gaftools/js/gafcall.js eval {input.base} {input.vcf} > {output.out1}
+       ../gafcall/js/gafcall.js eval {input.base} {input.vcf} > {output.out1}
        """
 
 use rule gafcalleval as gafcalleval_severus with:

@@ -62,8 +62,8 @@ picard_liftover() {
 
 crossmap_liftover() {
     # NOTE: only lift over pos, this ignore the ALT position encodings
-    CrossMap vcf --chromid l $output/hg19-chm13v2.chain  $output/truthset_somaticSVs_COLO829_hg19_sort.vcf.gz  ../../reference/chm13v2.0.fa  $output/truthset.colo829.out.chm13v2.crossmap.vcf
-    python vcf2bed.py colo_truth $output/truthset.colo829.out.chm13v2.crossmap.vcf
+    CrossMap vcf --chromid l $output/hg19-chm13v2.chain  $output/truthset_somaticSVs_COLO829_hg19_sort.vcf.gz  ../1a.alignment_sv_tools/chm13.fa  $output/truthset.colo829.out.chm13v2.crossmap.vcf
+    # python vcf2bed.py colo_truth $output/truthset.colo829.out.chm13v2.crossmap.vcf
     # convert to vcf, only liftover the ALT allele
     python liftover_makeup.py output/truthset.colo829.out.chm13v2.crossmap.vcf > $output/truthset.colo829.out.chm13v2.crossmap_clean.vcf
 }
@@ -82,9 +82,9 @@ main() {
     mkdir -p $output
     #download_colo829_truthset
     #get_liftover
-    #clean_truthset
+    clean_truthset
     #NOTE: picard have more excluded svs
-    #picard_liftover
+    ###picard_liftover
     crossmap_liftover
 
     #snakemake --cores 16

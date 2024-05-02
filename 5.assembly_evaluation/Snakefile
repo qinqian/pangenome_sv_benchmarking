@@ -57,3 +57,21 @@ rule gafcall:
         """
         zcat {input.paf} | ../gafcall/js/gafcall.js extract -q0 -Q0 - | gzip - > {output.gsv}
         """
+
+#def input_fastq(wildcards):
+#    if 'HG' in wildcards.cell_line or 'NA' in wildcards.cell_line:
+#        prefix = wildcards.cell_line.split('.')[0]
+#        return os.path.join(hprc_prefix, "{prefix}.fastq.gz".format(prefix=prefix))
+#    else:
+#        return os.path.join(fastq_prefix, "{wildcards.cell_line}.hifi1.fastq.gz".format(wildcards=wildcards))
+
+#rule gafcall_filter_by_assembly:
+#    input:
+#        gsv = rules.gafcall.output.gsv
+#        compare_gsv = 
+#    output:
+#        gsv = "{cell_line}_asm_extract.gsv.gz"
+#    shell:
+#        """
+#        ../gafcall/js/gafcall.js join <(zcat {input.gsv}) {input.compare_gsv} | sort -k1,1 -k2,2n - | ../gafcall/js/gafcall.js merge - | wc -l
+#        """

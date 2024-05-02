@@ -47,6 +47,24 @@ rule severus_linktag:
 
         """
 
+
+rule severus_single:
+    input:
+        crams = os.path.join(config['pwd'], "output/align/{cell_line}_{platform}/{pair}/{assembly}_{pair}_tag.cram"),
+        crais = os.path.join(config['pwd'], "output/align/{cell_line}_{platform}/{pair}/{assembly}_{pair}_tag.cram.crai"),
+        phased_vcf = "output/clair3/{cell_line}_{platform}/{pair}/{assembly}"
+    output:
+        outdir = directory("output/severus_{platform}/{cell_line}_{pair}_{assembly}")
+    conda: "severus"
+    threads: 12
+    resources:
+        mem_mb=48000
+    shell:
+        """
+        python Severus-1.0/severus.py --target-bam {input.crams} --out-dir {output.outdir} -t {threads} --phasing-vcf {input.phased_vcf}/phased_merge_output.vcf.gz --vntr-bed ../1a.alignment_sv_tools/{wildcards.assembly}_vntrs.bed
+        """
+
+
 rule severus_tumor_normal_pair:
     input:
         crams = expand(os.path.join(config['pwd'],"output/align/{{cell_line}}_{{platform}}/{pair}/{{assembly}}_{pair}_tag.cram"), pair=["T", "BL"]),

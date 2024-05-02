@@ -1,0 +1,7 @@
+name: truvari2
+channels:
+  - conda-forge
+  - bioconda
+  - defaults
+dependencies:
+  - truvari == 4.2.2
