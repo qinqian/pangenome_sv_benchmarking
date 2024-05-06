@@ -72,7 +72,7 @@ rule gaftools:
         """
         gafcall sv -l 100 -n tumor {params.centromere} {input.tumor_alignment} > {output.tumor}
         gafcall sv -l 100 -n normal {params.centromere} {input.normal_alignment} > {output.normal}
-        cat {output.tumor} {output.normal} | sort -k1,1 -k2,2n - | gafcall merge - > {output.merged}
+        cat {output.tumor} {output.normal} | sort -k1,1 -k2,2n - | gafcall merge -s 0 -c 2 - > {output.merged}
         """
 
 

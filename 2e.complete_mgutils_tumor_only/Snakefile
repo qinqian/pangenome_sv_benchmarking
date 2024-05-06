@@ -60,8 +60,7 @@ rule gaftools:
         1
     shell:
         """
-
-        ../../phaseA_minigraph_largedel/k8-1.0/k8-x86_64-Linux /home/ubuntu/gafcall_js/js/gafcall.js getsv -l 100 {params.centromere} {input.alignment} | gzip - > {output[0]}
+        /home/ubuntu/gafcall_js/js/gafcall.js getsv -l 100 {params.centromere} {input.alignment} | gzip - > {output[0]}
         """
 
 rule gaftools_merge:
@@ -71,8 +70,7 @@ rule gaftools_merge:
         "{assembly}_harmonize/{cellline}_merged.gsv.gz"
     shell:
         """
-
-        zcat {input.bed} | sort -k1,1 -k2,2n - | ../../phaseA_minigraph_largedel/k8-1.0/k8-x86_64-Linux /home/ubuntu/gafcall_js/js/gafcall.js mergesv - | gzip - > {output[0]}
+        zcat {input.bed} | sort -k1,1 -k2,2n - | /home/ubuntu/gafcall_js/js/gafcall.js mergesv - | gzip - > {output[0]}
         """
 
 rule filter_sv_vcf:
@@ -82,8 +80,7 @@ rule filter_sv_vcf:
         "{assembly}_harmonize/{cellline}_filtered.vcf"
     shell:
         """
-
-        zcat {input} | ../../phaseA_minigraph_largedel/k8-1.0/k8-x86_64-Linux ../../minigraph/misc/mgutils-es6.js sv2vcf - > {output[0]}
+        zcat {input} | /home/ubuntu/gafcall_js/js/gafcall.js genvcf - > {output[0]}
         """
 
 rule reformat_filter_sv_vcf:
@@ -95,9 +92,7 @@ rule reformat_filter_sv_vcf:
         format_vcf_gz_tbi="{assembly}_harmonize/{cellline}_filtered_format.vcf.gz.tbi"
     shell:
         """
-
         cat {input} | awk '$1 ~ /^#/ {{print $0;next}} {{print $0 | "sort -k1,1 -k2,2n"}}' > {output.format_vcf}
         bgzip -c {output.format_vcf} > {output.format_vcf_gz}
         tabix -p vcf {output.format_vcf_gz}
-
         """
