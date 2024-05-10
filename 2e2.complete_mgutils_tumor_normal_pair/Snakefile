@@ -73,8 +73,10 @@ rule gaftools:
         """
 
         ../../phaseA_minigraph_largedel/k8-1.0/k8-x86_64-Linux /home/ubuntu/gafcall_js/js/gafcall.js getsv -l 100 -n tumor {params.centromere} {input.tumor_alignment} > {output.tumor}
+
         ../../phaseA_minigraph_largedel/k8-1.0/k8-x86_64-Linux /home/ubuntu/gafcall_js/js/gafcall.js getsv -l 100 -n normal {params.centromere} {input.normal_alignment} > {output.normal}
-        cat {output.tumor} {output.normal} | sort -k1,1 -k2,2n - | ../../phaseA_minigraph_largedel/k8-1.0/k8-x86_64-Linux /home/ubuntu/gafcall_js/js/gafcall.js mergesv - > {output.merged}
+
+        cat {output.tumor} {output.normal} | sort -k1,1 -k2,2n - | ../../phaseA_minigraph_largedel/k8-1.0/k8-x86_64-Linux /home/ubuntu/gafcall_js/js/gafcall.js mergesv -c 2 -s 0 - > {output.merged}
 
         """
 

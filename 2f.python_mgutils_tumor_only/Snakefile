@@ -41,7 +41,7 @@ all_outputs_filtered_vcf   = expand("{assembly}_harmonize/{cellline}_filtered_fo
 
 rule all:
     input: 
-        all_outputs_harmonized
+        all_outputs_harmonized, all_outputs_filtered_vcf
 
 rule gaftools:
     input:
@@ -58,10 +58,8 @@ rule gaftools:
     threads:
         1
     shell:
-        """
-
+        """ 
         gafcall sv -l 100 {params.centromere} {input.alignment} | gzip - > {output[0]}
-
         """
 
 rule gaftools_merge:
@@ -81,8 +79,7 @@ rule filter_sv_vcf:
         "{assembly}_harmonize/{cellline}_filtered.vcf"
     shell:
         """
-
-        zcat {input} | gafcall sv2vcf - > {output[0]}
+        zcat {input} | gafcall formatvcf - > {output[0]}
 
         """
 
@@ -95,7 +92,6 @@ rule reformat_filter_sv_vcf:
         format_vcf_gz_tbi="{assembly}_harmonize/{cellline}_filtered_format.vcf.gz.tbi"
     shell:
         """
-
         cat {input} | awk '$1 ~ /^#/ {{print $0;next}} {{print $0 | "sort -k1,1 -k2,2n"}}' > {output.format_vcf}
         bgzip -c {output.format_vcf} > {output.format_vcf_gz}
         tabix -p vcf {output.format_vcf_gz}

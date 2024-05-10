@@ -8,9 +8,9 @@ configfile: "config.yaml"
 
 CELLLINE = ["COLO829", "COLO829_ONT"]
 ASSEMBLY = ["chm13linear", "chm13graph", 
-            #"grch37graph", "grch37linear",
             "grch38graph", "grch38linear"]
-minimap2_ASSEMBLY = ["chm13", "grch37", "grch38"]
+minimap2_ASSEMBLY = ["chm13", "grch38"]
+
 fasta = {'grch37': '../../reference/hs37d5.fa',
          'grch38': '../../reference/GCA_000001405.15_GRCh38_no_alt_analysis_set.fna',
          'chm13':  '../../reference/chm13v2.0.fa'}
