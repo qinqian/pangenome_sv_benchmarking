@@ -47,7 +47,7 @@ evaluate_notruthset() {
     done
 }
 
-#evaluate_truthset_colo829 ../2b.tumor_only_somatic_evaluation/output/truthset.colo829.out.chm13v2.crossmap_clean.vcf chm13 chm13 COLO829 & 
+evaluate_truthset_colo829 ../2b.tumor_only_somatic_evaluation/output/truthset.colo829.out.chm13v2.crossmap_clean.vcf chm13 chm13 COLO829 & 
 #evaluate_truthset_colo829 ../2b.tumor_only_somatic_evaluation/output/truthset_somaticSVs_COLO829_hg38_chrprefix.vcf grch38 hg38 COLO829 &
 ## 1b, evaluate tumor-pair SVs without gold standard
 #for cell_line in HCC1395 HCC1937 HCC1954 NCI1437 NCI2009; do
@@ -60,7 +60,7 @@ evaluate_notruthset() {
 
 #python parse_eval.py --prefix colo829_truthset_comparison *colo829_truthset_gafcalleval_vcf_withbed.tsv
 
-python parse_eval.py --prefix notruthset_comparison *HCC*truthset_gafcalleval_vcf_withbed.tsv *NCI*truthset_gafcalleval_vcf_withbed.tsv
+#python parse_eval.py --prefix notruthset_comparison *HCC*truthset_gafcalleval_vcf_withbed.tsv *NCI*truthset_gafcalleval_vcf_withbed.tsv
 
 # second, evaluate tumor read filter by assembly, graph and t2t for tumor-normal pair specificity
 

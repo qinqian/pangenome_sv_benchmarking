@@ -12,10 +12,8 @@ rule savana:
     shell:
         """
         if [[ {input.crams[0]} =~ "hifi" ]]; then
-            echo savana --mapq 5 --threads {threads} --tumour {input.crams[0]} --normal {input.crams[1]} --outdir {output.outdir} --ref {wildcards.assembly}.fa --contigs savana/example/contigs.chr.hg38.txt
-            savana --mapq 5 --threads {threads} --tumour {input.crams[0]} --normal {input.crams[1]} --outdir {output.outdir} --ref {wildcards.assembly}.fa --contigs savana/example/contigs.chr.hg38.txt
+            savana --threads {threads} --tumour {input.crams[0]} --normal {input.crams[1]} --outdir {output.outdir} --ref {wildcards.assembly}.fa --contigs savana/example/contigs.chr.hg38.txt
         else
-            echo savana --mapq 5 --threads {threads} --tumour {input.crams[0]} --normal {input.crams[1]} --outdir {output.outdir} --ref {wildcards.assembly}.fa --ont savana/example/contigs.chr.hg38.txt
-            savana --mapq 5 --threads {threads} --tumour {input.crams[0]} --normal {input.crams[1]} --outdir {output.outdir} --ref {wildcards.assembly}.fa --ont --contigs savana/example/contigs.chr.hg38.txt
+            savana --threads {threads} --tumour {input.crams[0]} --normal {input.crams[1]} --outdir {output.outdir} --ref {wildcards.assembly}.fa --ont --contigs savana/example/contigs.chr.hg38.txt
         fi
         """

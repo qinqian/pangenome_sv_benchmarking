@@ -1,0 +1,14 @@
+prefix: /hlilab/alvin/pangenome_sv_benchmarking/1c.additional_ont
+pwd: /hlilab/alvin/pangenome_sv_benchmarking/1c.additional_ont
+
+samples:
+  tumor:
+      - COLO829
+  normal:
+      - HG002
+
+assembly:
+  - chm13
+  - grch38
+
+mosaic: False

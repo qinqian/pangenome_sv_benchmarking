@@ -1,26 +1,28 @@
-idx_files  = expand(expand("output/align/{cell_line}/{{pair}}/{{assembly}}_tag.cram.crai",  cell_line=config['samples']['tumor']), pair=["T", "BL"], assembly=config['assembly'])
-files  = expand(expand("output/align/{cell_line}/{{pair}}/{{assembly}}_tag.cram", cell_line=config['samples']['tumor']), pair=["T", "BL"], assembly=config['assembly'])
+idx_files  = expand("output/align/{cell_line}/{assembly}_tag.cram.crai",  cell_line=config['samples']['normal'], assembly=config['assembly'])
+
+files  = expand("output/align/{cell_line}/{assembly}_tag.cram", cell_line=config['samples']['normal'], assembly=config['assembly'])
+
+severus_output  = expand("output/severus/{cell_line}_{assembly}", cell_line=config['samples']['normal'], assembly=config['assembly'])
 
 
 wildcard_constraints:
     cell_line = "[A-Za-z0-9]+",
-    pair = "BL|T",
     assembly = "chm13|grch38",
 
 
 rule all:
     input:
         idx_files,
-        files
+        files, severus_output
 
 rule haplotag:
     input:
          phased_vcf = "output/clair3/{cell_line}_{assembly}",
-         cram = rules.minimap2.output.cram,
-         crai = rules.minimap2.output.crai
+         cram = "{cell_line}_{assembly}.cram",
+         crai = "{cell_line}_{assembly}.cram.crai"
     output:
-         haplotag_cram = "output/align/{cell_line}/{pair}/{assembly}_tag.cram",
-         haplotag_crai = "output/align/{cell_line}/{pair}/{assembly}_tag.cram.crai"
+         haplotag_cram = "output/align/{cell_line}/{assembly}_tag.cram",
+         haplotag_crai = "output/align/{cell_line}/{assembly}_tag.cram.crai"
     resources:
          mem_mb=64000
     conda: "clair3"
@@ -32,36 +34,18 @@ rule haplotag:
         """
 
 
-rule severus_linktag:
+rule severus_single:
     input:
-        crams = os.path.join(config['pwd'],"output/align/{cell_line}/{pair}/{assembly}_tag.cram"),
-        crais = os.path.join(config['pwd'],"output/align/{cell_line}/{pair}/{assembly}_tag.cram.crai")
+        crams = "output/align/{cell_line}/{assembly}_tag.cram",
+        crais = "output/align/{cell_line}/{assembly}_tag.cram.crai",
+        phased_vcf = "output/clair3/{cell_line}_{assembly}"
     output:
-        crams = os.path.join(config['pwd'], "output/align/{cell_line}/{pair}/{assembly}_{pair}_tag.cram"),
-        crais = os.path.join(config['pwd'], "output/align/{cell_line}/{pair}/{assembly}_{pair}_tag.cram.crai")
-    shell:
-        """
-
-        ln -s {input.crams} {output.crams}
-        ln -s {input.crais} {output.crais}
-        ls {output.crams} {output.crais}
-
-        """
-
-rule severus_tumor_normal_pair:
-    input:
-        crams = expand(os.path.join(config['pwd'],"output/align/{{cell_line}}/{pair}/{{assembly}}_{pair}_tag.cram"), pair=["T", "BL"]),
-        crais = expand(os.path.join(config['pwd'],"output/align/{{cell_line}}/{pair}/{{assembly}}_{pair}_tag.cram.crai"), pair=["T", "BL"]),
-        phased_vcf = expand("output/clair3/{{cell_line}}{pair}_{{assembly}}", pair=["T", "BL"])
-    output:
-        outdir = directory("output/severus/{cell_line}/{assembly}")
+        outdir = directory("output/severus/{cell_line}_{assembly}")
     conda: "severus"
     threads: 12
     resources:
         mem_mb=48000
     shell:
         """
-
-        python ../1a.alignment_sv_tools/Severus-1.0/severus.py --target-bam {input.crams[0]} --control-bam {input.crams[1]} --out-dir {output.outdir} -t {threads} --phasing-vcf {input.phased_vcf[1]}/phased_merge_output.vcf.gz --vntr-bed ../1a.alignment_sv_tools/{wildcards.assembly}_vntrs.bed
-
+        python ../1a.alignment_sv_tools/Severus-1.0/severus.py --target-bam {input.crams} --out-dir {output.outdir} -t {threads} --phasing-vcf {input.phased_vcf}/phased_merge_output.vcf.gz --vntr-bed ../1a.alignment_sv_tools/{wildcards.assembly}_vntrs.bed
         """

@@ -9,7 +9,12 @@ configfile: "config.yaml"
 clair3_outdir  = expand("output/clair3/{cell_line}/{assembly}/", cell_line=config['samples']['normal'], assembly=config['assembly'])
 sniffles_files  = expand("output/sniffles/{cell_line}/{assembly}.vcf.gz", cell_line=config['samples']['normal'], assembly=config['assembly'])
 sniffles_tbi_files  = expand("output/sniffles/{cell_line}/{assembly}.vcf.gz.tbi", cell_line=config['samples']['normal'], assembly=config['assembly'])
+sniffles_mo_files  = expand("output/sniffles_mosaic/{cell_line}/{assembly}.vcf.gz", cell_line=config['samples']['normal'], assembly=config['assembly'])
+sniffles_mo_tbi_files  = expand("output/sniffles_mosaic/{cell_line}/{assembly}.vcf.gz.tbi", cell_line=config['samples']['normal'], assembly=config['assembly'])
 cutesv_files  = expand("output/cutesv/{cell_line}/{assembly}.vcf.gz", cell_line=config['samples']['normal'], assembly=config['assembly'])
+
+svision_files  = expand("output/svision/{cell_line}/{assembly}/{cell_line}.svision_pro_v1.8.s5.vcf", cell_line=config['samples']['normal'], assembly=config['assembly'])
+
 
 wildcard_constraints:
     cell_line = "[A-Za-z0-9]+",
@@ -32,11 +37,12 @@ module severus_workflow:
 use rule * from severus_workflow as severus_workflow_*
 
 include: "rules/cutesv.smk"
+include: "rules/svision.smk"
 
 rule all:
     input:
         rules.minimap2_workflow_all.input,
         rules.severus_workflow_all.input,
         sniffles_files, sniffles_tbi_files,
-        cutesv_files
+        cutesv_files, sniffles_mo_files, sniffles_mo_tbi_files, svision_files
     default_target: True 

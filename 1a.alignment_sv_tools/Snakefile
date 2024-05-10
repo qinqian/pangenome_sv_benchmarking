@@ -11,14 +11,20 @@ sniffles_files  = expand(expand("output/sniffles/{cell_line}_{platform}/{{pair}}
 sniffles_tbi_files  = expand(expand("output/sniffles/{cell_line}_{platform}/{{pair}}/{{assembly}}.vcf.gz.tbi", zip, cell_line=config['samples']['tumor'], platform=config['samples']['platform']), pair=["T", "BL"], assembly=config['assembly'])
 sniffles_mosaic_files  = expand(expand("output/sniffles_mosaic/{cell_line}_{platform}/{{pair}}/{{assembly}}.vcf.gz", zip, cell_line=config['samples']['tumor'], platform=config['samples']['platform']), pair=["T", "BL"], assembly=config['assembly'])
 sniffles_mosaic_tbi_files  = expand(expand("output/sniffles_mosaic/{cell_line}_{platform}/{{pair}}/{{assembly}}.vcf.gz.tbi", zip, cell_line=config['samples']['tumor'], platform=config['samples']['platform']), pair=["T", "BL"], assembly=config['assembly'])
+
 sniffles_multi_files  = expand(expand("output/sniffles/{cell_line}_{platform}/{{pair}}/{{assembly}}.snf", zip, cell_line=config['samples']['tumor'], platform=config['samples']['platform']), pair=["T", "BL"], assembly=config['assembly'])
 "output/sniffles/{cell_line}_{platform}/{assembly}_multi.vcf.gz"
 sniffles_multi_vcf_files  = expand(expand("output/sniffles/{cell_line}_{platform}/{{assembly}}_multi.vcf.gz", zip, cell_line=config['samples']['tumor'], platform=config['samples']['platform']), assembly=config['assembly'])
+
+sniffles_mo_multi_files  = expand(expand("output/sniffles_mosaic/{cell_line}_{platform}/{{pair}}/{{assembly}}.snf", zip, cell_line=config['samples']['tumor'], platform=config['samples']['platform']), pair=["T", "BL"], assembly=config['assembly'])
+sniffles_mo_multi_vcf_files  = expand(expand("output/sniffles_mosaic/{cell_line}_{platform}/{{assembly}}_multi.vcf.gz", zip, cell_line=config['samples']['tumor'], platform=config['samples']['platform']), assembly=config['assembly'])
 
 nanomonsv_files  = expand(expand("output/nanomonsv/{cell_line}_{platform}/{{assembly}}_tnpair.txt", zip, cell_line=config['samples']['tumor'], platform=config['samples']['platform']), assembly=config['assembly'])
 savana_outdir  = expand(expand("output/savana/{cell_line}_{platform}/{{assembly}}", zip, cell_line=config['samples']['tumor'], platform=config['samples']['platform']), assembly=config['assembly'])
 severus_outdir  = expand(expand("output/severus/{cell_line}_{platform}/{{assembly}}", zip, cell_line=config['samples']['tumor'], platform=config['samples']['platform']), assembly=config['assembly'])
 severus_single_outdir  = expand(expand("output/severus_{platform}/{cell_line}_{{pair}}_{{assembly}}", zip, cell_line=config['samples']['tumor'], platform=config['samples']['platform']), pair=["T", "BL"], assembly=config['assembly'])
+
+svision_outdir  = expand(expand("output/svision/{cell_line}_{platform}/{{assembly}}", zip, cell_line=config['samples']['tumor'], platform=config['samples']['platform']), assembly=config['assembly'])
 
 wildcard_constraints:
     cell_line = "[A-Za-z0-9]+",
@@ -44,6 +50,8 @@ use rule * from severus_workflow as severus_workflow_*
 
 include: "rules/nanomonsv.smk"
 
+include: "rules/svision.smk"
+
 rule all:
     input:
         rules.minimap2_workflow_all.input,
@@ -51,7 +59,9 @@ rule all:
         sniffles_files, sniffles_tbi_files,
         sniffles_mosaic_files, sniffles_mosaic_tbi_files,
         sniffles_multi_files, sniffles_multi_vcf_files,
+        sniffles_mo_multi_files, sniffles_mo_multi_vcf_files,
         savana_outdir, clair3_outdir, 
         severus_outdir, severus_single_outdir,
         nanomonsv_files,
+        svision_outdir
     default_target: True 

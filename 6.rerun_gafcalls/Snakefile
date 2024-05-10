@@ -1,0 +1,34 @@
+import glob
+import os
+
+
+rule all:
+    input:
+        expand("{cell_line}.gsv.gz", cell_line=)
+
+def input_alignment(wildcards):
+    if 'mm' in wildcards.cell_line:
+        return "{cell_line}.paf.gz"
+    if 'mg' in wildcards.cell_line:
+        return "{cell_line}.gaf.gz"
+    else:
+        return "../1c.additional_ont/{cell_line}{pair}_{assembly}.gaf.gz"
+
+rule gafcall_extract:
+    input:
+        input_alignment
+    output:
+        gsv = "{cell_line}.gsv.gz"
+    shell:
+        """
+        zcat {input} | ../gafcall/js/gafcall.js extract - | gzip - > {output.gsv}
+        """
+
+#rule gafcall_merge:
+#    input:
+#    output:
+#        "_c{c}s{s}"
+#    shell:
+#        """
+#        """
+#

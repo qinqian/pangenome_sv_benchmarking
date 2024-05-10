@@ -11,6 +11,7 @@ rule savana:
         tmpdir="local_tmp/"
     shell:
         """
-        echo savana --mapq 5 --threads {threads} --tumour {input.crams[0]} --normal {input.crams[1]} --outdir {output.outdir} --ref ../1a.alignment_sv_tools/{wildcards.assembly}.fa --ont savana/example/contigs.chr.hg38.txt
-        savana --mapq 5 --threads {threads} --tumour {input.crams[0]} --normal {input.crams[1]} --outdir {output.outdir} --ref ../1a.alignment_sv_tools/{wildcards.assembly}.fa --ont --contigs ../1a.alignment_sv_tools/savana/example/contigs.chr.hg38.txt
+        savana --threads {threads} --tumour {input.crams[0]} --normal {input.crams[1]} --outdir {output.outdir} --ref ../1a.alignment_sv_tools/{wildcards.assembly}.fa --ont --contigs ../1a.alignment_sv_tools/savana/example/contigs.chr.hg38.txt
         """
+
+##--mapq 5 

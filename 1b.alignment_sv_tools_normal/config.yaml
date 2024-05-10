@@ -1,0 +1,15 @@
+prefix: /hlilab/hli/gafcall/HPRC-normal/
+
+samples:
+  normal:
+    - HG00099
+    - HG002
+    - HG01192
+    - HG03225
+    - NA18983
+
+assembly:
+  - chm13
+  - grch38
+
+mosaic: False
