@@ -1,0 +1,14 @@
+prefix: /cluster/hlilab/alvin/severus_data2
+pwd: /cluster/hlilab/alvin/severus_data2
+
+samples:
+  tumor:
+      - HCC1937
+  platform:
+      - ont1
+
+assembly:
+  - chm13
+  - grch38
+
+mosaic: False

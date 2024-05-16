@@ -1,5 +1,5 @@
-idx_files  = expand(expand("output/align/{cell_line}_{platform}/{{pair}}/{{assembly}}_tag.cram.crai", zip, cell_line=config['samples']['tumor'], platform=config['samples']['platform']), pair=["T", "BL"], assembly=config['assembly'])
-files  = expand(expand("output/align/{cell_line}_{platform}/{{pair}}/{{assembly}}_tag.cram", zip, cell_line=config['samples']['tumor'], platform=config['samples']['platform']), pair=["T", "BL"], assembly=config['assembly'])
+idx_files  = expand(expand(os.path.join(config['pwd'], "output/align/{cell_line}_{platform}/{{pair}}/{{assembly}}_tag.cram.crai"), zip, cell_line=config['samples']['tumor'], platform=config['samples']['platform']), pair=["T", "BL"], assembly=config['assembly'])
+files  = expand(expand(os.path.join(config['pwd'], "output/align/{cell_line}_{platform}/{{pair}}/{{assembly}}_tag.cram"), zip, cell_line=config['samples']['tumor'], platform=config['samples']['platform']), pair=["T", "BL"], assembly=config['assembly'])
 
 wildcard_constraints:
     cell_line = "[A-Za-z0-9]+",
@@ -27,7 +27,7 @@ rule haplotag:
     shell:
         """
         whatshap haplotag --reference {wildcards.assembly}.fa {input.phased_vcf}/phased_merge_output.vcf.gz {input.cram} -o {output.haplotag_cram} --ignore-read-groups --tag-supplementary --skip-missing-contigs --output-threads={threads}
-        samtools/samtools index {output.haplotag_cram}
+        ~/data/pangenome_sv_benchmarking/1a.alignment_sv_tools/samtools/samtools index {output.haplotag_cram}
         """
 
 
@@ -61,7 +61,7 @@ rule severus_single:
         mem_mb=48000
     shell:
         """
-        python Severus-1.0/severus.py --target-bam {input.crams} --out-dir {output.outdir} -t {threads} --phasing-vcf {input.phased_vcf}/phased_merge_output.vcf.gz --vntr-bed ../1a.alignment_sv_tools/{wildcards.assembly}_vntrs.bed
+        python ~/data/pangenome_sv_benchmarking/1a.alignment_sv_tools/Severus-1.0/severus.py --target-bam {input.crams} --out-dir {output.outdir} -t {threads} --phasing-vcf {input.phased_vcf}/phased_merge_output.vcf.gz --vntr-bed {wildcards.assembly}_vntrs.bed
         """
 
 
@@ -79,25 +79,6 @@ rule severus_tumor_normal_pair:
     shell:
         """
 
-        python Severus-1.0/severus.py --target-bam {input.crams[0]} --control-bam {input.crams[1]} --out-dir {output.outdir} -t {threads} --phasing-vcf {input.phased_vcf[1]}/phased_merge_output.vcf.gz --vntr-bed {wildcards.assembly}_vntrs.bed
+        python ~/data/pangenome_sv_benchmarking/1a.alignment_sv_tools/Severus-1.0/severus.py --target-bam {input.crams[0]} --control-bam {input.crams[1]} --out-dir {output.outdir} -t {threads} --phasing-vcf {input.phased_vcf[1]}/phased_merge_output.vcf.gz --vntr-bed {wildcards.assembly}_vntrs.bed
 
         """
-
-
-
-rule severus_single_mix:
-    input:
-        crams = "output/align/{cell_line}_{platform}/{assembly}_mixdown.cram",
-        crais = "output/align/{cell_line}_{platform}/{assembly}_mixdown.crai",
-        phased_vcf = "output/clair3/{cell_line}_{platform}/BL/{assembly}"
-    output:
-        outdir = directory("output/severus_{platform}/{cell_line}_{assembly}_mixdown")
-    conda: "severus"
-    threads: 12
-    resources:
-        mem_mb=48000
-    shell:
-        """
-        python Severus-1.0/severus.py --target-bam {input.crams} --out-dir {output.outdir} -t {threads} --phasing-vcf {input.phased_vcf}/phased_merge_output.vcf.gz --vntr-bed ../1a.alignment_sv_tools/{wildcards.assembly}_vntrs.bed
-        """
-

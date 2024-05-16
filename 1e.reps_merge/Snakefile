@@ -12,9 +12,6 @@ sniffles_tbi_files  = expand(expand("output/sniffles/{cell_line}_{platform}/{{pa
 sniffles_mosaic_files  = expand(expand("output/sniffles_mosaic/{cell_line}_{platform}/{{pair}}/{{assembly}}.vcf.gz", zip, cell_line=config['samples']['tumor'], platform=config['samples']['platform']), pair=["T", "BL"], assembly=config['assembly'])
 sniffles_mosaic_tbi_files  = expand(expand("output/sniffles_mosaic/{cell_line}_{platform}/{{pair}}/{{assembly}}.vcf.gz.tbi", zip, cell_line=config['samples']['tumor'], platform=config['samples']['platform']), pair=["T", "BL"], assembly=config['assembly'])
 
-sniffles_mix_mosaic_files  = expand(expand("output/sniffles_mosaic/{cell_line}_{platform}/{{assembly}}_mixdown_mosaic.vcf.gz", zip, cell_line=config['samples']['tumor'], platform=config['samples']['platform']), assembly=config['assembly'])
-sniffles_mix_mosaic_tbi_files  = expand(expand("output/sniffles_mosaic/{cell_line}_{platform}/{{assembly}}_mixdown_mosaic.vcf.gz.tbi", zip, cell_line=config['samples']['tumor'], platform=config['samples']['platform']), assembly=config['assembly'])
-
 sniffles_multi_files  = expand(expand("output/sniffles/{cell_line}_{platform}/{{pair}}/{{assembly}}.snf", zip, cell_line=config['samples']['tumor'], platform=config['samples']['platform']), pair=["T", "BL"], assembly=config['assembly'])
 "output/sniffles/{cell_line}_{platform}/{assembly}_multi.vcf.gz"
 sniffles_multi_vcf_files  = expand(expand("output/sniffles/{cell_line}_{platform}/{{assembly}}_multi.vcf.gz", zip, cell_line=config['samples']['tumor'], platform=config['samples']['platform']), assembly=config['assembly'])
@@ -24,26 +21,18 @@ sniffles_mo_multi_vcf_files  = expand(expand("output/sniffles_mosaic/{cell_line}
 
 nanomonsv_files  = expand(expand("output/nanomonsv/{cell_line}_{platform}/{{assembly}}_tnpair.txt", zip, cell_line=config['samples']['tumor'], platform=config['samples']['platform']), assembly=config['assembly'])
 savana_outdir  = expand(expand("output/savana/{cell_line}_{platform}/{{assembly}}", zip, cell_line=config['samples']['tumor'], platform=config['samples']['platform']), assembly=config['assembly'])
-severus_outdir  = expand(expand("output/severus/{cell_line}_{platform}/{{assembly}}", zip, cell_line=config['samples']['tumor'], platform=config['samples']['platform']), assembly=config['assembly'])
-severus_single_outdir  = expand(expand("output/severus_{platform}/{cell_line}_{{pair}}_{{assembly}}", zip, cell_line=config['samples']['tumor'], platform=config['samples']['platform']), pair=["T", "BL"], assembly=config['assembly'])
 
-severus_mixdown_outdir  = expand(expand("output/severus_{platform}/{cell_line}_{{assembly}}_mixdown", zip, cell_line=config['samples']['tumor'], platform=config['samples']['platform']), assembly=config['assembly'])
-
-svision_outdir  = expand(expand("output/svision/{cell_line}_{platform}/{{assembly}}", zip, cell_line=config['samples']['tumor'], platform=config['samples']['platform']), assembly=config['assembly'])
 
 wildcard_constraints:
     cell_line = "[A-Za-z0-9]+",
     pair = "BL|T",
     assembly = "chm13|grch38",
-    platform = "ont1|ont2|hifi1"
+    platform = "ont|hifi",
+    rep = "1|2|3"
 
-module aligner_workflow:
-    snakefile: "rules/minimap2.smk"
-    config: config
-
-use rule * from aligner_workflow as minimap2_workflow_*
-
+include: "rules/samtools.smk"
 include: "rules/sniffles2.smk"
+
 include: "rules/savana.smk"
 include: "rules/clair3.smk"
 
@@ -54,21 +43,57 @@ module severus_workflow:
 use rule * from severus_workflow as severus_workflow_*
 
 include: "rules/nanomonsv.smk"
-
 include: "rules/svision.smk"
+
+rule minimap2_paf:
+    input:
+        fastq = os.path.join(config['prefix'], "{cell_line}{pair}.{platform}{rep}.fastq.gz"),
+        assembly = "../1a.alignment_sv_tools/{assembly}.fa"
+    output:
+        paf = "output/gafcall/{cell_line}{pair}_{platform}{rep}_{assembly}.paf.gz"
+    threads: 24
+    shell:
+        """
+        ../1a.alignment_sv_tools/minimap2/minimap2 -cx lr:hq -t {threads} {input.assembly} {input.fastq} | gzip - > {output.paf}
+        """
+
+rule minigraph:
+    input:
+        fastq = os.path.join(config['prefix'], "{cell_line}{pair}.{platform}{rep}.fastq.gz"),
+        assembly = "../1a.alignment_sv_tools/{assembly}.gfa.gz"
+    output:
+        gaf = "output/gafcall/{cell_line}{pair}_{platform}{rep}_{assembly}.gaf.gz"
+    threads: 24
+    shell:
+        """
+        ../1a.alignment_sv_tools/minigraph/minigraph -cxlr -t24 {input.assembly} {input.fastq} | gzip - > {output.gaf}
+        """
+
+bam_files = expand(expand("../1a.alignment_sv_tools/output/align/{cell_line}_{platform}/{{pair}}/{{assembly}}.cram", 
+             cell_line = config['samples']['tumor'], platform=config['samples']['platform']),
+             pair=['T', 'BL'], assembly=['chm13', 'grch38'])
+
+paf_files = expand(expand("output/gafcall/{cell_line}{{pair}}_{platform}{{rep}}_{{assembly}}.paf.gz", 
+             cell_line = config['samples']['tumor'], platform=config['samples']['platform']),
+             pair=['T', 'BL'], rep=[1,2], assembly=['chm13', 'grch38'])
+gaf_files = expand(expand("output/gafcall/{cell_line}{{pair}}_{platform}{{rep}}_{{assembly}}.gaf.gz", 
+             cell_line = config['samples']['tumor'], platform=config['samples']['platform']),
+             pair=['T', 'BL'], rep=[1,2], assembly=['chm13', 'grch38'])
+
+severus_outdir  = expand(expand("output/severus/{cell_line}_{platform}/{{assembly}}", zip, cell_line=config['samples']['tumor'], platform=config['samples']['platform']), assembly=config['assembly'])
+severus_single_outdir  = expand(expand("output/severus_{platform}/{cell_line}_{{pair}}_{{assembly}}", zip, cell_line=config['samples']['tumor'], platform=config['samples']['platform']), pair=["T", "BL"], assembly=config['assembly'])
+
+svision_vcfs  = expand(expand("output/svision/{cell_line}_{platform}/{{assembly}}/{cell_line}.svision_pro_v1.8.s5.vcf", zip, cell_line=config['samples']['tumor'], platform=config['samples']['platform']), assembly=config['assembly'])
 
 rule all:
     input:
-        rules.minimap2_workflow_all.input,
-        rules.severus_workflow_all.input,
+        bam_files,
         sniffles_files, sniffles_tbi_files,
         sniffles_mosaic_files, sniffles_mosaic_tbi_files,
         sniffles_multi_files, sniffles_multi_vcf_files,
+        rules.severus_workflow_all.input,
+        severus_outdir, severus_single_outdir,
         sniffles_mo_multi_files, sniffles_mo_multi_vcf_files,
         savana_outdir, clair3_outdir, 
-        severus_outdir, severus_single_outdir,
-        nanomonsv_files,
-        svision_outdir,
-        sniffles_mix_mosaic_files, sniffles_mix_mosaic_tbi_files,
-        severus_mixdown_outdir
+        nanomonsv_files, paf_files, gaf_files, svision_vcfs
     default_target: True 

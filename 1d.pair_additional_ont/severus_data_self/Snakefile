@@ -1,0 +1,37 @@
+import os
+import glob
+configfile: "config.yaml"
+
+paf_files  = expand(expand("output/align/{cell_line}_{{pair}}_{platform}_{{assembly}}_self.paf.gz", zip, cell_line=config['samples']['tumor'], platform=config['samples']['platform']), pair=["T", "BL"], assembly=config['assembly'])
+
+
+wildcard_constraints:
+    cell_line = "[A-Za-z0-9]+",
+    pair = "BL|T",
+    assembly = "chm13|grch38",
+    platform = "ont1|ont2|hifi1"
+
+rule all:
+    input:
+        paf_files
+
+
+def input_fastq_fun(wildcards):
+    if wildcards.cell_line == 'HCC1937':
+        return "../severus_data2/{cell_line}_{pair}_{platform}.fastq.gz"
+    else:
+        return "../severus_data/{cell_line}_{pair}_{platform}.fastq.gz"
+
+rule minimap2_paf:
+    input:
+        fastq = input_fastq_fun,
+        hap = expand("/homes6/alvin/data/pangenome_sv_benchmarking/5.assembly_evaluation/{{cell_line}}BL.asm.bp.hap{hap}.fa.gz", hap=[1,2]),
+    output:
+        paf = "output/align/{cell_line}_{pair}_{platform}_{assembly}_self.paf.gz"
+    threads: 24
+    resources:
+        mem_mb=64000
+    shell:
+        """
+        ~/data/pangenome_sv_benchmarking/1a.alignment_sv_tools/minimap2/minimap2 --ds -t {threads} -cxlr:hq <(zcat {input.hap}) -I100g --secondary=no {input.fastq} | gzip - > {output.paf}
+        """

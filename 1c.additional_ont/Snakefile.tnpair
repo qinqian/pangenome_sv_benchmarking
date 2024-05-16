@@ -1,0 +1,57 @@
+import os
+import glob
+import sys
+import pandas as pd
+from snakemake.utils import validate
+
+configfile: "config.yaml"
+
+gafcall_files  = expand(expand("output/gafcall/{cell_line}_{{pair}}_{{assembly}}l.gsv.gz", cell_line=config['samples']['tumor']), pair=["T", "BL"], assembly=config['assembly'])
+gafcall_files_Qs  = expand(expand("output/gafcall/{cell_line}_{{pair}}_{{assembly}}l.Q{{Q}}.gsv.gz", cell_line=config['samples']['tumor']), pair=["T", "BL"], assembly=config['assembly'], Q=[5, 20])
+gafcall_graph_files  = expand(expand("output/gafcall/{cell_line}_{{pair}}_{{assembly}}g.gsv.gz", cell_line=config['samples']['tumor']), pair=["T", "BL"], assembly=config['assembly'])
+gafcall_graph_files_Qs  = expand(expand("output/gafcall/{cell_line}_{{pair}}_{{assembly}}g.Q{{Q}}.gsv.gz", cell_line=config['samples']['tumor']), pair=["T", "BL"], assembly=config['assembly'], Q=[5, 20])
+
+sniffles_mosaic_files  = expand(expand("output/sniffles_mosaic/{cell_line}/{{pair}}/{{assembly}}.vcf.gz", cell_line=config['samples']['tumor']), pair=["T", "BL"], assembly=config['assembly'])
+sniffles_mosaic_tbi_files  = expand(expand("output/sniffles_mosaic/{cell_line}/{{pair}}/{{assembly}}.vcf.gz.tbi", cell_line=config['samples']['tumor']), pair=["T", "BL"], assembly=config['assembly'])
+
+sniffles_multi_files  = expand(expand("output/sniffles/{cell_line}/{{pair}}/{{assembly}}.snf", cell_line=config['samples']['tumor']), pair=["T", "BL"], assembly=config['assembly'])
+sniffles_multi_vcf_files  = expand(expand("output/sniffles/{cell_line}/{{assembly}}_multi.vcf.gz", cell_line=config['samples']['tumor']), assembly=config['assembly'])
+
+sniffles_mo_multi_files  = expand(expand("output/sniffles_mosaic/{cell_line}/{{pair}}/{{assembly}}.snf", cell_line=config['samples']['tumor']), pair=["T", "BL"], assembly=config['assembly'])
+sniffles_mo_multi_vcf_files  = expand(expand("output/sniffles_mosaic/{cell_line}/{{assembly}}_multi.vcf.gz", cell_line=config['samples']['tumor']), assembly=config['assembly'])
+
+nanomonsv_files  = expand(expand("output/nanomonsv/{cell_line}/{{assembly}}_tnpair.txt", cell_line=config['samples']['tumor']), assembly=config['assembly'])
+savana_outdir  = expand(expand("output/savana/{cell_line}/{{assembly}}", cell_line=config['samples']['tumor']), assembly=config['assembly'])
+
+severus_outdir  = expand(expand("output/severus/{cell_line}/{{assembly}}", cell_line=config['samples']['tumor']), assembly=config['assembly'])
+
+severus_single_outdir  = expand("output/severus/{cell_line}_{pair}_{assembly}", cell_line=config['samples']['tumor'], pair=["T", "BL"], assembly=config['assembly'])
+
+wildcard_constraints:
+    cell_line = "[A-Za-z0-9]+",
+    pair = "BL|T",
+    assembly = "chm13|grch38",
+    Q = "\d+"
+
+include: "rules/sniffles2_tnpair.smk"
+include: "rules/savana_tnpair.smk"
+
+module severus_workflow:
+    snakefile: "rules/severus_tnpair.smk"
+    config: config
+
+use rule * from severus_workflow as severus_workflow_*
+
+include: "rules/nanomonsv_tnpair.smk"
+include: "rules/gafcall_tnpair.smk"
+
+rule all:
+    input:
+        sniffles_mosaic_files, sniffles_mosaic_tbi_files,
+        sniffles_multi_files, sniffles_multi_vcf_files,
+        savana_outdir,
+        severus_outdir, severus_single_outdir,
+        nanomonsv_files,
+        sniffles_mo_multi_files, sniffles_mo_multi_vcf_files,
+        gafcall_files, gafcall_graph_files, gafcall_files_Qs, gafcall_graph_files_Qs
+    default_target: True 

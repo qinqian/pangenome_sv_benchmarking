@@ -1,0 +1,113 @@
+import os
+
+cellline_map_cram = {'COLO829T': 'PAK76302.cram',
+                     'COLO829BL': 'PAK76487.cram',
+                     'HG002': 'PAO29420.cram'}
+
+clair3_outdir  = expand("output/clair3/{cell_line}_{assembly}/", cell_line=list(cellline_map_cram.keys()), assembly=['chm13', 'grch38'])
+sniffles_files  = expand("output/sniffles/{cell_line}_{assembly}.vcf.gz", cell_line=list(cellline_map_cram.keys()), assembly=['chm13', 'grch38'])
+cutesv_files  = expand("output/cutesv/{cell_line}_{assembly}.vcf.gz", cell_line=list(cellline_map_cram.keys()), assembly=['chm13', 'grch38'])
+paf_files  = expand("{cell_line}_{assembly}.paf.gz", cell_line=list(cellline_map_cram.keys()), assembly=['chm13', 'grch38'])
+asm_files  = expand("{cell_line}_asm.paf.gz", cell_line=list(cellline_map_cram.keys()))
+gaf_files  = expand("{cell_line}_{assembly}.gaf.gz", cell_line=list(cellline_map_cram.keys()), assembly=['chm13', 'grch38'])
+
+svision_files  = expand("output/svision/{cell_line}/{assembly}/{cell_line}.svision_pro_v1.8.s5.vcf", cell_line=list(cellline_map_cram.keys()), assembly=['chm13', 'grch38'])
+
+def input_cram(wildcards):
+    return cellline_map_cram[wildcards.cell_line]
+
+
+rule all:
+    input:
+        expand("{cell_line}.fastq.gz", cell_line=list(cellline_map_cram.keys())),
+        expand("{cell_line}_{assembly}.cram", cell_line=list(cellline_map_cram.keys()), assembly=['chm13', 'grch38']),
+        expand("{cell_line}_{assembly}.cram.crai", cell_line=list(cellline_map_cram.keys()), assembly=['chm13', 'grch38']),
+        expand("{cell_line}_{assembly}.gaf.gz", cell_line=list(cellline_map_cram.keys()), assembly=['chm13', 'grch38']),
+        clair3_outdir, sniffles_files, cutesv_files, paf_files, gaf_files,
+        svision_files,
+        asm_files
+
+rule cram2fastq:
+    input:
+        cram = input_cram
+    output:
+        fastq = "{cell_line}.fastq.gz"
+    shell:
+        """
+        ../1a.alignment_sv_tools/samtools/samtools collate -Oun128 --reference ../1a.alignment_sv_tools/grch38.fa {input.cram} | ../1a.alignment_sv_tools/samtools/samtools fastq - | gzip - > {output.fastq}
+        """
+
+rule minimap2:
+    input:
+        fastq = rules.cram2fastq.output.fastq,
+        assembly = "../1a.alignment_sv_tools/{assembly}.fa"
+    output:
+        cram = "{cell_line}_{assembly}.cram",
+        crai = "{cell_line}_{assembly}.cram.crai"
+    threads: 24
+    shell:
+        """
+        ../1a.alignment_sv_tools/minimap2/minimap2 -ax lr:hq -t {threads} {input.assembly} {input.fastq} | \
+            ../1a.alignment_sv_tools/samtools/samtools sort --write-index -l 1 --output-fmt CRAM --reference {input.assembly} -@4 -m4g -o {output.cram} -
+        """
+
+
+def input_asm(wildcards):
+    if wildcards.cell_line == 'COLO829T':
+        cell_line = 'COLO829'
+        return expand("../5.assembly_evaluation/{cell_line}BL.asm.bp.hap{hap}.fa.gz", cell_line=cell_line, hap=[1,2])
+    elif wildcards.cell_line == 'HG002':
+        cell_line = 'HG002.revio1'
+        return expand("../5.assembly_evaluation/{cell_line}.asm.bp.hap{hap}.fa.gz", cell_line=cell_line, hap=[1,2])
+    else:
+        return expand("../5.assembly_evaluation/{cell_line}.asm.bp.hap{hap}.fa.gz", cell_line=wildcards.cell_line, hap=[1,2])
+
+
+rule minimap2_self:
+    input:
+        hap = input_asm,
+        fastq = "{cell_line}.fastq.gz"
+    output:
+        paf = "{cell_line}_asm.paf.gz"
+    threads: 24
+    resources:
+        mem_mb=64000
+    shell:
+        """
+        # -I100g for very large assembly
+        ../1a.alignment_sv_tools/minimap2/minimap2 -t {threads} -cxlr:hq <(zcat {input.hap}) -I100g --secondary=no {input.fastq} | gzip - > {output.paf}
+        """
+
+rule minimap2_paf:
+    input:
+        fastq = rules.cram2fastq.output.fastq,
+        assembly = "../1a.alignment_sv_tools/{assembly}.fa"
+    output:
+        paf = "{cell_line}_{assembly}.paf.gz",
+    threads: 24
+    shell:
+        """
+        ../1a.alignment_sv_tools/minimap2/minimap2 -cx lr:hq -t {threads} {input.assembly} {input.fastq} | gzip - > {output.paf}
+        """
+
+rule minigraph:
+    input:
+        fastq = rules.cram2fastq.output.fastq,
+        assembly = "../1a.alignment_sv_tools/{assembly}.gfa.gz"
+    output:
+        gaf = "{cell_line}_{assembly}.gaf.gz"
+    threads: 24
+    log:
+        "logs/{cell_line}_{assembly}.logs"
+    shell:
+        """
+        ../1a.alignment_sv_tools/minigraph/minigraph -cxlr -t24 {input.assembly} {input.fastq} 2>{log} | gzip - > {output.gaf}
+        """
+
+
+include: "rules/clair3.smk"
+include: "rules/sniffles2.smk"
+include: "rules/cutesv.smk"
+include: "rules/svision.smk"
+
+# above is single-sample mode

@@ -1,0 +1,14 @@
+prefix: /hlilab/21data/collections/cancer-pair/
+pwd: /hlilab/alvin/pangenome_sv_benchmarking/1a.alignment_sv_tools
+
+samples:
+  tumor:
+      - COLO829
+  platform:
+      - ont
+
+assembly:
+  - chm13
+  - grch38
+
+mosaic: False
