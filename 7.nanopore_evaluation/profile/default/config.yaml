@@ -1,0 +1,4 @@
+executor: slurm
+default-resources: mem_mb=200
+jobs: 100
+use-conda: True

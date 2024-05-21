@@ -10,7 +10,8 @@ rule svision:
     conda: "svision"
     threads: 16
     resources:
-        mem_mb=64000,
+        runtime="15h",
+        mem_mb_per_cpu=2000,
         tmpdir="local_tmp/"
     shell:
         """

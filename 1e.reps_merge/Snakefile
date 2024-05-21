@@ -45,6 +45,20 @@ use rule * from severus_workflow as severus_workflow_*
 include: "rules/nanomonsv.smk"
 include: "rules/svision.smk"
 
+rule minimap2_self:
+    input:
+        hap = expand("/homes6/alvin/data/pangenome_sv_benchmarking/5.assembly_evaluation/{{cell_line}}BL.asm.bp.hap{hap}.fa.gz", hap=[1,2]),
+        fastq = os.path.join(config['prefix'], "{cell_line}{pair}.{platform}{rep}.fastq.gz")
+    output:
+        paf = "output/gafcall/{cell_line}{pair}_{platform}{rep}_self.paf.gz"
+    threads: 24
+    resources:
+        mem_mb=64000
+    shell:
+        """
+        ~/data/pangenome_sv_benchmarking/1a.alignment_sv_tools/minimap2/minimap2 --ds -t {threads} -cxlr:hq <(zcat {input.hap}) -I100g --secondary=no {input.fastq} | gzip - > {output.paf}
+        """
+
 rule minimap2_paf:
     input:
         fastq = os.path.join(config['prefix'], "{cell_line}{pair}.{platform}{rep}.fastq.gz"),
@@ -73,6 +87,9 @@ bam_files = expand(expand("../1a.alignment_sv_tools/output/align/{cell_line}_{pl
              cell_line = config['samples']['tumor'], platform=config['samples']['platform']),
              pair=['T', 'BL'], assembly=['chm13', 'grch38'])
 
+self_files = expand(expand("output/gafcall/{cell_line}{{pair}}_{platform}{{rep}}_self.paf.gz", 
+             cell_line = config['samples']['tumor'], platform=config['samples']['platform']),
+             pair=['T', 'BL'], rep=[1,2], assembly=['chm13', 'grch38'])
 paf_files = expand(expand("output/gafcall/{cell_line}{{pair}}_{platform}{{rep}}_{{assembly}}.paf.gz", 
              cell_line = config['samples']['tumor'], platform=config['samples']['platform']),
              pair=['T', 'BL'], rep=[1,2], assembly=['chm13', 'grch38'])
@@ -85,9 +102,11 @@ severus_single_outdir  = expand(expand("output/severus_{platform}/{cell_line}_{{
 
 svision_vcfs  = expand(expand("output/svision/{cell_line}_{platform}/{{assembly}}/{cell_line}.svision_pro_v1.8.s5.vcf", zip, cell_line=config['samples']['tumor'], platform=config['samples']['platform']), assembly=config['assembly'])
 
+svision_vcfs_somatic  = expand(expand("output/svision/{cell_line}_{platform}/somatic/{cell_line}_{{assembly}}_tn.svision_pro_v1.8.s5.somatic_s1.vcf", zip, cell_line=config['samples']['tumor'], platform=config['samples']['platform']), assembly=config['assembly'])
+
 rule all:
     input:
-        bam_files,
+        bam_files, self_files, svision_vcfs_somatic,
         sniffles_files, sniffles_tbi_files,
         sniffles_mosaic_files, sniffles_mosaic_tbi_files,
         sniffles_multi_files, sniffles_multi_vcf_files,

@@ -31,6 +31,10 @@ severus_mixdown_outdir  = expand(expand("output/severus_{platform}/{cell_line}_{
 
 svision_outdir  = expand(expand("output/svision/{cell_line}_{platform}/{{assembly}}", zip, cell_line=config['samples']['tumor'], platform=config['samples']['platform']), assembly=config['assembly'])
 
+##{cell_line}_{assembly}_tn.svision_pro_v1.8.s5.somatic_s1.vcf
+##output/svision/HCC1954_hifi1/chm13/HCC1954_chm13_tn.svision_pro_v1.8.s5.somatic_s1.vcf
+svision_outdir_somatic = expand(expand("output/svision/{cell_line}_{platform}/somatic/{cell_line}_{{assembly}}_tn.svision_pro_v1.8.s5.somatic_s1.vcf", zip, cell_line=config['samples']['tumor'], platform=config['samples']['platform']), assembly=config['assembly'])
+
 wildcard_constraints:
     cell_line = "[A-Za-z0-9]+",
     pair = "BL|T",
@@ -70,5 +74,6 @@ rule all:
         nanomonsv_files,
         svision_outdir,
         sniffles_mix_mosaic_files, sniffles_mix_mosaic_tbi_files,
-        severus_mixdown_outdir
+        severus_mixdown_outdir,
+        svision_outdir_somatic
     default_target: True 

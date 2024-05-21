@@ -27,5 +27,21 @@ rule svision:
         tmpdir="local_tmp/"
     shell:
         """
-        SVision-pro --process_num {threads} --img_size 1024 --target_path {input.crams[0]} --base_path {input.crams[1]} --access_path ../1a.alignment_sv_tools/{wildcards.assembly}.access.10M.bed --genome_path ../1a.alignment_sv_tools/{wildcards.assembly}.fa --model_path ~/software/SVision-pro/src/pre_process/model_liteunet_1024_8_16_32_32_32.pth --out_path {output.outdir} --sample_name {wildcards.cell_line} --detect_mode somatic
+        SVision-pro --preset error-prone --process_num {threads} --img_size 1024 --target_path {input.crams[0]} --base_path {input.crams[1]} --access_path ../1a.alignment_sv_tools/{wildcards.assembly}.access.10M.bed --genome_path ../1a.alignment_sv_tools/{wildcards.assembly}.fa --model_path ~/software/SVision-pro/src/pre_process/model_liteunet_1024_8_16_32_32_32.pth --out_path {output.outdir} --sample_name {wildcards.cell_line} --detect_mode somatic
+        """
+
+
+rule extract_somatic:
+    input:
+        out_vcf = rules.svision.output.out_vcf
+    output:
+        vcf = "output/svision/{cell_line}_{platform}/somatic/{cell_line}_{assembly}_tn.svision_pro_v1.8.s5.somatic_s1.vcf"
+    threads: 1
+    resources:
+        mem_mb=4000,
+        runtime="1h"
+    shell:
+        """
+        python ~/software/SVision-pro/extract_op.py --input_vcf {input.out_vcf} --extract somatic
+        cat {input.out_vcf} > {output.vcf}
         """

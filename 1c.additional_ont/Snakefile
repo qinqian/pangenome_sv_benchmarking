@@ -12,6 +12,8 @@ asm_files  = expand("{cell_line}_asm.paf.gz", cell_line=list(cellline_map_cram.k
 gaf_files  = expand("{cell_line}_{assembly}.gaf.gz", cell_line=list(cellline_map_cram.keys()), assembly=['chm13', 'grch38'])
 
 svision_files  = expand("output/svision/{cell_line}/{assembly}/{cell_line}.svision_pro_v1.8.s5.vcf", cell_line=list(cellline_map_cram.keys()), assembly=['chm13', 'grch38'])
+print(list(cellline_map_cram.keys()))
+
 
 def input_cram(wildcards):
     return cellline_map_cram[wildcards.cell_line]
@@ -103,7 +105,6 @@ rule minigraph:
         """
         ../1a.alignment_sv_tools/minigraph/minigraph -cxlr -t24 {input.assembly} {input.fastq} 2>{log} | gzip - > {output.gaf}
         """
-
 
 include: "rules/clair3.smk"
 include: "rules/sniffles2.smk"
