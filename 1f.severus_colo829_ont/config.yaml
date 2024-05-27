@@ -1,0 +1,15 @@
+prefix: /hlilab/21data/collections/cancer-pair/
+
+samples:
+  tumor:
+      - COLO829
+      - COLO829
+  platform:
+      - ont1
+      - ont2
+
+assembly:
+  - chm13
+  - grch38
+
+mosaic: False

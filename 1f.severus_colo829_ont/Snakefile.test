@@ -1,0 +1,11 @@
+rule all:
+   input:
+       "test.txt"
+
+rule a:
+   params:
+      hap=[1,2]
+   output:
+      'test.txt'
+   shell:
+      "echo {params.hap} > {output}"

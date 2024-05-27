@@ -2,7 +2,8 @@ import os
 
 cellline_map_cram = {'COLO829T': 'PAK76302.cram',
                      'COLO829BL': 'PAK76487.cram',
-                     'HG002': 'PAO29420.cram'}
+                     'HG002rep1': 'PAO83395.pass.cram',
+                     'HG002rep2': 'PAO89685.pass.cram'}
 
 clair3_outdir  = expand("output/clair3/{cell_line}_{assembly}/", cell_line=list(cellline_map_cram.keys()), assembly=['chm13', 'grch38'])
 sniffles_files  = expand("output/sniffles/{cell_line}_{assembly}.vcf.gz", cell_line=list(cellline_map_cram.keys()), assembly=['chm13', 'grch38'])
@@ -34,6 +35,8 @@ rule cram2fastq:
         cram = input_cram
     output:
         fastq = "{cell_line}.fastq.gz"
+    resources:
+        tmpdir="local_tmp/"
     shell:
         """
         ../1a.alignment_sv_tools/samtools/samtools collate -Oun128 --reference ../1a.alignment_sv_tools/grch38.fa {input.cram} | ../1a.alignment_sv_tools/samtools/samtools fastq - | gzip - > {output.fastq}
@@ -46,7 +49,9 @@ rule minimap2:
     output:
         cram = "{cell_line}_{assembly}.cram",
         crai = "{cell_line}_{assembly}.cram.crai"
-    threads: 24
+    threads: 28
+    resources:
+        tmpdir="local_tmp/"
     shell:
         """
         ../1a.alignment_sv_tools/minimap2/minimap2 -ax lr:hq -t {threads} {input.assembly} {input.fastq} | \
@@ -58,7 +63,7 @@ def input_asm(wildcards):
     if wildcards.cell_line == 'COLO829T':
         cell_line = 'COLO829'
         return expand("../5.assembly_evaluation/{cell_line}BL.asm.bp.hap{hap}.fa.gz", cell_line=cell_line, hap=[1,2])
-    elif wildcards.cell_line == 'HG002':
+    elif wildcards.cell_line in ['HG002rep1', 'HG002rep2']:
         cell_line = 'HG002.revio1'
         return expand("../5.assembly_evaluation/{cell_line}.asm.bp.hap{hap}.fa.gz", cell_line=cell_line, hap=[1,2])
     else:

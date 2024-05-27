@@ -56,9 +56,11 @@ rule severus_single:
     output:
         outdir = directory("output/severus_{platform}/{cell_line}_{pair}_{assembly}")
     conda: "severus"
-    threads: 12
+    threads: 4
     resources:
-        mem_mb=48000
+        mem_mb_per_cpu=10000,
+        runtime="24h",
+        tmpdir="local_tmp/"
     shell:
         """
         python ~/data/pangenome_sv_benchmarking/1a.alignment_sv_tools/Severus-1.0/severus.py --target-bam {input.crams} --out-dir {output.outdir} -t {threads} --phasing-vcf {input.phased_vcf}/phased_merge_output.vcf.gz --vntr-bed {wildcards.assembly}_vntrs.bed
@@ -73,9 +75,11 @@ rule severus_tumor_normal_pair:
     output:
         outdir = directory("output/severus/{cell_line}_{platform}/{assembly}")
     conda: "severus"
-    threads: 12
+    threads: 4
     resources:
-        mem_mb=48000
+        mem_mb_per_cpu=10000,
+        runtime="24h",
+        tmpdir="local_tmp/"
     shell:
         """
 

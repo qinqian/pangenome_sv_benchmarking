@@ -5,13 +5,19 @@ samples:
       batch1:
           dir: ../1c.additional_ont/
           cell_line:
-              - HG002
+              - HG002rep1
+              - HG002rep2
       batch2:
-          dir: ../1a.alignment_sv_tools/
+          dir: ../1c.additional_ont/
           cell_line:
               - COLO829BL
-#../1c.additional_ont/output/gafcall_eval/HG002_eval_len.tsv
-
+      batch3:
+          dir: /cluster/hlilab/alvin/severus_data/
+          cell_line:
+              - H1437
+              - HCC1395
+              - H2009
+              - HCC1954
   #tumor_only:
   #    tumor:
   #        - HCC1395
@@ -41,10 +47,6 @@ samples:
   #            - COLO829
   #        platform:
   #            - ont1
-
-assembly:
-  - chm13
-  - grch38
 
 reg:
   chm13: ../4.gafcall_evaluation/chm13.reg.bed

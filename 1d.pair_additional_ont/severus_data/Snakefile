@@ -51,7 +51,8 @@ include: "rules/nanomonsv.smk"
 
 
 all_fastq = expand("{cell_line}_{pair}_{platform}.fastq.gz", cell_line=celllines, pair=["T", "BL"], platform=['ont1'])
-print(all_fastq)
+all_fastq_size = expand("{cell_line}_{pair}_{platform}.fastq.gz.sz", cell_line=celllines, pair=["T", "BL"], platform=['ont1'])
+
 clair3_outdir  = expand(expand("output/clair3/{cell_line}_{platform}/{{pair}}/{{assembly}}/", zip, cell_line=config['samples']['tumor'], platform=config['samples']['platform']), pair=["T", "BL"], assembly=config['assembly'])
 sniffles_files  = expand(expand("output/sniffles/{cell_line}_{platform}/{{pair}}/{{assembly}}.vcf.gz", zip, cell_line=config['samples']['tumor'], platform=config['samples']['platform']), pair=["T", "BL"], assembly=config['assembly'])
 sniffles_tbi_files  = expand(expand("output/sniffles/{cell_line}_{platform}/{{pair}}/{{assembly}}.vcf.gz.tbi", zip, cell_line=config['samples']['tumor'], platform=config['samples']['platform']), pair=["T", "BL"], assembly=config['assembly'])
@@ -61,6 +62,9 @@ sniffles_mosaic_tbi_files  = expand(expand("output/sniffles_mosaic/{cell_line}_{
 sniffles_multi_files  = expand(expand("output/sniffles/{cell_line}_{platform}/{{pair}}/{{assembly}}.snf", zip, cell_line=config['samples']['tumor'], platform=config['samples']['platform']), pair=["T", "BL"], assembly=config['assembly'])
 "output/sniffles/{cell_line}_{platform}/{assembly}_multi.vcf.gz"
 sniffles_multi_vcf_files  = expand(expand("output/sniffles/{cell_line}_{platform}/{{assembly}}_multi.vcf.gz", zip, cell_line=config['samples']['tumor'], platform=config['samples']['platform']), assembly=config['assembly'])
+
+sniffles_mix  = expand(expand("output/sniffles_mosaic/{cell_line}_{platform}/{{assembly}}_mixdown_mosaic.vcf.gz", zip, cell_line=config['samples']['tumor'], platform=config['samples']['platform']), assembly=config['assembly'])
+sniffles_mix_tbi  = expand(expand("output/sniffles_mosaic/{cell_line}_{platform}/{{assembly}}_mixdown_mosaic.vcf.gz.tbi", zip, cell_line=config['samples']['tumor'], platform=config['samples']['platform']), assembly=config['assembly'])
 
 sniffles_mo_multi_files  = expand(expand("output/sniffles_mosaic/{cell_line}_{platform}/{{pair}}/{{assembly}}.snf", zip, cell_line=config['samples']['tumor'], platform=config['samples']['platform']), pair=["T", "BL"], assembly=config['assembly'])
 sniffles_mo_multi_vcf_files  = expand(expand("output/sniffles_mosaic/{cell_line}_{platform}/{{assembly}}_multi.vcf.gz", zip, cell_line=config['samples']['tumor'], platform=config['samples']['platform']), assembly=config['assembly'])
@@ -72,23 +76,70 @@ severus_outdir_repeat2  = expand(expand("output/severus/{cell_line}_{platform}/{
 severus_single_outdir  = expand(expand("output/severus_{platform}/{cell_line}_{{pair}}_{{assembly}}", zip, cell_line=config['samples']['tumor'], platform=config['samples']['platform']), pair=["T", "BL"], assembly=config['assembly'])
 
 include: "rules/gafcall.smk"
+include: "rules/gafcall_tnpair.smk"
+include: "rules/svision.smk"
+include: "rules/seqtk.smk"
 
 extract_linear_files  = expand(expand("output/align/{cell_line}_{{pair}}_{platform}_{{assembly}}l.def.gsv.gz", zip, cell_line=config['samples']['tumor'], platform=config['samples']['platform']), pair=["T", "BL"], assembly=config['assembly'])
 extract_graph_files  = expand(expand("output/align/{cell_line}_{{pair}}_{platform}_{{assembly}}g.def.gsv.gz", zip, cell_line=config['samples']['tumor'], platform=config['samples']['platform']), pair=["T", "BL"], assembly=config['assembly'])
 
+svision_outdir  = expand(expand("output/svision/{cell_line}_{platform}/{{assembly}}", zip, cell_line=config['samples']['tumor'], platform=config['samples']['platform']), assembly=config['assembly'])
+
+paf_mixed  = expand(expand("output/align/{cell_line}_{platform}/{{assembly}}_mixdown.paf.gz", zip, cell_line=config['samples']['tumor'], platform=config['samples']['platform']), assembly=config['assembly'])
+
+# new interface failed in one sample, increase memory cannot resolve the problem, separate the steps
+#    output: output/minisv_pair/HCC1395_ont1_tumor_hg38l+tgs.rsv
+#    log: .snakemake/slurm_logs/rule_minisv_tnpair_tgs_extract_tumor/7576263.log (check log file(s) for error details)
+#    shell:
+#
+#
+#        minisv.js e -n TUMOR -0b ~/data/pangenome_sv_benchmarking/minisv/data/hg38.cen-mask.bed output/align/HCC1395_T_ont1_grch38l.paf.gz output/align/HCC1395_T_ont1_chm13l.paf.gz output/align/HCC1395_T_ont1_chm13g.paf.gz ../severus_data_self/output/align/HCC1395_T_ont1_self.paf.gz | bash > output/minisv_pair/HCC1395_ont1_tumor_hg38l+tgs.rsv
+
+minisv_pair = expand("output/minisv_pair/{cell_line}_{platform}_pair_hg38l+tgs.msv", zip, cell_line=config['samples']['tumor'], platform=config['samples']['platform'])
+
+#minisv_stepwise_pair = expand("output/minisv_stepwise_pair/{cell_line}_{platform}_hg38l+tgs.msv.gz", zip, cell_line=config['samples']['tumor'], platform=config['samples']['platform'])
+
+minisv_self_extract = expand(expand("output/minisv/{cell_line}_{{pair}}_{platform}_self.rsv.gz", zip, cell_line=config['samples']['tumor'], platform=config['samples']['platform']), pair=["T", "BL"])
+
+minisv_linear_def_extract = expand(expand("output/minisv/{cell_line}_{{pair}}_{platform}_{{assembly}}l.def.rsv.gz", zip, cell_line=config['samples']['tumor'], platform=config['samples']['platform']), pair=["T", "BL"], assembly=['chm13', 'grch38'])
+
+minisv_graph_def_extract = expand(expand("output/minisv/{cell_line}_{{pair}}_{platform}_{{assembly}}g.def.rsv.gz", zip, cell_line=config['samples']['tumor'], platform=config['samples']['platform']), pair=["T", "BL"], assembly=['chm13', 'grch38'])
+
+minisv_single_call = expand(expand("output/minisv/{cell_line}_{{pair}}_{platform}_{{assembly}}l_l+x_merge_c5s0.msv.gz", zip, cell_line=config['samples']['tumor'], platform=config['samples']['platform']), pair=["T", "BL"], assembly=['chm13', 'grch38'])
+
+minisv_single_graph_call = expand(expand("output/minisv/{cell_line}_{{pair}}_{platform}_{{assembly}}l_l+g_merge_c5s0.msv.gz", zip, cell_line=config['samples']['tumor'], platform=config['samples']['platform']), pair=["T", "BL"], assembly=['chm13', 'grch38'])
+
+minisv_single_s_call = expand(expand("output/minisv/{cell_line}_{{pair}}_{platform}_{{assembly}}l_l+s_merge_c5s0.msv.gz", zip, cell_line=config['samples']['tumor'], platform=config['samples']['platform']), pair=["T", "BL"], assembly=['chm13', 'grch38'])
+
+
+minisv_single_ts_call = expand(expand("output/minisv/{cell_line}_{{pair}}_{platform}_grch38l_t+s_merge_c5s0.msv.gz", zip, cell_line=config['samples']['tumor'], platform=config['samples']['platform']), pair=["T", "BL"], assembly=['chm13', 'grch38'])
+
+minisv_single_tg_call = expand(expand("output/minisv/{cell_line}_{{pair}}_{platform}_grch38l_t+g_merge_c5s0.msv.gz", zip, cell_line=config['samples']['tumor'], platform=config['samples']['platform']), pair=["T", "BL"], assembly=['chm13', 'grch38'])
+
+minisv_single_tgs_call = expand(expand("output/minisv/{cell_line}_{{pair}}_{platform}_grch38l_t+g+s_merge_c5s0.msv.gz", zip, cell_line=config['samples']['tumor'], platform=config['samples']['platform']), pair=["T", "BL"], assembly=['chm13', 'grch38'])
+
+
 rule all:
     input:
-        all_fastq,
+        all_fastq, all_fastq_size,
         rules.minimap2_workflow_all.input,
         sniffles_files, sniffles_tbi_files,
         sniffles_mosaic_files, sniffles_mosaic_tbi_files,
         sniffles_multi_files, sniffles_multi_vcf_files,
         sniffles_mo_multi_files, sniffles_mo_multi_vcf_files,
+        sniffles_mix, sniffles_mix_tbi,
         savana_outdir, clair3_outdir, 
         rules.severus_workflow_all.input,
         severus_outdir, 
         severus_single_outdir,
         severus_outdir_repeat2,
         nanomonsv_files,
-        extract_linear_files, extract_graph_files
+        extract_linear_files, extract_graph_files,
+        svision_outdir,
+        minisv_pair, 
+        minisv_self_extract,
+        minisv_linear_def_extract, minisv_graph_def_extract, 
+        minisv_single_call, minisv_single_graph_call, minisv_single_tg_call, minisv_single_tgs_call,
+        minisv_single_ts_call, minisv_single_s_call,
+        paf_mixed
     default_target: True 

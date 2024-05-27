@@ -2,19 +2,17 @@ import os
 import glob
 configfile: "config.yaml"
 
-paf_files  = expand(expand("output/align/{cell_line}_{{pair}}_{platform}_{{assembly}}_self.paf.gz", zip, cell_line=config['samples']['tumor'], platform=config['samples']['platform']), pair=["T", "BL"], assembly=config['assembly'])
+paf_files  = expand(expand("output/align/{cell_line}_{{pair}}_{platform}_self.paf.gz", zip, cell_line=config['samples']['tumor'], platform=config['samples']['platform']), pair=["T", "BL"])
 
 
 wildcard_constraints:
     cell_line = "[A-Za-z0-9]+",
     pair = "BL|T",
-    assembly = "chm13|grch38",
     platform = "ont1|ont2|hifi1"
 
 rule all:
     input:
         paf_files
-
 
 def input_fastq_fun(wildcards):
     if wildcards.cell_line == 'HCC1937':
@@ -22,12 +20,20 @@ def input_fastq_fun(wildcards):
     else:
         return "../severus_data/{cell_line}_{pair}_{platform}.fastq.gz"
 
+def input_asm_fun(wildcards):
+    if wildcards.cell_line == 'H1437':
+        return expand("/homes6/alvin/data/pangenome_sv_benchmarking/5.assembly_evaluation/NCI1437BL.asm.bp.hap{hap}.fa.gz", hap=[1,2])
+    elif wildcards.cell_line == 'H2009':
+        return expand("/homes6/alvin/data/pangenome_sv_benchmarking/5.assembly_evaluation/NCI2009BL.asm.bp.hap{hap}.fa.gz", hap=[1,2])
+    else:
+        return expand("/homes6/alvin/data/pangenome_sv_benchmarking/5.assembly_evaluation/{{cell_line}}BL.asm.bp.hap{hap}.fa.gz", hap=[1,2])
+
 rule minimap2_paf:
     input:
         fastq = input_fastq_fun,
-        hap = expand("/homes6/alvin/data/pangenome_sv_benchmarking/5.assembly_evaluation/{{cell_line}}BL.asm.bp.hap{hap}.fa.gz", hap=[1,2]),
+        hap = input_asm_fun,
     output:
-        paf = "output/align/{cell_line}_{pair}_{platform}_{assembly}_self.paf.gz"
+        paf = "output/align/{cell_line}_{pair}_{platform}_self.paf.gz"
     threads: 24
     resources:
         mem_mb=64000

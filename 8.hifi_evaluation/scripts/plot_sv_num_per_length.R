@@ -1,0 +1,41 @@
+library(ggplot2)
+library(tidyverse)
+
+
+do_bar_chart <- function(data_path, out_path, threads, myparam) {
+    # R code
+    print(myparam)
+    print(data_path)
+    res = read_tsv(data_path)
+    print(res)
+    res =res[,c(-5,-6)]
+    print('-------')
+    print(res)
+    # subtract translocation
+    res[,4] = res[,4] - res[,3]
+    res[,3] = res[,3] - res[,2]
+    res[,2] = res[,2] - res[,1] 
+
+    res = res %>% pivot_longer(cols=c(`translocation`, `>1M`, `>100k`, `>20k`))
+    res$file = gsub(".c3s0.msv", "", basename(res$file))
+    res$genome = ifelse(grepl("chm13", res$file), "chm13", "hg38")
+
+    res.normal = res %>% filter(!grepl(myparam[['select']], file))
+    res = res %>% filter(grepl(myparam[['select']], file))
+
+    print('test-')
+    res$cell_line = apply(matrix(res$file), 1, function(x) unlist(strsplit(x, '\\.'))[1])
+    res.normal$cell_line = apply(matrix(res.normal$file), 1, function(x) unlist(strsplit(x, '\\.'))[1])
+    print(table(res$cell_line))
+    res$file = gsub("hg38|chm13", "", res$file)
+    res.normal$file = gsub("hg38|chm13", "", res.normal$file)
+
+    ggplot(res, aes(x=file, y=value, fill=name)) + geom_bar(position='stack', stat='identity') + facet_grid(genome~cell_line, scales='free')+theme_classic() + theme(axis.text.x=element_text(angle=90, hjust=1, vjust=0.5)) + ylab(expression("#SV ">="5 Supporting reads")) + xlab("")
+    ggsave(out_path[['paired']], width=9.5, height=5)
+
+    ggplot(res.normal, aes(x=file, y=value, fill=name)) + geom_bar(position='stack', stat='identity') + facet_grid(genome~cell_line, scales='free')+theme_classic() + theme(axis.text.x=element_text(angle=90, hjust=1, vjust=0.5)) + ylab(expression("#SV ">="5 Supporting reads")) + xlab("")
+    ggsave(out_path[['normal']], width=9.5, height=5)
+}
+
+
+do_bar_chart(snakemake@input[[1]], snakemake@output, snakemake@threads, snakemake@params)
