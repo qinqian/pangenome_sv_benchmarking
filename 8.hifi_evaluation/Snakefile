@@ -36,8 +36,7 @@ rule gafcall_eval_length_combine:
 
 rule gafcall_eval_length_merge_all:
     input:
-        eval_length = expand("output/gafcall_eval/normal_v2/{cell_line}_merged_eval.len.tsv",
-                             cell_line=cell_lines)
+        eval_length = expand("output/gafcall_eval/normal_v2/{cell_line}_merged_eval.len.tsv", cell_line=cell_lines)
     output:
         eval_length = "output/gafcall_eval/normal_v2/all_merged_eval.len.tsv"
     shell:

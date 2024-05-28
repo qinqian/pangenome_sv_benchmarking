@@ -81,6 +81,7 @@ include: "rules/svision.smk"
 #
 #minisv_single_tgs_call = expand(expand("output/minisv/{cell_line}_{{pair}}_{platform}_grch38l_t+g+s_merge_c5s0.msv.gz", zip, cell_line=config['samples']['tumor'], platform=config['samples']['platform']), pair=["T", "BL"], assembly=['chm13', 'grch38'])
 
+paf_mixed  = expand(expand("output/align/{cell_line}_{platform}/{{assembly}}_mixdown.paf.gz", zip, cell_line=config['samples']['tumor'], platform=config['samples']['platform']), assembly=config['assembly'])
 
 rule all:
     input:
@@ -100,5 +101,6 @@ rule all:
         #minisv_self_extract,
         #minisv_linear_def_extract, minisv_graph_def_extract, 
         #minisv_single_call, minisv_single_graph_call, minisv_single_tg_call, minisv_single_tgs_call,
-        #minisv_single_ts_call, minisv_single_s_call
+        #minisv_single_ts_call, minisv_single_s_call,
+        #paf_mixed
     default_target: True 

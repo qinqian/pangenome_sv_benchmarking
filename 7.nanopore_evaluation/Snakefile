@@ -8,8 +8,6 @@ print(config)
 #    shell:
 #        "wget -c "
 
-print(config['samples']['normal'])
-
 module control_plot_workflow:
     snakefile: "rules/normal.smk"
     config: config

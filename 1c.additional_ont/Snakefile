@@ -7,13 +7,17 @@ cellline_map_cram = {'COLO829T': 'PAK76302.cram',
 
 clair3_outdir  = expand("output/clair3/{cell_line}_{assembly}/", cell_line=list(cellline_map_cram.keys()), assembly=['chm13', 'grch38'])
 sniffles_files  = expand("output/sniffles/{cell_line}_{assembly}.vcf.gz", cell_line=list(cellline_map_cram.keys()), assembly=['chm13', 'grch38'])
+
 cutesv_files  = expand("output/cutesv/{cell_line}_{assembly}.vcf.gz", cell_line=list(cellline_map_cram.keys()), assembly=['chm13', 'grch38'])
 paf_files  = expand("{cell_line}_{assembly}.paf.gz", cell_line=list(cellline_map_cram.keys()), assembly=['chm13', 'grch38'])
 asm_files  = expand("{cell_line}_asm.paf.gz", cell_line=list(cellline_map_cram.keys()))
 gaf_files  = expand("{cell_line}_{assembly}.gaf.gz", cell_line=list(cellline_map_cram.keys()), assembly=['chm13', 'grch38'])
 
+
 svision_files  = expand("output/svision/{cell_line}/{assembly}/{cell_line}.svision_pro_v1.8.s5.vcf", cell_line=list(cellline_map_cram.keys()), assembly=['chm13', 'grch38'])
 print(list(cellline_map_cram.keys()))
+
+all_fastq_size = expand("{cell_line}.fastq.gz.sz", cell_line=list(cellline_map_cram.keys()))
 
 
 def input_cram(wildcards):
@@ -28,7 +32,9 @@ rule all:
         expand("{cell_line}_{assembly}.gaf.gz", cell_line=list(cellline_map_cram.keys()), assembly=['chm13', 'grch38']),
         clair3_outdir, sniffles_files, cutesv_files, paf_files, gaf_files,
         svision_files,
-        asm_files
+        asm_files,
+        all_fastq_size,
+        #paf_mixed, gaf_mixed, sniffles_mosaic_files
 
 rule cram2fastq:
     input:
@@ -41,6 +47,8 @@ rule cram2fastq:
         """
         ../1a.alignment_sv_tools/samtools/samtools collate -Oun128 --reference ../1a.alignment_sv_tools/grch38.fa {input.cram} | ../1a.alignment_sv_tools/samtools/samtools fastq - | gzip - > {output.fastq}
         """
+
+include: "rules/seqtk.smk"
 
 rule minimap2:
     input:
