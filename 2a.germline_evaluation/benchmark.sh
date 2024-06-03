@@ -11,24 +11,24 @@ download_giab() {
 
     wget -c https://ftp-trace.ncbi.nlm.nih.gov/ReferenceSamples/giab/data/AshkenazimTrio/analysis/NIST_HG002_DraftBenchmark_defrabbV0.015-20240215/GRCh38_HG2-T2TQ100-V1.0.vcf.gz -O giab/GRCh38_HG2-T2TQ100-V1.0.vcf.gz
     wget -c https://ftp-trace.ncbi.nlm.nih.gov/ReferenceSamples/giab/data/AshkenazimTrio/analysis/NIST_HG002_DraftBenchmark_defrabbV0.015-20240215/GRCh38_HG2-T2TQ100-V1.0.vcf.gz.tbi -O giab/GRCh38_HG2-T2TQ100-V1.0.vcf.gz.tbi
-    bcftools view -i '(INFO/SVTYPE = "DEL" || INFO/SVTYPE = "INS") && INFO/SVLEN >=50 ' -Oz -o giab/GRCh38_HG2-T2TQ100-V1.0_filtered.vcf.gz -f . giab/GRCh38_HG2-T2TQ100-V1.0.vcf.gz
-    tabix -p vcf giab/GRCh38_HG2-T2TQ100-V1.0_filtered.vcf.gz
+    #bcftools view -i '(INFO/SVTYPE = "DEL" || INFO/SVTYPE = "INS") && INFO/SVLEN >=50 ' -Oz -o giab/GRCh38_HG2-T2TQ100-V1.0_filtered.vcf.gz -f . giab/GRCh38_HG2-T2TQ100-V1.0.vcf.gz
+    #tabix -p vcf giab/GRCh38_HG2-T2TQ100-V1.0_filtered.vcf.gz
 
     wget -c https://ftp-trace.ncbi.nlm.nih.gov/ReferenceSamples/giab/data/AshkenazimTrio/analysis/NIST_HG002_DraftBenchmark_defrabbV0.015-20240215/GRCh38_HG2-T2TQ100-V1.0_smvar.benchmark.bed -O giab/GRCh38_HG2-T2TQ100-V1.0_smvar.benchmark.bed
     wget -c https://ftp-trace.ncbi.nlm.nih.gov/ReferenceSamples/giab/data/AshkenazimTrio/analysis/NIST_HG002_DraftBenchmark_defrabbV0.015-20240215/GRCh38_HG2-T2TQ100-V1.0_stvar.benchmark.bed -O giab/GRCh38_HG2-T2TQ100-V1.0_stvar.benchmark.bed
 
     wget -c https://ftp-trace.ncbi.nlm.nih.gov/ReferenceSamples/giab/data/AshkenazimTrio/analysis/NIST_HG002_DraftBenchmark_defrabbV0.015-20240215/GRCh37_HG2-T2TQ100-V1.0.vcf.gz -O giab/GRCh37_HG2-T2TQ100-V1.0.vcf.gz
     wget -c https://ftp-trace.ncbi.nlm.nih.gov/ReferenceSamples/giab/data/AshkenazimTrio/analysis/NIST_HG002_DraftBenchmark_defrabbV0.015-20240215/GRCh37_HG2-T2TQ100-V1.0.vcf.gz.tbi -O giab/GRCh37_HG2-T2TQ100-V1.0.vcf.gz.tbi
-    bcftools view -i '(INFO/SVTYPE = "DEL" || INFO/SVTYPE = "INS") && INFO/SVLEN >=50 ' -Oz -o giab/GRCh37_HG2-T2TQ100-V1.0_filtered.vcf.gz -f . giab/GRCh37_HG2-T2TQ100-V1.0.vcf.gz
-    tabix -p vcf giab/GRCh37_HG2-T2TQ100-V1.0_filtered.vcf.gz
+    #bcftools view -i '(INFO/SVTYPE = "DEL" || INFO/SVTYPE = "INS") && INFO/SVLEN >=50 ' -Oz -o giab/GRCh37_HG2-T2TQ100-V1.0_filtered.vcf.gz -f . giab/GRCh37_HG2-T2TQ100-V1.0.vcf.gz
+    #tabix -p vcf giab/GRCh37_HG2-T2TQ100-V1.0_filtered.vcf.gz
 
     wget -c https://ftp-trace.ncbi.nlm.nih.gov/ReferenceSamples/giab/data/AshkenazimTrio/analysis/NIST_HG002_DraftBenchmark_defrabbV0.015-20240215/GRCh37_HG2-T2TQ100-V1.0_smvar.benchmark.bed -O giab/GRCh37_HG2-T2TQ100-V1.0_smvar.benchmark.bed
     wget -c https://ftp-trace.ncbi.nlm.nih.gov/ReferenceSamples/giab/data/AshkenazimTrio/analysis/NIST_HG002_DraftBenchmark_defrabbV0.015-20240215/GRCh37_HG2-T2TQ100-V1.0_stvar.benchmark.bed -O giab/GRCh37_HG2-T2TQ100-V1.0_stvar.benchmark.bed
 
     wget -c https://ftp-trace.ncbi.nlm.nih.gov/ReferenceSamples/giab/data/AshkenazimTrio/analysis/NIST_HG002_DraftBenchmark_defrabbV0.015-20240215/CHM13v2.0_HG2-T2TQ100-V1.0.vcf.gz -O giab/CHM13v2.0_HG2-T2TQ100-V1.0.vcf.gz
     wget -c https://ftp-trace.ncbi.nlm.nih.gov/ReferenceSamples/giab/data/AshkenazimTrio/analysis/NIST_HG002_DraftBenchmark_defrabbV0.015-20240215/CHM13v2.0_HG2-T2TQ100-V1.0.vcf.gz.tbi -O giab/CHM13v2.0_HG2-T2TQ100-V1.0.vcf.gz.tbi
-    bcftools view -i '(INFO/SVTYPE = "DEL" || INFO/SVTYPE = "INS") && INFO/SVLEN >=50 ' -Oz -o giab/CHM13v2.0_HG2-T2TQ100-V1.0_filtered.vcf.gz -f . giab/CHM13v2.0_HG2-T2TQ100-V1.0.vcf.gz
-    tabix -p vcf giab/CHM13v2.0_HG2-T2TQ100-V1.0_filtered.vcf.gz
+    #bcftools view -i '(INFO/SVTYPE = "DEL" || INFO/SVTYPE = "INS") && INFO/SVLEN >=50 ' -Oz -o giab/CHM13v2.0_HG2-T2TQ100-V1.0_filtered.vcf.gz -f . giab/CHM13v2.0_HG2-T2TQ100-V1.0.vcf.gz
+    #tabix -p vcf giab/CHM13v2.0_HG2-T2TQ100-V1.0_filtered.vcf.gz
 
     wget -c https://ftp-trace.ncbi.nlm.nih.gov/ReferenceSamples/giab/data/AshkenazimTrio/analysis/NIST_HG002_DraftBenchmark_defrabbV0.015-20240215/CHM13v2.0_HG2-T2TQ100-V1.0_smvar.benchmark.bed -O giab/CHM13v2.0_HG2-T2TQ100-V1.0_smvar.benchmark.bed
     wget -c https://ftp-trace.ncbi.nlm.nih.gov/ReferenceSamples/giab/data/AshkenazimTrio/analysis/NIST_HG002_DraftBenchmark_defrabbV0.015-20240215/CHM13v2.0_HG2-T2TQ100-V1.0_stvar.benchmark.bed -O giab/CHM13v2.0_HG2-T2TQ100-V1.0_stvar.benchmark.bed

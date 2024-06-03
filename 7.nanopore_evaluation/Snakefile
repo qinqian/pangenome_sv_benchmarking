@@ -14,7 +14,16 @@ module control_plot_workflow:
 
 use rule * from control_plot_workflow as r_control_plot_workflow_*
 
+
+module tnpair_plot_workflow:
+    snakefile: "rules/tnpair.smk"
+    config: config
+
+use rule * from tnpair_plot_workflow as r_tnpair_plot_workflow_*
+
+
 rule all:
     input:
-        rules.r_control_plot_workflow_all.input
+        rules.r_control_plot_workflow_all.input,
+        rules.r_tnpair_plot_workflow_all.input
     default_target: True

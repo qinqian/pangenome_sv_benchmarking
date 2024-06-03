@@ -13,6 +13,28 @@ rule link_cram:
 
         """
 
+rule svision_germline_mode:
+    input:
+        crams = os.path.join(config['pwd'], "output/align/{cell_line}_{platform}/{pair}/{assembly}_{pair}.cram"),
+        crais = os.path.join(config['pwd'], "output/align/{cell_line}_{platform}/{pair}/{assembly}_{pair}.cram.crai")
+    output:
+        outdir = directory("output/svision_single/{cell_line}_{platform}_{pair}/{assembly}"),
+        out_vcf = "output/svision_single/{cell_line}_{platform}_{pair}/{assembly}/{cell_line}.svision_pro_v1.8.s5.vcf"
+    conda: "svision"
+    threads: 12
+    resources:
+        tmpdir="local_tmp/",
+        runtime="28h",
+        mem_mb_per_cpu=8000
+    shell:
+        """
+        if [[ {wildcards.platform} =~ "hifi" ]]; then
+            SVision-pro --process_num {threads} --img_size 1024 --target_path {input.crams} --access_path {wildcards.assembly}.access.10M.bed --genome_path {wildcards.assembly}.fa --model_path ~/software/SVision-pro/src/pre_process/model_liteunet_1024_8_16_32_32_32.pth --out_path {output.outdir} --sample_name {wildcards.cell_line} --detect_mode germline
+        else
+            SVision-pro --preset error-prone --process_num {threads} --img_size 1024 --target_path {input.crams} --access_path {wildcards.assembly}.access.10M.bed --genome_path {wildcards.assembly}.fa --model_path ~/software/SVision-pro/src/pre_process/model_liteunet_1024_8_16_32_32_32.pth --out_path {output.outdir} --sample_name {wildcards.cell_line} --detect_mode germline
+        fi
+        """
+
 rule svision:
     input:
         crams = expand(os.path.join(config['pwd'], "output/align/{{cell_line}}_{{platform}}/{pair}/{{assembly}}_{pair}.cram"), pair=["T", "BL"]),

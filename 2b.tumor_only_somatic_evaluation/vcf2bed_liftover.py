@@ -26,6 +26,10 @@ def chr_prefix_truthset(vcf, platform, liftover=None):
                     line = re.sub(r"([XYMT0-9]+):", "chr\g<1>:", line)
                 if "#" not in line[0] and ('chr' not in line[0]):
                     line = "chr" + line
+                if line[0] != '#':
+                    line = line.split('\t')
+                    line[2] = line[2][:-2]
+                    line = '\t'.join(line)
                 print(line)
 
 

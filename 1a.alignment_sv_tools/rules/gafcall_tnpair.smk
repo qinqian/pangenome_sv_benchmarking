@@ -222,29 +222,50 @@ use rule gafcall_merge_filter as gafcall_merge_join_tgs_filter with:
         msv = "output/minisv/{cell_line}_{pair}_{platform}_grch38l_t+g+s_merge_c5s0.msv.gz"
 
 
-#rule gafcall_eval_length:
-#    input:
-#        #l = rules.gafcall_merge_filter.output.gsv,
-#        #s = rules.gafcall_merge_join_s_filter.output.gsv,
-#        #g = rules.gafcall_merge_join_graph_filter.output.gsv,
-#        l = expand("output/gafcall/{{cell_line}}_{assembly}l_mergeflt_c5s0.gsv.gz", assembly=['chm13', 'grch38']),
-#        s = expand("output/gafcall/{{cell_line}}_{assembly}l_s_join_mergeflt_c5s0.gsv.gz", assembly=['chm13', 'grch38']),
-#        g = expand("output/gafcall/{{cell_line}}_{assembly}l_g_join_mergeflt_c5s0.gsv.gz", assembly=['chm13', 'grch38']),
-#        ts = rules.gafcall_merge_join_ts_filter.output.gsv,
-#        tg = rules.gafcall_merge_join_tg_filter.output.gsv,
-#        tgs = rules.gafcall_merge_join_tgs_filter.output.gsv
-#    output:
-#        eval_length = "output/gafcall_eval/{cell_line}_eval_len.tsv"
-#    shell:
-#        """
-#
-#        echo -e '>100\t>1M\t>100k\t>20k\tall_except_inv\tinv\tfile' > {output.eval_length} 
-#        for input in {input.l} {input.g} {input.s} {input.ts} {input.tg} {input.tgs}; do
-#            if [[ $input =~ "chm13" ]]; then
-#                ../gafcall/js/gafcall.js view -b ../4.gafcall_evaluation/chm13.reg.bed -c 5 -C -I $input >> {output.eval_length} 
-#            else
-#                ../gafcall/js/gafcall.js view -b ../4.gafcall_evaluation/hg38.reg.bed -c 5 -C -I $input >> {output.eval_length} 
-#            fi
-#        done
-#
-#        """
+rule minisv_view_length_tn:
+    input:
+        pair=expand("output/minisv_pair/{{cell_line}}_{{platform}}_pair_{comb}.msv", comb=['chm13l_l+t+g+s', 'hg38l+tgs']),
+    output:
+        tn_eval_length = "output/minisv_view/tn_{cell_line}_{platform}_eval_len.tsv",
+    shell:
+        """
+        for input in {input.pair}; do
+            if [[ $input =~ "chm13" ]]; then
+                minisv.js view -b ~/data/pangenome_sv_benchmarking/minisv/data/chm13v2.reg.bed -c 5 -C -I $input >> {output.tn_eval_length} 
+            else
+                minisv.js view -b ~/data/pangenome_sv_benchmarking/minisv/data/hs38.reg.bed -c 5 -C -I $input  >> {output.tn_eval_length} 
+            fi
+        done
+        """
+
+rule minisv_view_length_single_count_grch38:
+   input:
+        single=expand("output/minisv/{{cell_line}}_{pair}_{{platform}}_{assembly}l_{{comb}}_merge_{{cnt}}.msv.gz", assembly=['grch38'], pair=['T', 'BL'])
+   output:
+        single_eval_length = "output/minisv_view/single_grch38_{cell_line}_{platform}_{comb}_merge_{cnt}_eval_len.tsv"
+   shell:
+        """
+        cnt="{wildcards.cnt}"
+        for input in {input.single}; do
+            if [[ $input =~ "chm13" ]]; then
+                minisv.js view -b ~/data/pangenome_sv_benchmarking/minisv/data/chm13v2.reg.bed -c ${{cnt:1:1}} -IC $input >> {output.single_eval_length} 
+            else
+                minisv.js view -b ~/data/pangenome_sv_benchmarking/minisv/data/hs38.reg.bed -c ${{cnt:1:1}} -IC $input >> {output.single_eval_length} 
+            fi
+        done
+        """
+
+use rule minisv_view_length_single_count_grch38 as minisv_view_length_single_count_chm13 with:
+   input:
+        single=expand("output/minisv/{{cell_line}}_{pair}_{{platform}}_{assembly}l_{{comb}}_merge_{{cnt}}.msv.gz", assembly=['chm13', 'grch38'], pair=['T', 'BL'])
+   output:
+        single_eval_length = "output/minisv_view/single_chm13_{cell_line}_{platform}_{comb}_merge_{cnt}_eval_len.tsv"
+
+
+rule minisv_view_length_single_combined:
+    input: 
+        single = expand("output/minisv_view/single_grch38_{{cell_line}}_{{platform}}_{comb}_merge_{cnt}_eval_len.tsv", comb=['t+g+s', 't+s', 't+g'], cnt=['c2s0', 'c3s0', 'c4s0', 'c5s0']) + expand("output/minisv_view/single_{assembly}_{{cell_line}}_{{platform}}_{comb}_merge_{cnt}_eval_len.tsv", comb=['l+x', 'l+g', 'l+s'], cnt=['c2s0', 'c3s0', 'c4s0', 'c5s0'], assembly=['chm13', 'grch38'])
+    output:
+        single_eval_length = "output/minisv_view/single_{cell_line}_{platform}_eval_len.tsv"
+    shell:
+        "cat {input.single} > {output.single_eval_length}"

@@ -20,6 +20,10 @@ gafcall_merged_linear_alone = expand(expand("output/gafcall/{cell_line}_{{pair}}
 gafcall_mergedflt_linear_alone = expand(expand("output/gafcall/{cell_line}_{{pair}}_{{assembly}}l_mergeflt_c5s0.gsv.gz", cell_line=config['samples']['tumor']), pair=["T", "BL"], assembly=config['assembly'])
 
 
+sniffles_mix_mosaic_files  = expand("output/sniffles_mosaic/{cell_line}/{assembly}_mixdown_mosaic.vcf.gz", cell_line=config['samples']['tumor'], assembly=['chm13', 'grch38'])
+paf_mixed  = expand("output/align/{cell_line}/{assembly}_mixdown.paf.gz", cell_line=config['samples']['tumor'], assembly=['chm13', 'grch38'])
+gaf_mixed  = expand("output/align/{cell_line}/{assembly}g_mixdown.paf.gz", cell_line=config['samples']['tumor'], assembly=['chm13', 'grch38'])
+
 sniffles_mosaic_files  = expand(expand("output/sniffles_mosaic/{cell_line}/{{pair}}/{{assembly}}.vcf.gz", cell_line=config['samples']['tumor']), pair=["T", "BL"], assembly=config['assembly'])
 sniffles_mosaic_tbi_files  = expand(expand("output/sniffles_mosaic/{cell_line}/{{pair}}/{{assembly}}.vcf.gz.tbi", cell_line=config['samples']['tumor']), pair=["T", "BL"], assembly=config['assembly'])
 
@@ -53,10 +57,36 @@ use rule * from severus_workflow as severus_workflow_*
 
 include: "rules/nanomonsv_tnpair.smk"
 include: "rules/gafcall_tnpair.smk"
-
+include: "rules/gafcall_mixed.smk"
 include: "rules/svision_tnpair.smk"
 
 svision_files_somatic  = expand("output/svision/{cell_line}/somatic/{cell_line}_{assembly}_tn.svision_pro_v1.8.s5.somatic_s1.vcf", cell_line=config['samples']['tumor'], assembly=['chm13', 'grch38'])
+
+minisv_pair = expand(expand("output/minisv_pair/{cell_line}_pair_hg38l_l+t+g+s_{{cnt}}.msv.gz", zip, cell_line=config['samples']['tumor']), cnt=['c2s0', 'c3s0', 'c4s0', 'c5s0'])
+minisv_pair_t2t = expand(expand("output/minisv_pair/{cell_line}_pair_chm13l_l+t+g+s_{{cnt}}.msv.gz", zip, cell_line=config['samples']['tumor']), cnt=['c2s0', 'c3s0', 'c4s0', 'c5s0'])
+minisv_pair_t = expand(expand("output/minisv_pair/{cell_line}_pair_hg38l_l+t_{{cnt}}.msv.gz", zip, cell_line=config['samples']['tumor']), cnt=['c2s0', 'c3s0', 'c4s0', 'c5s0'])
+minisv_pair_g = expand(expand("output/minisv_pair/{cell_line}_pair_hg38l_l+g_{{cnt}}.msv.gz", zip, cell_line=config['samples']['tumor']), cnt=['c2s0', 'c3s0', 'c4s0', 'c5s0'])
+minisv_pair_tg = expand(expand("output/minisv_pair/{cell_line}_pair_hg38l_l+tg_{{cnt}}.msv.gz", zip, cell_line=config['samples']['tumor']), cnt=['c2s0', 'c3s0', 'c4s0', 'c5s0'])
+minisv_pair_gx = expand(expand("output/minisv_pair/{cell_line}_pair_{{assembly}}g_g+x_{{cnt}}.msv.gz", zip, cell_line=config['samples']['tumor']), cnt=['c2s0', 'c3s0', 'c4s0', 'c5s0'], assembly=['chm13', 'grch38'])
+minisv_pair_lx = expand(expand("output/minisv_pair/{cell_line}_pair_{{assembly}}l_l+x_{{cnt}}.msv.gz", zip, cell_line=config['samples']['tumor']), cnt=['c2s0', 'c3s0', 'c4s0', 'c5s0'], assembly=['chm13', 'grch38'])
+
+
+minisv_mixed_mosaic_g = expand("output/minisv_mosaic/{cell_line}/{assembly}g_g+x_mosaic.msv.gz", cell_line=config['samples']['tumor'], assembly=['chm13', 'grch38'])
+minisv_mixed_mosaic_l = expand("output/minisv_mosaic/{cell_line}/{assembly}l_l+x_mosaic.msv.gz", cell_line=config['samples']['tumor'], assembly=['chm13', 'grch38'])
+minisv_mixed_mosaic_lg = expand("output/minisv_mosaic/{cell_line}/{assembly}l_l+g_mosaic.msv.gz", cell_line=config['samples']['tumor'], assembly=['chm13', 'grch38'])
+#minisv_mixed_mosaic_lt = expand("output/minisv_mosaic/{cell_line}/grch38l_l+g_mosaic.msv.gz", cell_line=config['samples']['tumor'])
+#minisv_mixed_mosaic_ltg = expand("output/minisv_mosaic/{cell_line}/grch38l_l+t+g_mosaic.msv.gz", cell_line=config['samples']['tumor'])
+
+tn_eval_length = expand("output/minisv_view/tn_{cell_line}_eval_len.tsv", zip, cell_line=config['samples']['tumor'])
+single_eval_length = expand("output/minisv_view/single_{cell_line}_eval_len.tsv", zip, cell_line=config['samples']['tumor'])
+
+
+
+include: "rules/minisv_eval_all_tools.smk"
+
+minisv_eval_files = expand("output/minisv_eval_tnpair/{cell_line}_{assembly}_count{cutoff}_eval.tsv", cell_line=config['samples']['tumor'], assembly=['chm13', 'grch38'], cutoff=[2,3,4,5,10])
+
+minisv_single_eval_files = expand("output/minisv_eval_single{pair}/single_{cell_line}_{assembly}_count{cutoff}_eval.tsv", cell_line=config['samples']['tumor'], assembly=['chm13', 'grch38'], cutoff=[2,3,4,5,10], pair=['T', 'BL'])
 
 rule all:
     input:
@@ -70,5 +100,10 @@ rule all:
         gafcall_merged_linear_alone,
         gafcall_merged_linear_Qs, gafcall_mergedflt_linear_alone,
         gafcall_asm_files,
-        svision_files_somatic,
+        svision_files_somatic, 
+        sniffles_mix_mosaic_files, 
+        paf_mixed, gaf_mixed, tn_eval_length, single_eval_length,
+        minisv_mixed_mosaic_l, minisv_mixed_mosaic_g, minisv_mixed_mosaic_lg, #minisv_mixed_mosaic_lt, minisv_mixed_mosaic_ltg,
+        minisv_pair, minisv_pair_t2t, minisv_pair_t, minisv_pair_g, minisv_pair_tg, minisv_pair_gx, minisv_pair_lx,
+        minisv_eval_files, minisv_single_eval_files
     default_target: True 

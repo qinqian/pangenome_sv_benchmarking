@@ -66,7 +66,9 @@ crossmap_liftover() {
     # python vcf2bed.py colo_truth $output/truthset.colo829.out.chm13v2.crossmap.vcf
     # convert to vcf, only liftover the ALT allele
     python liftover_makeup.py output/truthset.colo829.out.chm13v2.crossmap.vcf > $output/truthset.colo829.out.chm13v2.crossmap_clean.vcf
+
 }
+
 
 clean_sniffles() {
     echo "sniffles2"
@@ -82,7 +84,7 @@ main() {
     mkdir -p $output
     #download_colo829_truthset
     #get_liftover
-    clean_truthset
+    #clean_truthset
     #NOTE: picard have more excluded svs
     ###picard_liftover
     crossmap_liftover

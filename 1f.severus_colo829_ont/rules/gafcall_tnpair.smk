@@ -6,7 +6,6 @@ rule minisv_tnpair_tgs_extract_tumor_chm13:
     input:
         paf = expand("output/align/{{cell_line}}_{pair}_{{platform}}_{assembly}l.paf.gz", assembly=['grch38', 'chm13'], pair=['T', 'BL']),
         gaf = expand("output/align/{{cell_line}}_{pair}_{{platform}}_{assembly}g.paf.gz", assembly=['grch38', 'chm13'], pair=['T', 'BL']),
-        # ['output/align/{cell_line}_T_{platform}_grch38l.paf.gz', 'output/align/{cell_line}_BL_{platform}_grch38l.paf.gz', 'output/align/{cell_line}_T_{platform}_chm13l.paf.gz', 'output/align/{cell_line}_BL_{platform}_chm13l.paf.gz']
         asm = expand("output/align/{{cell_line}}_{pair}_{{platform}}_self.paf.gz", pair=['T', 'BL'])
     output:
         t_rsv = "output/minisv_pair/{cell_line}_{platform}_tumor_chm13l+tgs.rsv"
@@ -42,12 +41,28 @@ rule minisv_tnpair_somatic_call_chm13:
         mem_mb=24000, 
         run_time="12h"
     output:
-        "output/minisv_pair/{cell_line}_{platform}_pair_chm13l_l+t+g+s.msv"
+        msv="output/minisv_pair/{cell_line}_{platform}_pair_chm13l_l+t+g+s.msv.gz"
     shell:
         """
         cat {input.t} <(zcat {input.n}) | sort -k1,1 -k2,2n -S4g \
-          | minisv.js merge - | grep TUMOR | grep -v NORMAL > {output}
+          | minisv.js merge -c 2 -s 0 - | grep TUMOR | grep -v NORMAL | gzip > {output}
         """
+
+rule gafcall_merge_filter_tnpair_chm13:
+    threads: 1
+    input:
+        msv = rules.minisv_tnpair_somatic_call_chm13.output.msv
+    output:
+        msv = expand("output/minisv_pair/{{cell_line}}_{{platform}}_pair_chm13l_l+t+g+s_{cnt}.msv.gz", cnt=['c3s0', 'c4s0', 'c5s0'])
+    params:
+        c = [3, 4, 5],
+        s = [0, 0, 0]
+    resources:
+        mem_mb=4000, 
+        run_time="1h"
+    run:
+        for m, c, s in zip(output.msv, params.c, params.s):
+            shell(f"zcat {input.msv} | ~/data/pangenome_sv_benchmarking/minisv/minisv.js mergeflt -c {c} -s {s} - | gzip > {m}")
 
 
 rule minisv_tnpair_tgs_extract_tumor:
@@ -94,12 +109,29 @@ rule minisv_tnpair_somatic_call:
         mem_mb=24000, 
         run_time="12h"
     output:
-        "output/minisv_pair/{cell_line}_{platform}_pair_hg38l+tgs.msv"
+        #"output/minisv_pair/{cell_line}_{platform}_pair_hg38l+tgs.msv"
+        msv="output/minisv_pair/{cell_line}_{platform}_pair_hg38l_l+t+g+s_c2s0.msv.gz"
     shell:
         """
         cat {input.t} <(zcat {input.n}) | sort -k1,1 -k2,2n -S4g \
-          | minisv.js merge - | grep TUMOR | grep -v NORMAL > {output}
+          | minisv.js merge -c 2 -s 0 - | grep TUMOR | grep -v NORMAL | gzip  > {output}
         """
+
+rule gafcall_merge_filter_tnpair_hg38:
+    threads: 1
+    input:
+        msv = rules.minisv_tnpair_somatic_call.output.msv
+    output:
+        msv = expand("output/minisv_pair/{{cell_line}}_{{platform}}_pair_hg38l_l+t+g+s_{cnt}.msv.gz", cnt=['c3s0', 'c4s0', 'c5s0'])
+    params:
+        c = [3, 4, 5],
+        s = [0, 0, 0]
+    resources:
+        mem_mb=4000, 
+        run_time="1h"
+    run:
+        for m, c, s in zip(output.msv, params.c, params.s):
+            shell(f"zcat {input.msv} | ~/data/pangenome_sv_benchmarking/minisv/minisv.js mergeflt -c {c} -s {s} - | gzip > {m}")
 
 rule gafcall_extract_asm:
     threads: 1
@@ -131,7 +163,6 @@ rule gafcall_extract:
         if [[ {wildcards.pair} == "T" ]]; then
             ~/data/pangenome_sv_benchmarking/minisv/minisv.js extract -n TUMOR -b {wildcards.assembly}.cen-mask.bed {input.paf} | gzip > {output.rsv}
         else
-            #~/data/pangenome_sv_benchmarking/minisv/minisv.js extract -n NORMAL -b {wildcards.assembly}.cen-mask.bed {input.paf} | gzip > {output.rsv}
             ~/data/pangenome_sv_benchmarking/minisv/minisv.js extract -n NORMAL {input.paf} | gzip > {output.rsv}
         fi
         """
@@ -147,9 +178,8 @@ rule gafcall_extract_graph:
     shell:
         """
         if [[ {wildcards.pair} == "T" ]]; then
-            ~/data/pangenome_sv_benchmarking/minisv/minisv.js extract -n TUMOR -b {wildcards.assembly}.cen-mask.bed -n {wildcards.cell_line}{wildcards.pair} {input.paf} | gzip > {output.rsv}
+            ~/data/pangenome_sv_benchmarking/minisv/minisv.js extract -n TUMOR -b {wildcards.assembly}.cen-mask.bed {input.paf} | gzip > {output.rsv}
         else
-            #~/data/pangenome_sv_benchmarking/minisv/minisv.js extract -n NORMAL -b {wildcards.assembly}.cen-mask.bed {input.paf} | gzip > {output.rsv}
             ~/data/pangenome_sv_benchmarking/minisv/minisv.js extract -n NORMAL {input.paf} | gzip > {output.rsv}
         fi
         """
@@ -226,6 +256,130 @@ use rule gafcall_merge_filter as gafcall_merge_join_tg_filter with:
     params:
         c = [3, 4, 5],
         s = [0, 0, 0]
+
+rule minisv_tnpair_somatic_call_tg:
+    input:
+        rsv = expand("output/minisv/{{cell_line}}_T_{{platform}}_{assembly}l.def.rsv.gz", assembly=['chm13', 'grch38']),
+        graph = expand("output/minisv/{{cell_line}}_T_{{platform}}_{assembly}g.def.rsv.gz", assembly=['chm13', 'grch38']),
+        n = rules.minisv_tnpair_tgs_extract_normal.output.n_rsv
+    resources:
+        mem_mb=24000, 
+        run_time="12h"
+    output:
+        msv="output/minisv_pair/{cell_line}_{platform}_pair_hg38l_l+tg_c2s0.msv.gz"
+    shell:
+        """
+        cat <(k8 --max-old-space={resources.mem_mb} ~/data/pangenome_sv_benchmarking/minisv/minisv.js isec {input.rsv[1]} {input.rsv[0]} |k8 --max-old-space={resources.mem_mb} ~/data/pangenome_sv_benchmarking/minisv/minisv.js isec - {input.graph[0]}) <(zcat {input.n}) | sort -k1,1 -k2,2n -S4g \
+          | minisv.js merge -c 2 -s 0 - | grep TUMOR | grep -v NORMAL | gzip > {output.msv}
+        """
+
+use rule gafcall_merge_filter as tnpair_gafcall_merge_join_tg_filter with:
+    input:
+        msv = rules.minisv_tnpair_somatic_call_tg.output.msv,
+    output:
+        msv = expand("output/minisv_pair/{{cell_line}}_{{platform}}_pair_hg38l_l+tg_{cnt}.msv.gz", cnt=['c3s0', 'c4s0', 'c5s0'])
+    params:
+        c = [3, 4, 5],
+        s = [0, 0, 0]
+
+rule minisv_tnpair_somatic_call_g:
+    input:
+        rsv = expand("output/minisv/{{cell_line}}_T_{{platform}}_{assembly}l.def.rsv.gz", assembly=['chm13', 'grch38']),
+        graph = expand("output/minisv/{{cell_line}}_T_{{platform}}_{assembly}g.def.rsv.gz", assembly=['chm13', 'grch38']),
+        n = rules.minisv_tnpair_tgs_extract_normal.output.n_rsv
+    resources:
+        mem_mb=24000, 
+        run_time="12h"
+    output:
+        msv="output/minisv_pair/{cell_line}_{platform}_pair_hg38l_l+g_c2s0.msv.gz"
+    shell:
+        """
+        cat <(k8 --max-old-space={resources.mem_mb} ~/data/pangenome_sv_benchmarking/minisv/minisv.js isec {input.rsv[1]} {input.graph[0]}) <(zcat {input.n}) | sort -k1,1 -k2,2n -S4g \
+          | minisv.js merge -c 2 -s 0 - | grep TUMOR | grep -v NORMAL | gzip > {output.msv}
+        """
+
+use rule gafcall_merge_filter as tnpair_gafcall_merge_join_g_filter with:
+    input:
+        msv = rules.minisv_tnpair_somatic_call_tg.output.msv,
+    output:
+        msv = expand("output/minisv_pair/{{cell_line}}_{{platform}}_pair_hg38l_l+g_{cnt}.msv.gz", cnt=['c3s0', 'c4s0', 'c5s0'])
+    params:
+        c = [3, 4, 5],
+        s = [0, 0, 0]
+
+rule minisv_tnpair_somatic_call_t:
+    input:
+        rsv = expand("output/minisv/{{cell_line}}_T_{{platform}}_{assembly}l.def.rsv.gz", assembly=['chm13', 'grch38']),
+        graph = expand("output/minisv/{{cell_line}}_T_{{platform}}_{assembly}g.def.rsv.gz", assembly=['chm13', 'grch38']),
+        n = rules.minisv_tnpair_tgs_extract_normal.output.n_rsv
+    resources:
+        mem_mb=24000, 
+        run_time="12h"
+    output:
+        msv="output/minisv_pair/{cell_line}_{platform}_pair_hg38l_l+t_c2s0.msv.gz"
+    shell:
+        """
+        cat <(k8 --max-old-space={resources.mem_mb} ~/data/pangenome_sv_benchmarking/minisv/minisv.js isec {input.rsv[1]} {input.rsv[0]}) <(zcat {input.n}) | sort -k1,1 -k2,2n -S4g \
+          | minisv.js merge -c 2 -s 0 - | grep TUMOR | grep -v NORMAL | gzip > {output.msv}
+        """
+
+use rule gafcall_merge_filter as tnpair_gafcall_merge_join_t_filter with:
+    input:
+        msv = rules.minisv_tnpair_somatic_call_tg.output.msv,
+    output:
+        msv = expand("output/minisv_pair/{{cell_line}}_{{platform}}_pair_hg38l_l+t_{cnt}.msv.gz", cnt=['c3s0', 'c4s0', 'c5s0'])
+    params:
+        c = [3, 4, 5],
+        s = [0, 0, 0]
+
+
+rule minisv_tnpair_somatic_call_lx:
+    input:
+        rsv = expand("output/minisv/{{cell_line}}_{pair}_{{platform}}_{{assembly}}l.def.rsv.gz", pair=['T', 'BL'])
+    resources:
+        mem_mb=24000, 
+        run_time="12h"
+    output:
+        msv="output/minisv_pair/{cell_line}_{platform}_pair_{assembly}l_l+x_c2s0.msv.gz"
+    shell:
+        """
+        zcat {input.rsv[0]} {input.rsv[1]} | sort -k1,1 -k2,2n -S4g \
+          | minisv.js merge -c 2 -s 0 - | grep TUMOR | grep -v NORMAL | gzip > {output.msv}
+        """
+
+use rule gafcall_merge_filter as tnpair_gafcall_merge_join_lx_filter with:
+    input:
+        msv = rules.minisv_tnpair_somatic_call_lx.output.msv,
+    output:
+        msv = expand("output/minisv_pair/{{cell_line}}_{{platform}}_pair_{{assembly}}l_l+x_{cnt}.msv.gz", cnt=['c3s0', 'c4s0', 'c5s0'])
+    params:
+        c = [3, 4, 5],
+        s = [0, 0, 0]
+
+
+rule minisv_tnpair_somatic_call_gx:
+    input:
+        rsv = expand("output/minisv/{{cell_line}}_{pair}_{{platform}}_{{assembly}}g.def.rsv.gz", pair=['T', 'BL'])
+    resources:
+        mem_mb=24000, 
+        run_time="12h"
+    output:
+        msv="output/minisv_pair/{cell_line}_{platform}_pair_{assembly}g_g+x_c2s0.msv.gz"
+    shell:
+        """
+        zcat {input.rsv[0]} {input.rsv[1]} | sort -k1,1 -k2,2n -S4g \
+          | minisv.js merge -c 2 -s 0 - | grep TUMOR | grep -v NORMAL | gzip > {output.msv}
+        """
+
+use rule gafcall_merge_filter as tnpair_gafcall_merge_join_gx_filter with:
+    input:
+        msv = rules.minisv_tnpair_somatic_call_gx.output.msv,
+    output:
+        msv = expand("output/minisv_pair/{{cell_line}}_{{platform}}_pair_{{assembly}}g_g+x_{cnt}.msv.gz", cnt=['c3s0', 'c4s0', 'c5s0'])
+    params:
+        c = [3, 4, 5],
+        s = [0, 0, 0]
+
 
 
 rule gafcall_merge_join_s:

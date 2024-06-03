@@ -9,6 +9,7 @@ rule all:
     input:
         "output/batch1/plots/sv_normal_eval_len.pdf",
         "output/batch3/sv_len.tsv",
+        "output/batch1/sv_len.tsv",
         "output/batch3/plots/sv_normal_eval_len.pdf"
 
 

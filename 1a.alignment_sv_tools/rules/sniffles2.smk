@@ -149,3 +149,18 @@ rule sniffles2_mosaic_downsample_call:
         """
         sniffles --threads {threads} --reference ../1a.alignment_sv_tools/{wildcards.assembly}.fa --tandem-repeats ../1a.alignment_sv_tools/{wildcards.assembly}_vntrs.bed -i {input.cram} -v {output.vcf} --output-rnames --sample-id {wildcards.cell_line}_{wildcards.platform} {params.mosaic}
         """
+
+rule query_downsample_paf:
+    input:
+        cram = "output/align/{cell_line}_{platform}/{assembly}_mixdown.cram",
+        crai = "output/align/{cell_line}_{platform}/{assembly}_mixdown.crai",
+#/hlilab/hli/gafcall/pair_v2
+#COLO829BL.hg38l.paf.gz
+        pafs = expand("/hlilab/hli/gafcall/pair_v2/{{cell_line}}_{pair}_{{platform}}_{{assembly}}l.paf.gz", pair=['T', 'BL'])
+    output:
+        "output/align/{cell_line}_{platform}/{assembly}_mixdown.paf.gz"
+    shell:
+        """
+        ~/software/tabtk/tabtk isct <(~/data/pangenome_sv_benchmarking/1a.alignment_sv_tools/samtools/samtools view {input.cram}|cut -f1) <(zcat {input.pafs}) | gzip > {output}
+        """
+

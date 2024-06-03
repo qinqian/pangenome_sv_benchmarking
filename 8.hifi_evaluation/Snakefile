@@ -5,7 +5,8 @@ cell_lines = list(set(list(map(lambda x: os.path.basename(x).split('.')[0], glob
 rule all: 
     input:
         "output/gafcall_eval/normal_v2/all_merged_eval.len.tsv",
-        "output/gafcall_eval/normal_v2/normal_length_hifi.pdf"
+        "output/gafcall_eval/normal_v2/normal_length_hifi.pdf",
+        "colo829_hifi_clean.png"
 
 
 rule gafcall_eval_length:
@@ -53,3 +54,15 @@ rule plot_normal:
         normal = "output/gafcall_eval/normal_v2/normal_length_hifi.pdf"
     script:
         "scripts/plot_sv_num_per_length.R"
+
+
+rule colo829_hifi_evaluation:
+    input:
+        expand(os.path.join("../1a.alignment_sv_tools/output/minisv_eval_tnpair", '{cell_line}_hifi1_{assembly}_count{count}_eval.tsv'), cell_line=['COLO829'], count=[2,3,4,5,10], assembly=['chm13', 'grch38'])
+    conda: "plot"
+    output:
+        table="colo829_hifi_clean.tsv",
+        plot="colo829_hifi_clean.png"
+    script:
+        "scripts/tn_pair_precision_recall.R"
+

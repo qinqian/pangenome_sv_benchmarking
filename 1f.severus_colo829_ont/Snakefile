@@ -97,6 +97,23 @@ minisv_mixed_mosaic_ltg = expand("output/minisv_mosaic/{cell_line}_{platform}/gr
 tn_eval_length = expand("output/minisv_view/tn_{cell_line}_{platform}_eval_len.tsv", zip, cell_line=config['samples']['tumor'], platform=config['samples']['platform'])
 single_eval_length = expand("output/minisv_view/single_{cell_line}_{platform}_eval_len.tsv", zip, cell_line=config['samples']['tumor'], platform=config['samples']['platform'])
 
+include: "rules/minisv_eval_all_tools.smk"
+
+mixed_eval_length = expand("output/minisv_view/mixed_{cell_line}_{platform}_merge_eval_len.tsv", zip, cell_line=config['samples']['tumor'], platform=config['samples']['platform'])
+
+minisv_eval_files = expand(expand("output/minisv_eval_tnpair/{cell_line}_{platform}_{{assembly}}_cutoff{{count_cutoff}}_eval.tsv", zip, cell_line=config['samples']['tumor'], platform=config['samples']['platform']), assembly=['chm13', 'grch38'], count_cutoff=[2,3,4,5,10])
+
+##minisv_eval_pairwise_files = expand(expand("output/minisv_eval_tnpair/{cell_line}_{platform}_{{assembly}}_pairwise_eval.tsv", zip, cell_line=config['samples']['tumor'], platform=config['samples']['platform']), assembly=['chm13', 'grch38'])
+
+single_eval_performance = expand(expand("output/minisv_eval_single{{pair}}/single_{cell_line}_{platform}_{{assembly}}_eval.tsv", zip, cell_line=config['samples']['tumor'], platform=config['samples']['platform']), pair=['T', 'BL'], assembly=['chm13', 'grch38'])
+
+minisv_eval_mixed_files = expand(expand("output/minisv_eval_tnpair/{cell_line}_{platform}_{{assembly}}_cutoff{{cutoff}}_eval_mixed.tsv", zip, cell_line=config['samples']['tumor'], platform=config['samples']['platform']), assembly=['chm13', 'grch38'], cutoff=[2,3,4,5,10])
+
+tn_eval_length = expand("output/alltools_view/tn_{cell_line}_{platform}_{assembly}_eval_len.tsv", zip, cell_line=config['samples']['tumor'], platform=config['samples']['platform'], assembly=['chm13', 'grch38'])
+
+
+pair_eval_single_length = expand(expand("output/minisv_view_single{{pair}}/single_{cell_line}_{platform}_{{assembly}}_eval_len.tsv", zip, cell_line=config['samples']['tumor'], platform=config['samples']['platform']), pair=['T', 'BL'], assembly=['chm13', 'grch38'])
+
 rule all:
     input:
         paf_self_files, paf_files, gaf_files,
@@ -109,7 +126,11 @@ rule all:
         minisv_single_ts_call, minisv_single_s_call,
         paf_mixed, gaf_mixed, 
         minisv_mixed_mosaic_l, minisv_mixed_mosaic_g, minisv_mixed_mosaic_lg, minisv_mixed_mosaic_lt, minisv_mixed_mosaic_ltg,
-        tn_eval_length, 
-        single_eval_length, 
+        #tn_eval_length, 
+        single_eval_length, minisv_eval_files, #minisv_eval_pairwise_files,
+        #mixed_eval_length,  pair_eval_single_length,
+        minisv_eval_mixed_files, 
+        #tn_eval_length, 
+        #single_eval_performance,
+        #"output/minisv_view_single/single_sample_allsvtools_svlength.tsv"
     default_target: True 
-

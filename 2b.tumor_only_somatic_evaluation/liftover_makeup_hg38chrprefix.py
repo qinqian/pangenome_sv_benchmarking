@@ -17,8 +17,6 @@ with open(argv[1], 'r') as invcf:
 			print(line)
 			continue
 		chrm, pos1, fullid, ref, alt_orig, qual, filt, info, gt1, gt2 = line.split("\t")
-		fullid = fullid[:-2]
-              
 		k = "_".join(fullid.split("_")[0:2])
 		if k in d:
 			d[k][2] = {"chrm":chrm, "pos1":pos1,"fullid":fullid, "ref":ref, "alt_orig":alt_orig,

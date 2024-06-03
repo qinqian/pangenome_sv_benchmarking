@@ -233,12 +233,12 @@ rule gafcall_eval_length:
     shell:
         """
 
-        echo -e '>100\t>1M\t>100k\t>20k\tall_except_inv\tinv\tfile' > {output.eval_length} 
+        echo -e 'translocation\t>1M\t>100k\t>20k\tall_except_inv\tinv\tfile' > {output.eval_length} 
         for input in {input.l} {input.g} {input.s} {input.ts} {input.tg} {input.tgs}; do
             if [[ $input =~ "chm13" ]]; then
-                ../gafcall/js/gafcall.js view -b ../4.gafcall_evaluation/chm13.reg.bed -c 5 -C -I $input >> {output.eval_length} 
+                minisv.js view -b ../4.gafcall_evaluation/chm13.reg.bed -c 5 -C -I $input >> {output.eval_length} 
             else
-                ../gafcall/js/gafcall.js view -b ../4.gafcall_evaluation/hg38.reg.bed -c 5 -C -I $input >> {output.eval_length} 
+                minisv.js view -b ../4.gafcall_evaluation/hg38.reg.bed -c 5 -C -I $input >> {output.eval_length} 
             fi
         done
 

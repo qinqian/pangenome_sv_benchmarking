@@ -84,7 +84,7 @@ rule minisv_mosaic_mixed_lg_e:
         rsv = "output/minisv_mosaic/{cell_line}_{platform}/{assembly}l_l+g_mosaic.rsv"
     shell: 
         """
-        minisv.js e -0b {wildcards.assembly}.cen-mask.bed {input.paf} {input.gaf} | bash > {output.rsv}
+        minisv.js e -b {wildcards.assembly}.cen-mask.bed {input.paf} {input.gaf} | bash > {output.rsv}
         """
    
 use rule minisv_call as minisv_call_lg with:
@@ -135,3 +135,22 @@ use rule minisv_call as minisv_call_g with:
     output:
         msv = "output/minisv_mosaic/{cell_line}_{platform}/{assembly}g_g+x_mosaic.msv.gz"
 
+
+rule minisv_view_length_single_count:
+   input:
+        msv1 = "output/minisv_mosaic/{cell_line}_{platform}/grch38l_l+t+g_mosaic.msv.gz",
+        msv2 = "output/minisv_mosaic/{cell_line}_{platform}/grch38l_l+t_mosaic.msv.gz",
+        msv3 = expand("output/minisv_mosaic/{{cell_line}}_{{platform}}/{assembly}l_l+g_mosaic.msv.gz", assembly=['grch38', 'chm13']),
+        msv4 = expand("output/minisv_mosaic/{{cell_line}}_{{platform}}/{assembly}g_g+x_mosaic.msv.gz", assembly=['grch38', 'chm13'])
+   output:
+        single_eval_length = "output/minisv_view/mixed_{cell_line}_{platform}_merge_eval_len.tsv"
+   shell:
+        """
+        for input in {input.msv1} {input.msv2} {input.msv3} {input.msv4}; do
+            if [[ $input =~ "chm13" ]]; then
+                minisv.js view -b ~/data/pangenome_sv_benchmarking/minisv/data/chm13v2.reg.bed -c 4 -IC $input >> {output.single_eval_length} 
+            else
+                minisv.js view -b ~/data/pangenome_sv_benchmarking/minisv/data/hs38.reg.bed -c 4 -IC $input >> {output.single_eval_length} 
+            fi
+        done
+        """
