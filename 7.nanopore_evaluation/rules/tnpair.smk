@@ -7,21 +7,23 @@ wildcard_constraints:
 
 rule all:
     input:
-        "output/batch1/plots/sv_normal_eval_len.pdf",
-        "output/batch3/sv_len.tsv",
-        "output/batch3/plots/sv_normal_eval_len.pdf",
-        "colo829_ont_clean.tsv",
-        "colo829_ont_clean.png",
-        "colo829_ont_clean2.png",
-        "colo829_ont_clean3.png"
+        "output/tnpair/batch1/colo829_ont_clean.tsv",
+        "output/tnpair/batch1/colo829_ont_clean.png",
+        "output/tnpair/batch2/colo829_ont2_clean.tsv",
+        "output/tnpair/batch2/colo829_ont2_clean.png",
+        "output/tnpair/batch2/colo829_ont1_clean.tsv",
+        "output/tnpair/batch2/colo829_ont1_clean.png"
+
 
 rule colo829_evaluation:
     input:
         expand(os.path.join(config['samples']['tumor_normal_pair']['batch1']['dir'], 'output/minisv_eval_tnpair', '{cell_line}_{assembly}_count{count}_eval.tsv'), cell_line=config['samples']['tumor_normal_pair']['batch1']['cell_line1'], count=[2,3,4,5,10], assembly=['chm13', 'grch38'])
     conda: "plot"
     output:
-        table="colo829_ont_clean.tsv",
-        plot="colo829_ont_clean.png"
+        table1 = "output/tnpair/batch1/colo829_ont_clean.tsv",
+        table2 = "output/tnpair/batch1/colo829_ont_clean_max.tsv",
+        plot1 = "output/tnpair/batch1/colo829_ont_clean.png",
+        plot2 = "output/tnpair/batch1/colo829_ont_clean_max.png",
     script:
         "scripts/tn_pair_precision_recall.R"
 
@@ -31,8 +33,10 @@ rule colo829_evaluation2:
         expand(os.path.join(config['samples']['tumor_normal_pair']['batch2']['dir2'], 'output/minisv_eval_tnpair', '{cell_line}_ont2_{assembly}_cutoff{count}_eval.tsv'), cell_line=config['samples']['tumor_normal_pair']['batch2']['cell_line2'], count=[2,3,4,5,10], assembly=['chm13', 'grch38'])
     conda: "plot"
     output:
-        table="colo829_ont_clean2.tsv",
-        plot="colo829_ont_clean2.png"
+        table1 = "output/tnpair/batch2/colo829_ont2_clean.tsv",
+        table2 = "output/tnpair/batch2/colo829_ont2_clean_max.tsv",
+        plot1 = "output/tnpair/batch2/colo829_ont2_clean.png",
+        plot2 = "output/tnpair/batch2/colo829_ont2_clean_max.png",
     script:
         "scripts/tn_pair_precision_recall.R"
 
@@ -41,8 +45,10 @@ rule colo829_evaluation3:
         expand(os.path.join(config['samples']['tumor_normal_pair']['batch2']['dir2'], 'output/minisv_eval_tnpair', '{cell_line}_ont1_{assembly}_cutoff{count}_eval.tsv'), cell_line=config['samples']['tumor_normal_pair']['batch2']['cell_line2'], count=[2,3,4,5,10], assembly=['chm13', 'grch38'])
     conda: "plot"
     output:
-        table="colo829_ont_clean3.tsv",
-        plot="colo829_ont_clean3.png"
+        table1 = "output/tnpair/batch2/colo829_ont1_clean.tsv",
+        table2 = "output/tnpair/batch2/colo829_ont1_clean_max.tsv",
+        plot1 = "output/tnpair/batch2/colo829_ont1_clean.png",
+        plot2 = "output/tnpair/batch2/colo829_ont1_clean_max.png",
     script:
         "scripts/tn_pair_precision_recall.R"
 

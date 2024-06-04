@@ -62,7 +62,8 @@ rule colo829_hifi_evaluation:
     conda: "plot"
     output:
         table="colo829_hifi_clean.tsv",
-        plot="colo829_hifi_clean.png"
+        plot="colo829_hifi_clean.png",
+        f1plot="colo829_hifi_clean_max.png",
     script:
         "scripts/tn_pair_precision_recall.R"
 

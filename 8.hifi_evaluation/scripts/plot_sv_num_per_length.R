@@ -15,8 +15,9 @@ do_bar_chart <- function(data_path, out_path, threads, myparam) {
     res[,4] = res[,4] - res[,3]
     res[,3] = res[,3] - res[,2]
     res[,2] = res[,2] - res[,1] 
-
-    res = res %>% pivot_longer(cols=c(`translocation`, `>1M`, `>100k`, `>20k`))
+    # remove >20k
+    res = res[,-4]
+    res = res %>% pivot_longer(cols=c(`translocation`, `>1M`, `>100k`))
     res$file = gsub(".c3s0.msv", "", basename(res$file))
     res$genome = ifelse(grepl("chm13", res$file), "chm13", "hg38")
     res$file = ifelse(grepl("chm13", res$file) & (!grepl("l\\+x", res$file)), gsub("l\\+", "l\\+t", res$file), res$file)

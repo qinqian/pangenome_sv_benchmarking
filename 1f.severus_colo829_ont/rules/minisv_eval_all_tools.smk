@@ -98,28 +98,28 @@ for count_cutoff in [2, 3, 4, 5, 10]:
             fi
             """
 
-#rule minisv_view_length_tn_othertools:
-#    input:
-#        pair=expand("output/minisv_pair/{{cell_line}}_{{platform}}_pair_{comb}.msv", comb=['chm13l_l+t+g+s', 'hg38l+tgs']),
-#        severus = "output/severus/{cell_line}_{platform}/{assembly}/somatic_SVs/severus_somatic.vcf",
-#        nanomonsv = "output/nanomonsv/{cell_line}_{platform}/{assembly}_tnpair.vcf",
-#        savana = "output/savana/{cell_line}_{platform}/{assembly}",
-#        svision = "output/svision/{cell_line}_{platform}/somatic/{cell_line}_{assembly}_tn.svision_pro_v1.8.s5.somatic_s1.vcf",
-#        sniffles_mosaic = "output/sniffles_mosaic/{cell_line}_{platform}/T/{assembly}.vcf.gz",
-#        sniffles_somatic = rules.snf_extract_tnpair.output.sniffles,
-#    output:
-#        tn_eval_length = "output/alltools_view/tn_{cell_line}_{platform}_{assembly}_eval_len.tsv",
-#    shell:
-#        """
-#        for input in {input.pair} {input.severus} {input.nanomonsv} {input.savana}/{wildcards.assembly}.classified.somatic.vcf {input.svision} {input.sniffles_mosaic} {input.sniffles_somatic}; do
-#            if [[ $input =~ "chm13" ]]; then
-#                minisv.js view -b ~/data/pangenome_sv_benchmarking/minisv/data/chm13v2.reg.bed -c 5 -C -I $input >> {output.tn_eval_length} 
-#            else
-#                minisv.js view -b ~/data/pangenome_sv_benchmarking/minisv/data/hs38.reg.bed -c 5 -C -I $input  >> {output.tn_eval_length} 
-#            fi
-#        done
-#        """
-#
+rule minisv_view_length_tn_othertools:
+    input:
+        pair=expand("output/minisv_pair/{{cell_line}}_{{platform}}_pair_{comb}_c2s0.msv.gz", comb=['chm13l_l+t+g+s', 'hg38l_l+t+g+s', 'hg38l_l+g']),
+        severus = "../1a.alignment_sv_tools/output/severus/{cell_line}_{platform}/{assembly}/somatic_SVs/severus_somatic.vcf",
+        nanomonsv = "../1a.alignment_sv_tools/output/nanomonsv/{cell_line}_{platform}/{assembly}_tnpair.vcf",
+        savana = "../1a.alignment_sv_tools/output/savana/{cell_line}_{platform}/{assembly}",
+        svision = "../1a.alignment_sv_tools/output/svision/{cell_line}_{platform}/somatic/{cell_line}_{assembly}_tn.svision_pro_v1.8.s5.somatic_s1.vcf",
+        #sniffles_mosaic = "output/sniffles_mosaic/{cell_line}_{platform}/T/{assembly}.vcf.gz",
+        sniffles_somatic = rules.snf_extract_tnpair.output.sniffles,
+    output:
+        tn_eval_length = "output/alltools_view/tn_{cell_line}_{platform}_{assembly}_eval_len.tsv",
+    shell:
+        """
+        for input in {input.pair} {input.severus} {input.nanomonsv} {input.savana}/{wildcards.assembly}.classified.somatic.vcf {input.svision} {input.sniffles_somatic}; do
+            if [[ $input =~ "chm13" ]]; then
+                minisv.js view -b ~/data/pangenome_sv_benchmarking/minisv/data/chm13v2.reg.bed -c 5 -C -I $input >> {output.tn_eval_length} 
+            else
+                minisv.js view -b ~/data/pangenome_sv_benchmarking/minisv/data/hs38.reg.bed -c 5 -C -I $input  >> {output.tn_eval_length} 
+            fi
+        done
+        """
+
 #rule minisv_view_length_single_count_grch38_othertools:
 #   input:
 #        single = expand("output/minisv/{{cell_line}}_{{pair}}_{{platform}}_grch38l_{comb}_merge_{cnt}.msv.gz", comb=['t+g+s'], cnt=['c5s0']),

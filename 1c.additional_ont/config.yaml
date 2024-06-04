@@ -5,7 +5,7 @@ samples:
   tumor:
       - COLO829
   normal:
-      - HG002 # this is wrong
+      ##- HG002 # this is wrong
       - HG002rep1
       - HG002rep2
 

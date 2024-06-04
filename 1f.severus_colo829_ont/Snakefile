@@ -59,7 +59,17 @@ rule minimap2:
 
 include: "rules/gafcall_tnpair.smk"
 
-minisv_pair = expand("output/minisv_pair/{cell_line}_{platform}_pair_hg38l+tgs.msv", zip, cell_line=config['samples']['tumor'], platform=config['samples']['platform'])
+#minisv_pair = expand("output/minisv_pair/{cell_line}_{platform}_pair_hg38l+tgs.msv", zip, cell_line=config['samples']['tumor'], platform=config['samples']['platform'])
+minisv_pair = expand(expand("output/minisv_pair/{cell_line}_{platform}_pair_hg38l_l+t+g+s_{{cnt}}.msv.gz", zip, cell_line=config['samples']['tumor'], platform=config['samples']['platform']), cnt=['c2s0', 'c3s0', 'c4s0', 'c5s0'])
+minisv_pair_t2t = expand(expand("output/minisv_pair/{cell_line}_{platform}_pair_chm13l_l+t+g+s_{{cnt}}.msv.gz", zip, cell_line=config['samples']['tumor'], platform=config['samples']['platform']), cnt=['c2s0', 'c3s0', 'c4s0', 'c5s0'])
+minisv_pair_t = expand(expand("output/minisv_pair/{cell_line}_{platform}_pair_hg38l_l+t_{{cnt}}.msv.gz", zip, cell_line=config['samples']['tumor'], platform=config['samples']['platform']), cnt=['c2s0', 'c3s0', 'c4s0', 'c5s0'])
+minisv_pair_g = expand(expand("output/minisv_pair/{cell_line}_{platform}_pair_hg38l_l+g_{{cnt}}.msv.gz", zip, cell_line=config['samples']['tumor'], platform=config['samples']['platform']), cnt=['c2s0', 'c3s0', 'c4s0', 'c5s0'])
+minisv_pair_tg = expand(expand("output/minisv_pair/{cell_line}_{platform}_pair_hg38l_l+tg_{{cnt}}.msv.gz", zip, cell_line=config['samples']['tumor'], platform=config['samples']['platform']), cnt=['c2s0', 'c3s0', 'c4s0', 'c5s0'])
+minisv_pair_gx = expand(expand("output/minisv_pair/{cell_line}_{platform}_pair_{{assembly}}g_g+x_{{cnt}}.msv.gz", zip, cell_line=config['samples']['tumor'], platform=config['samples']['platform']), cnt=['c2s0', 'c3s0', 'c4s0', 'c5s0'], assembly=['chm13', 'grch38'])
+minisv_pair_lx = expand(expand("output/minisv_pair/{cell_line}_{platform}_pair_{{assembly}}l_l+x_{{cnt}}.msv.gz", zip, cell_line=config['samples']['tumor'], platform=config['samples']['platform']), cnt=['c2s0', 'c3s0', 'c4s0', 'c5s0'], assembly=['chm13', 'grch38'])
+
+
+
 #minisv_self_extract = expand(expand("output/minisv/{cell_line}_{{pair}}_{platform}_self.rsv.gz", zip, cell_line=config['samples']['tumor'], platform=config['samples']['platform']), pair=["T", "BL"])
 #minisv_linear_def_extract = expand(expand("output/minisv/{cell_line}_{{pair}}_{platform}_{{assembly}}l.def.rsv.gz", zip, cell_line=config['samples']['tumor'], platform=config['samples']['platform']), pair=["T", "BL"], assembly=['chm13', 'grch38'])
 #minisv_graph_def_extract = expand(expand("output/minisv/{cell_line}_{{pair}}_{platform}_{{assembly}}g.def.rsv.gz", zip, cell_line=config['samples']['tumor'], platform=config['samples']['platform']), pair=["T", "BL"], assembly=['chm13', 'grch38'])
@@ -117,7 +127,7 @@ pair_eval_single_length = expand(expand("output/minisv_view_single{{pair}}/singl
 rule all:
     input:
         paf_self_files, paf_files, gaf_files,
-        minisv_pair,
+        minisv_pair, minisv_pair_t2t, minisv_pair_t, minisv_pair_g, minisv_pair_tg, minisv_pair_gx, minisv_pair_lx,
         #minisv_self_extract,
         #minisv_linear_def_extract, minisv_graph_def_extract
         minisv_self_extract,
@@ -126,7 +136,7 @@ rule all:
         minisv_single_ts_call, minisv_single_s_call,
         paf_mixed, gaf_mixed, 
         minisv_mixed_mosaic_l, minisv_mixed_mosaic_g, minisv_mixed_mosaic_lg, minisv_mixed_mosaic_lt, minisv_mixed_mosaic_ltg,
-        #tn_eval_length, 
+        tn_eval_length, 
         single_eval_length, minisv_eval_files, #minisv_eval_pairwise_files,
         #mixed_eval_length,  pair_eval_single_length,
         minisv_eval_mixed_files, 

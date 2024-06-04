@@ -21,7 +21,8 @@ rule colo829_evaluation:
     conda: "plot"
     output:
         table="colo829_ont_clean.tsv",
-        plot="colo829_ont_clean.png"
+        plot="colo829_ont_clean.png",
+        f1plot="colo829_ont_clean.png"
     script:
         "scripts/tn_pair_precision_recall.R"
 
@@ -32,7 +33,8 @@ rule colo829_evaluation2:
     conda: "plot"
     output:
         table="colo829_ont_clean2.tsv",
-        plot="colo829_ont_clean2.png"
+        plot="colo829_ont_clean2.png",
+        f1plot="colo829_ont_clean2.png"
     script:
         "scripts/tn_pair_precision_recall.R"
 
@@ -42,7 +44,8 @@ rule colo829_evaluation3:
     conda: "plot"
     output:
         table="colo829_ont_clean3.tsv",
-        plot="colo829_ont_clean3.png"
+        plot="colo829_ont_clean3.png",
+        f1plot="colo829_ont_clean3.png"
     script:
         "scripts/tn_pair_precision_recall.R"
 

@@ -11,8 +11,10 @@ do_bar_chart <- function(data_path, out_path, threads, myparam) {
     res[,3] = res[,3] - res[,2]
     res[,2] = res[,2] - res[,1] 
     res = res %>% filter(grepl(myparam[['select']], file))
+    # remove >20k
+    res = res[,-4]
 
-    res = res %>% pivot_longer(cols=c(`translocation`, `>1M`, `>100k`, `>20k`))
+    res = res %>% pivot_longer(cols=c(`translocation`, `>1M`, `>100k`))
     res$file = gsub("_merge_c5s0.msv.gz", "", basename(res$file))
 
     res$cell_line = ifelse(grepl("ont", res$file), 

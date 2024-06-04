@@ -18,7 +18,7 @@ use rule * from severus_workflow as severus_workflow_*
 
 include: "rules/gafcall.smk"
 
-gafcall_mergedflt_l = expand(expand("output/gafcall/{cell_line}_{{assembly}}l_mergeflt_c5s0.gsv.gz", cell_line=config['samples']['normal']), assembly=config['assembly'])
+gafcall_mergedflt_l = expand(expand("output/gafcall/{cell_line}_{{assembly}}l_mergeflt_{{cnt}}.gsv.gz", cell_line=config['samples']['normal']), assembly=config['assembly'], cnt=['c2s0', 'c3s0', 'c4s0', 'c5s0'])
 
 gafcall_mergedflt_l_g = expand(expand("output/gafcall/{cell_line}_{{assembly}}l_g_join_mergeflt_c5s0.gsv.gz", cell_line=config['samples']['normal']), assembly=config['assembly'])
 
@@ -33,6 +33,7 @@ gafcall_mergedflt_l_tgs = expand("output/gafcall/{cell_line}_grch38l_tgs_join_me
 
 gafcall_eval_len = expand("output/gafcall_eval/{cell_line}_eval_len.tsv", cell_line=config['samples']['normal'])
 
+gafcall_eval_truthgermline = expand("output/gafcall_eval_truthgermline/{cell_line}_{assembly}_count{cnt}_eval_len.tsv", cell_line=config['samples']['normal'], assembly=['chm13', 'grch38'], cnt=[2,3,4,5,10])
 
 rule all:
     input:
@@ -40,5 +41,5 @@ rule all:
         gafcall_mergedflt_l,
         gafcall_mergedflt_l_g, gafcall_mergedflt_l_s,
         gafcall_mergedflt_l_tg, gafcall_mergedflt_l_ts, gafcall_mergedflt_l_tgs,
-        gafcall_eval_len
+        gafcall_eval_len, gafcall_eval_truthgermline
     default_target: True 

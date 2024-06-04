@@ -41,7 +41,7 @@ rule minisv_tnpair_somatic_call_chm13:
         mem_mb=24000, 
         run_time="12h"
     output:
-        msv="output/minisv_pair/{cell_line}_{platform}_pair_chm13l_l+t+g+s.msv.gz"
+        msv="output/minisv_pair/{cell_line}_{platform}_pair_chm13l_l+t+g+s_c2s0.msv.gz"
     shell:
         """
         cat {input.t} <(zcat {input.n}) | sort -k1,1 -k2,2n -S4g \
@@ -109,7 +109,6 @@ rule minisv_tnpair_somatic_call:
         mem_mb=24000, 
         run_time="12h"
     output:
-        #"output/minisv_pair/{cell_line}_{platform}_pair_hg38l+tgs.msv"
         msv="output/minisv_pair/{cell_line}_{platform}_pair_hg38l_l+t+g+s_c2s0.msv.gz"
     shell:
         """
@@ -452,7 +451,7 @@ use rule gafcall_merge_filter as gafcall_merge_join_tgs_filter with:
 
 rule minisv_view_length_tn:
     input:
-        pair=expand("output/minisv_pair/{{cell_line}}_{{platform}}_pair_{comb}.msv", comb=['chm13l_l+t+g+s', 'hg38l+tgs']),
+        pair=expand("output/minisv_pair/{{cell_line}}_{{platform}}_pair_{comb}.msv", comb=['chm13l_l+t+g+s', 'hg38l_l+t+g+s']),
     output:
         tn_eval_length = "output/minisv_view/tn_{cell_line}_{platform}_eval_len.tsv",
     shell:
