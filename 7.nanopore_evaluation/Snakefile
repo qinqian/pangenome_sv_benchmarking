@@ -14,6 +14,17 @@ module control_plot_workflow:
 
 use rule * from control_plot_workflow as r_control_plot_workflow_*
 
+module single_plot_workflow:
+    snakefile: "rules/single.smk"
+    config: config
+
+use rule * from single_plot_workflow as r_single_plot_workflow_*
+
+module mixed_plot_workflow:
+    snakefile: "rules/mixed.smk"
+    config: config
+
+use rule * from mixed_plot_workflow as r_mixed_plot_workflow_*
 
 module tnpair_plot_workflow:
     snakefile: "rules/tnpair.smk"
@@ -21,9 +32,17 @@ module tnpair_plot_workflow:
 
 use rule * from tnpair_plot_workflow as r_tnpair_plot_workflow_*
 
+module tnpair_plot_concensus_workflow:
+    snakefile: "rules/tnpair_concensus.smk"
+    config: config
+
+use rule * from tnpair_plot_concensus_workflow as r_tnpair_plot_concensus_workflow_*
 
 rule all:
     input:
         rules.r_control_plot_workflow_all.input,
-        rules.r_tnpair_plot_workflow_all.input
+        rules.r_single_plot_workflow_all.input,
+        rules.r_mixed_plot_workflow_all.input,
+        rules.r_tnpair_plot_workflow_all.input,
+        rules.r_tnpair_plot_concensus_workflow_all.input
     default_target: True

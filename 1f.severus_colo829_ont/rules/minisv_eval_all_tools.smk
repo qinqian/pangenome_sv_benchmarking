@@ -56,23 +56,24 @@ for count_cutoff in [2, 3, 4, 5, 10]:
     rule:
         name: f"minisv_eval_single_mode_{count_cutoff}"
         input:
-            single = expand("output/minisv/{{cell_line}}_{{pair}}_{{platform}}_grch38l_{comb}_merge_{cnt}.msv.gz", comb=['t+g+s', 't+g', 't+s', 'l+x', 'l+s', 'l+g'], cnt=['c2s0']),
-            single2 = expand("output/minisv/{{cell_line}}_{{pair}}_{{platform}}_{{assembly}}l_{comb}_merge_{cnt}.msv.gz", comb=['l+g', 'l+s', 'l+x'], cnt=['c2s0']),
-            severus = "output/severus_{platform}/{cell_line}_{pair}_{assembly}",
-            svision = "../1a.alignment_sv_tools/output/svision_single/{cell_line}_{platform}_{pair}/{assembly}/{cell_line}.svision_pro_v1.8.s5.vcf",
+            single = expand("output/minisv/{{cell_line}}_{{pair}}_{{platform}}_grch38l_{comb}_merge_{cnt}.msv.gz", comb=['t+g+s', 't+g', 't+s'], cnt=['c2s0']),
+
+            single_tg = expand("output/minisv/{{cell_line}}_{{pair}}_{{platform}}_{{assembly}}l_{comb}_merge_{cnt}.msv.gz", comb=['l+g', 'l+s', 'l+x', 'l+g+s'], cnt=['c2s0']),
+            severus = "../1a.alignment_sv_tools/output/severus_{platform}/{cell_line}_{pair}_{assembly}",
             sniffles_single = "../1a.alignment_sv_tools/output/sniffles/{cell_line}_{platform}/{pair}/{assembly}.vcf.gz",
             sniffles_single_mosaic = "../1a.alignment_sv_tools/output/sniffles_mosaic/{cell_line}_{platform}/{pair}/{assembly}.vcf.gz",
+            svision = "../1a.alignment_sv_tools/output/svision_single/{cell_line}_{platform}_{pair}/{assembly}/{cell_line}.svision_pro_v1.8.s5.vcf",
             truth = input_truth
         output:
-            eval = f"output/minisv_eval_single{{pair}}/single_{{cell_line}}_{{platform}}_{{assembly}}_eval_count{count_cutoff}.tsv"
+            eval = f"output/minisv_eval_single{{pair}}/single_{{cell_line}}_{{platform}}_{{assembly}}_count{count_cutoff}_eval.tsv"
         params:
             c = count_cutoff
         shell: 
             """
             if [[ {wildcards.assembly} == "chm13" ]]; then
-                minisv.js eval -c {params.c} -M -b ~/data/pangenome_sv_benchmarking/minisv/data/chm13v2.reg.bed {input.truth} {input.single} {input.single2} {input.severus}/all_SVs/severus_all.vcf {input.svision} {input.sniffles_single} {input.sniffles_single_mosaic} > {output.eval}
+                minisv.js eval -c {params.c} -b ~/data/pangenome_sv_benchmarking/minisv/data/chm13v2.reg.bed {input.truth} {input.single_tg} {input.severus}/all_SVs/severus_all.vcf {input.sniffles_single} {input.sniffles_single_mosaic} {input.svision} > {output.eval}
             else
-                minisv.js eval -c {params.c} -M -b ~/data/pangenome_sv_benchmarking/minisv/data/hs38.reg.bed {input.truth} {input.single} {input.severus}/all_SVs/severus_all.vcf {input.svision} {input.sniffles_single} {input.sniffles_single_mosaic} > {output.eval}
+                minisv.js eval -c {params.c} -b ~/data/pangenome_sv_benchmarking/minisv/data/hs38.reg.bed {input.truth} {input.single} {input.single_tg} {input.severus}/all_SVs/severus_all.vcf {input.sniffles_single} {input.sniffles_single_mosaic} {input.svision} > {output.eval}
             fi
             """
     

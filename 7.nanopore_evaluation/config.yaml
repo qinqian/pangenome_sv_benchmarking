@@ -25,16 +25,6 @@ samples:
           cell_line4:
               - COLO829
 
-  #tumor_only:
-  #    tumor:
-  #        - HCC1395
-  #        - HCC1937
-  #        - HCC1954
-  #    platform:
-  #        - ont1
-  #        - ont1
-  #        - ont1
-
   tumor_normal_pair:
       batch1:
           #ultra-long reads
@@ -50,12 +40,15 @@ samples:
       batch3:
           dir: /cluster/hlilab/alvin/severus_data/
           cell_line3:
-              - COLO829
+              - H1437
+              - HCC1395
+              - H2009
+              - HCC1954
 
       batch4:
           dir: /cluster/hlilab/alvin/severus_data2
           cell_line4:
-              - COLO829
+              - HCC1937
 
 reg:
   chm13: ../4.gafcall_evaluation/chm13.reg.bed

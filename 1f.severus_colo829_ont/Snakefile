@@ -115,7 +115,6 @@ minisv_eval_files = expand(expand("output/minisv_eval_tnpair/{cell_line}_{platfo
 
 ##minisv_eval_pairwise_files = expand(expand("output/minisv_eval_tnpair/{cell_line}_{platform}_{{assembly}}_pairwise_eval.tsv", zip, cell_line=config['samples']['tumor'], platform=config['samples']['platform']), assembly=['chm13', 'grch38'])
 
-single_eval_performance = expand(expand("output/minisv_eval_single{{pair}}/single_{cell_line}_{platform}_{{assembly}}_eval.tsv", zip, cell_line=config['samples']['tumor'], platform=config['samples']['platform']), pair=['T', 'BL'], assembly=['chm13', 'grch38'])
 
 minisv_eval_mixed_files = expand(expand("output/minisv_eval_tnpair/{cell_line}_{platform}_{{assembly}}_cutoff{{cutoff}}_eval_mixed.tsv", zip, cell_line=config['samples']['tumor'], platform=config['samples']['platform']), assembly=['chm13', 'grch38'], cutoff=[2,3,4,5,10])
 
@@ -123,6 +122,10 @@ tn_eval_length = expand("output/alltools_view/tn_{cell_line}_{platform}_{assembl
 
 
 pair_eval_single_length = expand(expand("output/minisv_view_single{{pair}}/single_{cell_line}_{platform}_{{assembly}}_eval_len.tsv", zip, cell_line=config['samples']['tumor'], platform=config['samples']['platform']), pair=['T', 'BL'], assembly=['chm13', 'grch38'])
+
+single_eval_performance = expand(expand("output/minisv_eval_single{{pair}}/single_{cell_line}_{platform}_{{assembly}}_count{{count_cutoff}}_eval.tsv", zip, cell_line=config['samples']['tumor'], platform=config['samples']['platform']), pair=['T', 'BL'], assembly=['chm13', 'grch38'], count_cutoff=[2,3,4,5,10])
+
+#output/minisv_eval_singleT/single_COLO829_ont1_chm13_count2_eval.tsv
 
 rule all:
     input:
@@ -141,6 +144,6 @@ rule all:
         #mixed_eval_length,  pair_eval_single_length,
         minisv_eval_mixed_files, 
         #tn_eval_length, 
-        #single_eval_performance,
+        single_eval_performance,
         #"output/minisv_view_single/single_sample_allsvtools_svlength.tsv"
     default_target: True 

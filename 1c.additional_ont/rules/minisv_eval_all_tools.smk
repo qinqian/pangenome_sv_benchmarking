@@ -53,13 +53,12 @@ for count_cutoff in [2, 3, 4, 5, 10]:
     rule:
         name: f"minisv_eval_single_mode_count{count_cutoff}"
         input:
-            single = expand("output/minisv/{{cell_line}}_{{pair}}_grch38l_{comb}_merge_{cnt}.msv.gz", comb=['t+g+s'], cnt=['c2s0']),
-            single2 = expand("output/minisv/{{cell_line}}_{{pair}}_{{assembly}}l_{comb}_merge_{cnt}.msv.gz", comb=['l+g', 'l+s'], cnt=['c2s0']),
+            single = expand("output/minisv/{{cell_line}}_{{pair}}_grch38l_{comb}_merge_{cnt}.msv.gz", comb=['t+g+s', 't+g', 't+s'], cnt=['c2s0']),
+            single_tg = expand("output/minisv/{{cell_line}}_{{pair}}_{{assembly}}l_{comb}_merge_{cnt}.msv.gz", comb=['l+x', 'l+g', 'l+s', 'l+g+s'], cnt=['c2s0']),
             severus = "output/severus/{cell_line}_{pair}_{assembly}",
-            ###svision = "output/svision/{cell_line}/{assembly}/{cell_line}.svision_pro_v1.8.s5.vcf",
-            ###sniffles_single = rules.sniffles2.output.vcf,
             sniffles_single = "output/sniffles/{cell_line}{pair}_{assembly}.vcf.gz",
             sniffles_single_mosaic = rules.sniffles2_mosaic.output.vcf,
+            svision = "output/svision/{cell_line}{pair}/{assembly}/{cell_line}{pair}.svision_pro_v1.8.s5.vcf",
             truth = input_truth
         output:
             eval = f"output/minisv_eval_single{{pair}}/single_{{cell_line}}_{{assembly}}_count{count_cutoff}_eval.tsv"
@@ -68,12 +67,30 @@ for count_cutoff in [2, 3, 4, 5, 10]:
         shell: 
             """
             if [[ {wildcards.assembly} == "chm13" ]]; then
-                minisv.js eval -c {params.c} -b ~/data/pangenome_sv_benchmarking/minisv/data/chm13v2.reg.bed {input.truth} {input.single2} {input.severus}/all_SVs/severus_all.vcf {input.sniffles_single} {input.sniffles_single_mosaic} > {output.eval}
+                minisv.js eval -c {params.c} -b ~/data/pangenome_sv_benchmarking/minisv/data/chm13v2.reg.bed {input.truth} {input.single_tg} {input.severus}/all_SVs/severus_all.vcf {input.sniffles_single} {input.sniffles_single_mosaic} {input.svision} > {output.eval}
             else
-                minisv.js eval -c {params.c} -b ~/data/pangenome_sv_benchmarking/minisv/data/hs38.reg.bed {input.truth} {input.single} {input.severus}/all_SVs/severus_all.vcf {input.sniffles_single} {input.sniffles_single_mosaic} > {output.eval}
+                minisv.js eval -c {params.c} -b ~/data/pangenome_sv_benchmarking/minisv/data/hs38.reg.bed {input.truth} {input.single} {input.single_tg} {input.severus}/all_SVs/severus_all.vcf {input.sniffles_single} {input.sniffles_single_mosaic} {input.svision} > {output.eval}
             fi
             """
 
-            #minisv_mosaic = "output/minisv_mosaic/{cell_line}/grch38l_l+t+g_mosaic.msv.gz",
-            #sniffles_mosaic = "output/sniffles_mosaic/{cell_line}/T/{assembly}.vcf.gz",
-            #sniffles_mixed_mosaic = "output/sniffles_mosaic/{cell_line}/{assembly}_mixdown_mosaic.vcf.gz",
+
+    rule:
+        name: f"minisv_mosaic_mixed_{count_cutoff}"
+        input:
+            minisv = "output/minisv_mosaic/{cell_line}/grch38l_l+t+g_mosaic.msv.gz",
+            minisv_lt="output/minisv_mosaic/{cell_line}/grch38l_l+t_mosaic.msv.gz",
+            minisv_lg="output/minisv_mosaic/{cell_line}/{assembly}l_l+g_mosaic.msv.gz",
+            snf_mixed="output/sniffles_mosaic/{cell_line}/{assembly}_mixdown_mosaic.vcf.gz",
+            truth = input_truth
+        output:
+            eval = f"output/minisv_eval_tnpair/{{cell_line}}_{{assembly}}_cutoff{count_cutoff}_eval_mixed.tsv"
+        params:
+            c = count_cutoff
+        shell:
+            """
+            if [[ {wildcards.assembly} == "chm13" ]]; then
+                minisv.js eval -c {params.c} -b ~/data/pangenome_sv_benchmarking/minisv/data/chm13v2.reg.bed {input.truth} {input.minisv_lg} {input.snf_mixed} > {output.eval}
+            else
+                minisv.js eval -c {params.c} -b ~/data/pangenome_sv_benchmarking/minisv/data/hs38.reg.bed {input.truth} {input.minisv} {input.minisv_lt} {input.minisv_lg} {input.snf_mixed} > {output.eval}
+            fi
+            """

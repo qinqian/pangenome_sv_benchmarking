@@ -244,7 +244,7 @@ rule gafcall_merge_join_tg:
         mem_mb=24000, 
         run_time="8h"
     shell:
-        "k8 --max-old-space={resources.mem_mb} ~/data/pangenome_sv_benchmarking/minisv/minisv.js isec {input.rsv[1]} {input.rsv[0]} |k8 --max-old-space={resources.mem_mb} ~/data/pangenome_sv_benchmarking/minisv/minisv.js isec - {input.graph[1]} | sort -k1,1 -k2,2n -S4g | ~/data/pangenome_sv_benchmarking/minisv/minisv.js merge -c 1 -s 0 - | gzip > {output.msv}"
+        "k8 --max-old-space={resources.mem_mb} ~/data/pangenome_sv_benchmarking/minisv/minisv.js isec {input.rsv[1]} {input.rsv[0]} |k8 --max-old-space={resources.mem_mb} ~/data/pangenome_sv_benchmarking/minisv/minisv.js isec - {input.graph[0]} | sort -k1,1 -k2,2n -S4g | ~/data/pangenome_sv_benchmarking/minisv/minisv.js merge -c 1 -s 0 - | gzip > {output.msv}"
 
 
 use rule gafcall_merge_filter as gafcall_merge_join_tg_filter with:
@@ -252,6 +252,30 @@ use rule gafcall_merge_filter as gafcall_merge_join_tg_filter with:
         msv = rules.gafcall_merge_join_tg.output.msv,
     output:
         msv = expand("output/minisv/{{cell_line}}_{{pair}}_{{platform}}_grch38l_t+g_merge_{cnt}.msv.gz", cnt=['c3s0', 'c4s0', 'c5s0'])
+    params:
+        c = [3, 4, 5],
+        s = [0, 0, 0]
+
+
+rule gafcall_merge_join_lgs:
+    input:
+        rsv = "output/minisv/{cell_line}_{pair}_{platform}_{assembly}l.def.rsv.gz",
+        graph = expand("output/minisv/{{cell_line}}_{{pair}}_{{platform}}_{assembly}g.def.rsv.gz", assembly=['chm13', 'grch38']),
+        asm = "output/minisv/{cell_line}_{pair}_{platform}_self.rsv.gz"
+    resources:
+        mem_mb=24000, 
+        run_time="8h"
+    output:
+        msv = "output/minisv/{cell_line}_{pair}_{platform}_{assembly}l_l+g+s_merge_c2s0.msv.gz"
+    shell:
+        "k8 --max-old-space={resources.mem_mb} ~/data/pangenome_sv_benchmarking/minisv/minisv.js isec {input.rsv} {input.graph[0]} | k8 --max-old-space={resources.mem_mb} ~/data/pangenome_sv_benchmarking/minisv/minisv.js isec - {input.asm} | sort -k1,1 -k2,2n -S4g | ~/data/pangenome_sv_benchmarking/minisv/minisv.js merge -c 2 -s 0 - | gzip > {output.msv}"
+
+
+use rule gafcall_merge_filter as gafcall_merge_join_ts_filter_lgs with:
+    input:
+        msv = rules.gafcall_merge_join_lgs.output.msv,
+    output:
+        msv = expand("output/minisv/{{cell_line}}_{{pair}}_{{platform}}_{{assembly}}l_l+g+s_merge_{cnt}.msv.gz", cnt=['c3s0', 'c4s0', 'c5s0'])
     params:
         c = [3, 4, 5],
         s = [0, 0, 0]
@@ -436,7 +460,7 @@ rule gafcall_merge_join_tgs:
         mem_mb=24000, 
         run_time="8h"
     shell:
-        "k8 --max-old-space={resources.mem_mb} ~/data/pangenome_sv_benchmarking/minisv/minisv.js isec {input.rsv[1]} {input.rsv[0]} |k8 --max-old-space={resources.mem_mb} ~/data/pangenome_sv_benchmarking/minisv/minisv.js isec - {input.graph[1]} | k8 --max-old-space={resources.mem_mb} ~/data/pangenome_sv_benchmarking/minisv/minisv.js isec - {input.asm} | sort -k1,1 -k2,2n -S4g | ~/data/pangenome_sv_benchmarking/minisv/minisv.js merge -c 2 -s 0 - | gzip > {output.msv}"
+        "k8 --max-old-space={resources.mem_mb} ~/data/pangenome_sv_benchmarking/minisv/minisv.js isec {input.rsv[1]} {input.rsv[0]} |k8 --max-old-space={resources.mem_mb} ~/data/pangenome_sv_benchmarking/minisv/minisv.js isec - {input.graph[0]} | k8 --max-old-space={resources.mem_mb} ~/data/pangenome_sv_benchmarking/minisv/minisv.js isec - {input.asm} | sort -k1,1 -k2,2n -S4g | ~/data/pangenome_sv_benchmarking/minisv/minisv.js merge -c 2 -s 0 - | gzip > {output.msv}"
 
 
 use rule gafcall_merge_filter as gafcall_merge_join_tgs_filter with:
