@@ -31,6 +31,20 @@ rule haplotag:
         ../1a.alignment_sv_tools/samtools/samtools index {output.haplotag_cram}
         """
 
+rule extract_haplotag:
+    input:
+         haplotag_cram = "output/align/{cell_line}/{assembly}_tag.cram",
+         haplotag_crai = "output/align/{cell_line}/{assembly}_tag.cram.crai"
+    output:
+         haplotag_tsv = "output/extract_hp/{cell_line}_{assembly}.tsv.gz"
+    conda: "minisvpy"
+    threads: 1
+    resources:
+         mem_mb=8000,
+         runtime="2h"
+    shell:
+         "minisv extracthp {input.haplotag_cram} | gzip > {output.haplotag_tsv}"
+
 rule severus_normal:
     input:
         crams = "output/align/{cell_line}/{assembly}_tag.cram",

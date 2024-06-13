@@ -15,6 +15,8 @@ cutesv_files  = expand("output/cutesv/{cell_line}/{assembly}.vcf.gz", cell_line=
 
 svision_files  = expand("output/svision/{cell_line}/{assembly}/{cell_line}.svision_pro_v1.8.s5.vcf", cell_line=config['samples']['normal'], assembly=config['assembly'])
 
+hp_tag_files = expand("output/extract_hp/{cell_line}_{assembly}.tsv.gz", cell_line=config['samples']['normal'], assembly=config['assembly'])
+
 
 wildcard_constraints:
     cell_line = "[A-Za-z0-9]+",
@@ -44,5 +46,5 @@ rule all:
         rules.minimap2_workflow_all.input,
         rules.severus_workflow_all.input,
         sniffles_files, sniffles_tbi_files,
-        cutesv_files, sniffles_mo_files, sniffles_mo_tbi_files, svision_files
+        cutesv_files, sniffles_mo_files, sniffles_mo_tbi_files, svision_files, hp_tag_files
     default_target: True 

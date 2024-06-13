@@ -2,11 +2,40 @@ from glob import glob
 
 cell_lines = list(set(list(map(lambda x: os.path.basename(x).split('.')[0], glob("normal_v2/msv/*msv")))))
 
+cell_lines_sub = [cell for cell in list(set(list(map(lambda x: os.path.basename(x).split('.')[0], glob("normal_v2/msv/*msv"))))) if 'BL' not in cell]
+print(cell_lines_sub)
+
 rule all: 
     input:
         "output/gafcall_eval/normal_v2/all_merged_eval.len.tsv",
         "output/gafcall_eval/normal_v2/normal_length_hifi.pdf",
-        "colo829_hifi_clean.png"
+        "colo829_hifi_clean.png",
+        expand("output/minisv_phase/{cell_line}_grch38_phased_tg.msv", cell_line = cell_lines_sub),
+        expand("output/minisv_phase/{cell_line}_grch38_phased_tg_filtered.msv", cell_line = cell_lines_sub)
+
+
+rule phased_minisv_hg38_tg:
+    input:
+         msv = "normal_v2/msv/{cell_line}.hg38l+tg.c2s0.msv",
+         hptag = "../1b.alignment_sv_tools_normal/output/extract_hp/{cell_line}_grch38.tsv.gz"
+    output:
+         "output/minisv_phase/{cell_line}_grch38_phased_tg.msv"
+    conda: "minisvpy"
+    shell:
+         """
+         zcat {input.hptag} | minisv annotatehp - {input.msv}  > {output}
+         """
+
+rule phased_minisv_hg38_tg_filter:
+    input:
+         msv = rules.phased_minisv_hg38_tg.output
+    output:
+         "output/minisv_phase/{cell_line}_grch38_phased_tg_filtered.msv"
+    conda: "minisvpy"
+    shell:
+         """
+         awk 'BEGIN{{IFS="\\t"}} {{split($NF, a, ","); if (!(a[2]>=1 && a[3]>=1)) {{print $0}}}}' {input} > {output}
+         """
 
 
 rule gafcall_eval_length:
