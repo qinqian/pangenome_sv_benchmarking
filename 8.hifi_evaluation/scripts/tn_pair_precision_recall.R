@@ -43,6 +43,13 @@ do_bar_chart <- function(data_path, out_path, threads, myparam) {
     ggsave(out_path[['plot']], width=15, height=5.5)
     write_tsv(metrics, out_path[['table']])
 
+    metrics_hg38 = metrics %>% filter(genome == 'hg38')
+    metrics_chm13 = metrics %>% filter(genome == "chm13")
+    ggplot(metrics_hg38, aes(x=sensitivity, y=specificity, shape=factor(count))) + geom_point(aes(colour = factor(tool)), size = 5) + facet_wrap(~genome, scales='free')+theme_classic() + xlim(0, 1) + ylim(0, 1) + ylab('Precision') + xlab("Recall")
+    ggsave(out_path[['hg38plot']], width=9.5, height=2.5)
+    ggplot(metrics_chm13, aes(x=sensitivity, y=specificity, shape=factor(count))) + geom_point(aes(colour = factor(tool)), size = 5) + facet_wrap(~genome, scales='free')+theme_classic() + xlim(0, 1) + ylim(0, 1) + ylab('Precision') + xlab("Recall")
+    ggsave(out_path[['chm13plot']], width=9.5, height=2.5)
+
     metrics = metrics %>% group_by(tool, genome) %>% slice_max(order_by=f1,n=1, with_ties=F)
     ggplot(metrics, aes(y=f1, x=reorder(tool, f1), fill=tool)) + geom_bar(stat='identity') + facet_grid(~genome, scales='free')+theme_classic() + ylab('F1 score')
     ggsave(out_path[['f1plot']], width=15, height=5.5)

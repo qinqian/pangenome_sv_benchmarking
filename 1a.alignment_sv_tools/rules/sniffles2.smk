@@ -57,7 +57,7 @@ rule sniffles2_snf:
         tmpdir="local_tmp/"
     shell:
         """
-	sniffles --input {input.cram} --snf {output.snf} --threads {threads} {params.mosaic}
+	sniffles --reference ../1a.alignment_sv_tools/{wildcards.assembly}.fa --tandem-repeats ../1a.alignment_sv_tools/{wildcards.assembly}_vntrs.bed --input {input.cram} --snf {output.snf} --threads {threads} {params.mosaic}
         """
 
 
@@ -75,7 +75,7 @@ rule sniffles2_tumor_normal_pair:
         tmpdir="local_tmp/"
     shell:
         """
-        sniffles --input {input.snf} --output-rnames --vcf {output.vcf}
+        sniffles --reference ../1a.alignment_sv_tools/{wildcards.assembly}.fa --tandem-repeats ../1a.alignment_sv_tools/{wildcards.assembly}_vntrs.bed --input {input.snf} --output-rnames --vcf {output.vcf}
         """
 
 rule sniffles2_snf_mosaic:
@@ -94,6 +94,7 @@ rule sniffles2_snf_mosaic:
         tmpdir="local_tmp/"
     shell:
         """
+
 	sniffles --reference ../1a.alignment_sv_tools/{wildcards.assembly}.fa --tandem-repeats ../1a.alignment_sv_tools/{wildcards.assembly}_vntrs.bed --input {input.cram} --snf {output.snf} --threads {threads} {params.mosaic}
         """
 
@@ -109,6 +110,7 @@ rule sniffles2_tumor_normal_pair_mosaic:
         mem_mb=32000
     shell:
         """
+
         sniffles --reference ../1a.alignment_sv_tools/{wildcards.assembly}.fa --tandem-repeats ../1a.alignment_sv_tools/{wildcards.assembly}_vntrs.bed --input {input.snf} --output-rnames --vcf {output.vcf} --mosaic
         """
 
