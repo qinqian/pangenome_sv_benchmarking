@@ -1,5 +1,7 @@
 library(ggplot2)
 library(tidyverse)
+library(ggthemes)
+library(patchwork)
 
 
 do_bar_chart <- function(data_path, out_path, threads, myparam) {
@@ -14,7 +16,7 @@ do_bar_chart <- function(data_path, out_path, threads, myparam) {
     res[,2] = res[,2] - res[,1] 
     # remove >20k
     res = res[,-4]
-    res = res %>% pivot_longer(cols=c(`translocation`, `>1M`, `>100k`))
+    res = res %>% pivot_longer(cols=c(`translocation`, `>1M`, `>100k`), names_to='Size')
     res$file = gsub(".c3s0.msv", "", basename(res$file))
     res$genome = ifelse(grepl("chm13", res$file), "chm13", "hg38")
     res$file = ifelse(grepl("chm13", res$file) & (!grepl("l\\+x", res$file)), gsub("l\\+", "l\\+t", res$file), res$file)
@@ -28,28 +30,29 @@ do_bar_chart <- function(data_path, out_path, threads, myparam) {
     res$file = gsub("hg38|chm13", "", res$file)
     res.normal$file = gsub("hg38|chm13", "", res.normal$file)
 
-    ggplot(res, aes(x=reorder(file, value), y=value, fill=name)) + geom_bar(position='stack', stat='identity') + facet_grid(genome~cell_line, scales='free')+theme_classic() + theme(axis.text.x=element_text(angle=90, hjust=1, vjust=0.5)) + ylab(expression("#SV ">="5 Supporting reads")) + xlab("")
+    ggplot(res, aes(x=reorder(file, value), y=value, fill=Size)) + geom_bar(position='stack', stat='identity') + facet_grid(genome~cell_line, scales='free')+theme_classic() + theme(axis.text.x=element_text(angle=90, hjust=1, vjust=0.5)) + ylab(expression("#SV ">="5 Supporting reads")) + xlab("")
     ggsave(out_path[['paired']], width=9.5, height=5)
 
-    #ggplot(res.normal, aes(x=file, y=value, fill=name)) + geom_bar(position='stack', stat='identity') + facet_grid(genome~cell_line, scales='free')+theme_classic() + theme(axis.text.x=element_text(angle=90, hjust=1, vjust=0.5)) + ylab(expression("#SV ">="5 Supporting reads")) + xlab("")
-    ggplot(res.normal, aes(x=reorder(file, value), y=value, fill=name)) + geom_bar(position='stack', stat='identity') + facet_grid(genome~cell_line, scales='free')+theme_classic() + theme(axis.text.x=element_text(angle=90, hjust=1, vjust=0.5)) + ylab(expression("#SV ">="5 Supporting reads")) + xlab("")
+    ggplot(res.normal, aes(x=reorder(file, value), y=value, fill=Size)) + geom_bar(position='stack', stat='identity') + facet_grid(genome~cell_line, scales='free')+theme_classic() + theme(axis.text.x=element_text(angle=90, hjust=1, vjust=0.5)) + ylab(expression("#SV ">="5 Supporting reads")) + xlab("")
     ggsave(out_path[['normal']], width=9.5, height=5)
+
+    defined_theme = theme_clean() + theme(legend.title=element_text(size=7), strip.text=element_text(size=7), legend.text=element_text(size=7), axis.title.x=element_text(size=7), axis.title.y=element_text(size=7), axis.text.y=element_text(size=7), axis.text.x=element_text(size=7, angle=90, hjust=1, vjust=0.5)) 
 
     res.hg38 = res %>% filter(genome == 'hg38')
     res.chm13 = res %>% filter(genome == 'chm13')
-    ggplot(res.hg38, aes(x=reorder(file, value), y=value, fill=name)) + geom_bar(position='stack', stat='identity') + facet_grid(genome~cell_line, scales='free')+theme_classic() + theme(axis.text.x=element_text(angle=90, hjust=1, vjust=0.5)) + ylab(expression("#SV ">="5 Supporting reads")) + xlab("")
-    ggsave(out_path[['hg38paired']], width=9.5, height=5)
+    ggplot(res.hg38, aes(x=reorder(file, value), y=value, fill=Size)) + geom_bar(position='stack', stat='identity') + facet_grid(genome~cell_line, scales='free')+ ylab(expression("#SV ">="5 Supporting reads")) + xlab("") + defined_theme
+    ggsave(out_path[['hg38paired']], width=6.5, height=3.5)
 
-    ggplot(res.chm13, aes(x=reorder(file, value), y=value, fill=name)) + geom_bar(position='stack', stat='identity') + facet_grid(genome~cell_line, scales='free')+theme_classic() + theme(axis.text.x=element_text(angle=90, hjust=1, vjust=0.5)) + ylab(expression("#SV ">="5 Supporting reads")) + xlab("")
-    ggsave(out_path[['chm13paired']], width=9.5, height=5)
+    ggplot(res.chm13, aes(x=reorder(file, value), y=value, fill=Size)) + geom_bar(position='stack', stat='identity') + facet_grid(genome~cell_line, scales='free')+defined_theme+ ylab(expression("#SV ">="5 Supporting reads")) + xlab("")
+    ggsave(out_path[['chm13paired']], width=6.5, height=3.5)
 
-    res.normal.hg38 = res %>% filter(genome == 'hg38')
-    res.normal.chm13 = res %>% filter(genome == 'chm13')
-    ggplot(res.normal.hg38, aes(x=reorder(file, value), y=value, fill=name)) + geom_bar(position='stack', stat='identity') + facet_grid(genome~cell_line, scales='free')+theme_classic() + theme(axis.text.x=element_text(angle=90, hjust=1, vjust=0.5)) + ylab(expression("#SV ">="5 Supporting reads")) + xlab("")
-    ggsave(out_path[['hg38normal']], width=9.5, height=5)
+    res.normal.hg38 = res.normal %>% filter(genome == 'hg38')
+    res.normal.chm13 = res.normal %>% filter(genome == 'chm13')
+    ggplot(res.normal.hg38, aes(x=reorder(file, value), y=value, fill=Size)) + geom_bar(position='stack', stat='identity') + facet_grid(genome~cell_line, scales='free')+defined_theme + ylab(expression("#SV ">="5 Supporting reads")) + xlab("")
+    ggsave(out_path[['hg38normal']], width=6.5, height=3.5)
 
-    ggplot(res.normal.chm13, aes(x=reorder(file, value), y=value, fill=name)) + geom_bar(position='stack', stat='identity') + facet_grid(genome~cell_line, scales='free')+theme_classic() + theme(axis.text.x=element_text(angle=90, hjust=1, vjust=0.5)) + ylab(expression("#SV ">="5 Supporting reads")) + xlab("")
-    ggsave(out_path[['chm13normal']], width=9.5, height=5)
+    ggplot(res.normal.chm13, aes(x=reorder(file, value), y=value, fill=Size)) + geom_bar(position='stack', stat='identity') + facet_grid(genome~cell_line, scales='free') + defined_theme + ylab(expression("#SV ">="5 Supporting reads")) + xlab("")
+    ggsave(out_path[['chm13normal']], width=6.5, height=3.5)
 }
 
 

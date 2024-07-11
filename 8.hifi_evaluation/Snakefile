@@ -5,14 +5,6 @@ cell_lines = list(set(list(map(lambda x: os.path.basename(x).split('.')[0], glob
 cell_lines_sub = [cell for cell in list(set(list(map(lambda x: os.path.basename(x).split('.')[0], glob("normal_v2/msv/*msv"))))) if 'BL' not in cell]
 print(cell_lines_sub)
 
-rule all: 
-    input:
-        "output/gafcall_eval/normal_v2/all_merged_eval.len.tsv",
-        "output/gafcall_eval/normal_v2/normal_length_hifi.pdf",
-        "colo829_hifi_clean.png",
-        expand("output/minisv_phase/{cell_line}_grch38_phased_tg.msv", cell_line = cell_lines_sub),
-        expand("output/minisv_phase/{cell_line}_grch38_phased_tg_filtered.msv", cell_line = cell_lines_sub)
-
 
 rule phased_minisv_hg38_tg:
     input:
@@ -80,7 +72,11 @@ rule plot_normal:
     conda: "plot"
     output:
         paired = "output/gafcall_eval/normal_v2/paired_length_hifi.pdf",
-        normal = "output/gafcall_eval/normal_v2/normal_length_hifi.pdf"
+        normal = "output/gafcall_eval/normal_v2/normal_length_hifi.pdf",
+        hg38paired = "output/gafcall_eval/normal_v2/hg38_paired_length_hifi.pdf",
+        chm13paired = "output/gafcall_eval/normal_v2/chm13_paired_length_hifi.pdf",
+        hg38normal = "output/gafcall_eval/normal_v2/hg38_normal_length_hifi.pdf",
+        chm13normal = "output/gafcall_eval/normal_v2/chm13_normal_length_hifi.pdf"
     script:
         "scripts/plot_sv_num_per_length.R"
 
@@ -92,7 +88,23 @@ rule colo829_hifi_evaluation:
     output:
         table="colo829_hifi_clean.tsv",
         plot="colo829_hifi_clean.png",
+        hg38plot="hg38_colo829_hifi_clean.png",
+        chm13plot="chm13_colo829_hifi_clean.png",
         f1plot="colo829_hifi_clean_max.png",
     script:
         "scripts/tn_pair_precision_recall.R"
 
+
+rule all: 
+    input:
+        "output/gafcall_eval/normal_v2/all_merged_eval.len.tsv",
+        "output/gafcall_eval/normal_v2/normal_length_hifi.pdf",
+        "colo829_hifi_clean.png",
+        "hg38_colo829_hifi_clean.png", 
+        "chm13_colo829_hifi_clean.png", 
+        "output/gafcall_eval/normal_v2/hg38_paired_length_hifi.pdf",
+        "output/gafcall_eval/normal_v2/chm13_paired_length_hifi.pdf",
+        "output/gafcall_eval/normal_v2/hg38_normal_length_hifi.pdf",
+        expand("output/minisv_phase/{cell_line}_grch38_phased_tg.msv", cell_line = cell_lines_sub),
+        expand("output/minisv_phase/{cell_line}_grch38_phased_tg_filtered.msv", cell_line = cell_lines_sub)
+    default_target: True
