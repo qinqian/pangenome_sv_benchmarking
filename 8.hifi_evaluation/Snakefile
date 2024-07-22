@@ -3,7 +3,41 @@ from glob import glob
 cell_lines = list(set(list(map(lambda x: os.path.basename(x).split('.')[0], glob("normal_v2/msv/*msv")))))
 
 cell_lines_sub = [cell for cell in list(set(list(map(lambda x: os.path.basename(x).split('.')[0], glob("normal_v2/msv/*msv"))))) if 'BL' not in cell]
+print(cell_lines)
 print(cell_lines_sub)
+
+cell_lines_labels = list(set(list(map(lambda x: os.path.basename(x).split('.')[0], glob("normal_v2/msv/*msv")))))
+cell_lines_labels1 = [ l.replace('BL', '') for l in cell_lines_labels if 'BL' in l ]
+cell_lines_labels2 = [ l for l in cell_lines_labels if 'BL' not in l ]
+print(cell_lines_labels)
+print(cell_lines_labels1)
+print(cell_lines_labels2)
+
+wildcard_constraints:
+    cell_line = "[A-Za-z0-9]+",
+    cell_line_label1 = "[A-Za-z0-9]+",
+    cell_line_label2 = "[A-Za-z0-9]+",
+    pair = "BL|T",
+    assembly = "chm13|grch38|hg38",
+    platform = "ont1|ont2|hifi1"
+
+
+def cat_minisv_view(input_files, output):
+    import pandas as pd
+    df_list = []
+    for file in input_files:
+        df = pd.read_table(file, header=None)
+        df['count'] = os.path.basename(file).split('_')[-1].replace('.tsv', '').replace('count', '')
+        df['count_file'] = file
+        #df.columns[:7] = ['translocation', '>1M', '>100k', '>20k', 'all_except_inv', 'inv', 'file']
+        df_list.append(df)
+
+    
+    # Concatenate all DataFrames
+    combined_df = pd.concat(df_list, axis=0, ignore_index=True)
+    
+    # Save the concatenated DataFrame to a new CSV file
+    combined_df.to_csv(output, index=False, sep='\t', header=False)
 
 
 rule phased_minisv_hg38_tg:
@@ -32,37 +66,179 @@ rule phased_minisv_hg38_tg_filter:
 
 rule gafcall_eval_length:
     input:
-        expand("normal_v2/msv/{{cell_line}}.{{comb}}.{count}.msv", count=['c3s0'])
-               #count=['c4s2', 'c2s0', 'c3s0', 'c3s1'])
+        minisv = expand("normal_v2/msv/{{cell_line}}.{{comb}}.{count}.msv", count=['c2s0'])
     output:
-        eval_length="output/gafcall_eval/normal_v2/{cell_line}_{comb}_eval_len.tsv"
+        eval_length = "output/gafcall_eval/normal_v2/{cell_line}_{comb}_eval_len_count{cnt}.tsv"
     shell:
-         """
-         for input in {input}; do
-             if [[ $input =~ "chm13" ]]; then
-                 ../gafcall/js/gafcall.js view -b ../4.gafcall_evaluation/chm13.reg.bed -c 5 -C -I $input >> {output.eval_length} 
-             else
-                 ../gafcall/js/gafcall.js view -b ../4.gafcall_evaluation/hg38.reg.bed -c 5 -C -I $input >> {output.eval_length} 
-             fi
-         done
+        """
+        for input in {input.minisv}; do
+            if [[ $input =~ "chm13" ]]; then
+                ../gafcall/js/gafcall.js view -b ../4.gafcall_evaluation/chm13.reg.bed -c {wildcards.cnt} -C -I $input >> {output.eval_length} 
+            else
+                ../gafcall/js/gafcall.js view -b ../4.gafcall_evaluation/hg38.reg.bed -c {wildcards.cnt} -C -I $input >> {output.eval_length} 
+            fi
+        done
+        """
 
-         """
+
+rule gafcall_eval_length_severus_BL:
+    input:
+        severus = "../1a.alignment_sv_tools/output/severus_hifi1/{cell_line_label1}_BL_{assembly}/all_SVs/severus_all.vcf"
+    output:
+        severus = "output/gafcall_eval/normal_v2_{assembly}_severus1/{cell_line_label1}_eval_len_count{cnt}.tsv"
+    shell:
+        """
+        for input in {input.severus}; do
+            if [[ $input =~ "chm13" ]]; then
+                ../gafcall/js/gafcall.js view -b ../4.gafcall_evaluation/chm13.reg.bed -c {wildcards.cnt} -C -I $input >> {output.severus} 
+            else
+                ../gafcall/js/gafcall.js view -b ../4.gafcall_evaluation/hg38.reg.bed -c {wildcards.cnt} -C -I $input >> {output.severus} 
+            fi
+        done
+        """
+
+
+rule gafcall_eval_length_severus_normal:
+    input:
+        severus = "../1b.alignment_sv_tools_normal/output/severus/{cell_line_label2}/{assembly}/all_SVs/severus_all.vcf"
+    output:
+        severus = "output/gafcall_eval/normal_v2_{assembly}_severus2/{cell_line_label2}_eval_len_count{cnt}.tsv"
+    shell:
+        """
+        for input in {input.severus}; do
+            if [[ $input =~ "chm13" ]]; then
+                ../gafcall/js/gafcall.js view -b ../4.gafcall_evaluation/chm13.reg.bed -c {wildcards.cnt} -C -I $input >> {output.severus} 
+            else
+                ../gafcall/js/gafcall.js view -b ../4.gafcall_evaluation/hg38.reg.bed -c {wildcards.cnt} -C -I $input >> {output.severus} 
+            fi
+        done
+        """
+
+rule gafcall_eval_length_combine_severus:
+    input:
+        severus = expand("output/gafcall_eval/normal_v2_{assembly}_severus1/{{cell_line_label1}}_eval_len_count{cnt}.tsv", assembly=['chm13', 'grch38'], cnt=[2, 3, 4, 5])
+    output:
+        severus = "output/gafcall_eval/normal_v2_severus1/{cell_line_label1}_merged_eval.len.tsv"
+    run:
+        #"""cat {input.severus} > {output.severus}"""
+
+        cat_minisv_view(input.severus, output.severus)
+
+
+
+rule gafcall_eval_length_combine_severus2:
+    input:
+        severus = expand("output/gafcall_eval/normal_v2_{assembly}_severus2/{{cell_line_label2}}_eval_len_count{cnt}.tsv", assembly=['chm13', 'grch38'], cnt=[2, 3, 4, 5])
+    output:
+        severus = "output/gafcall_eval/normal_v2_severus2/{cell_line_label2}_merged_eval.len.tsv"
+    run:
+        #"""cat {input.severus} > {output.severus}"""
+
+        cat_minisv_view(input.severus, output.severus)
+
+
+
+rule gafcall_eval_length_merge_all_severus:
+    input:
+        eval_length1 = expand("output/gafcall_eval/normal_v2_severus1/{cell_line_label1}_merged_eval.len.tsv", cell_line_label1=cell_lines_labels1),
+        eval_length2 = expand("output/gafcall_eval/normal_v2_severus2/{cell_line_label2}_merged_eval.len.tsv", cell_line_label2=cell_lines_labels2)
+    output:
+        eval_length = "output/gafcall_eval/normal_v2/severus_all_merged_eval.len.tsv"
+    shell:
+        #"echo -e 'translocation\t>1M\t>100k\t>20k\tall_except_inv\tinv\tfile' > {output.eval_length} && cat {input.eval_length1} {input.eval_length2} >> {output.eval_length}"
+        "cat {input.eval_length1} {input.eval_length2} >> {output.eval_length}"
+
+
+rule gafcall_eval_length_snf_BL:
+    input:
+#../1a.alignment_sv_tools/output/sniffles_mosaic/COLO829_hifi1/BL/chm13.vcf.gz
+        snf = "../1a.alignment_sv_tools/output/sniffles_mosaic/{cell_line_label1}_hifi1/BL/{assembly}.vcf.gz"
+    output:
+        snf = "output/gafcall_eval/normal_v2_{assembly}_snf1/{cell_line_label1}_eval_len_count{cnt}.tsv"
+    shell:
+        """
+        for input in {input.snf}; do
+            if [[ $input =~ "chm13" ]]; then
+                ../gafcall/js/gafcall.js view -b ../4.gafcall_evaluation/chm13.reg.bed -c {wildcards.cnt} -C -I $input >> {output.snf} 
+            else
+                ../gafcall/js/gafcall.js view -b ../4.gafcall_evaluation/hg38.reg.bed -c {wildcards.cnt} -C -I $input >> {output.snf} 
+            fi
+        done
+        """
+
+
+rule gafcall_eval_length_snf_normal:
+    input:
+        snf = "../1b.alignment_sv_tools_normal/output/sniffles_mosaic/{cell_line_label2}/{assembly}.vcf.gz"
+    output:
+        snf = "output/gafcall_eval/normal_v2_{assembly}_snf2/{cell_line_label2}_eval_len_count{cnt}.tsv"
+    shell:
+        """
+        for input in {input.snf}; do
+            if [[ $input =~ "chm13" ]]; then
+                ../gafcall/js/gafcall.js view -b ../4.gafcall_evaluation/chm13.reg.bed -c {wildcards.cnt} -C -I $input >> {output.snf} 
+            else
+                ../gafcall/js/gafcall.js view -b ../4.gafcall_evaluation/hg38.reg.bed -c {wildcards.cnt} -C -I $input >> {output.snf} 
+            fi
+        done
+        """
+
+
+rule gafcall_eval_length_combine_snf:
+    input:
+        snf = expand("output/gafcall_eval/normal_v2_{assembly}_snf1/{{cell_line_label1}}_eval_len_count{cnt}.tsv", assembly=['chm13', 'grch38'], cnt=[2,3,4,5]),
+    output:
+        snf = "output/gafcall_eval/normal_v2_snf1/{cell_line_label1}_merged_eval.len.tsv"
+    run:
+        #"""cat {input.snf} > {output.snf}"""
+
+        cat_minisv_view(input.snf, output.snf)
+
+
+
+rule gafcall_eval_length_combine_snf2:
+    input:
+        snf = expand("output/gafcall_eval/normal_v2_{assembly}_snf2/{{cell_line_label2}}_eval_len_count{cnt}.tsv", assembly=['chm13', 'grch38'], cnt=[2,3,4,5]),
+    output:
+        snf = "output/gafcall_eval/normal_v2_snf2/{cell_line_label2}_merged_eval.len.tsv"
+    run:
+        #"""cat {input.snf} > {output.snf}"""
+
+        cat_minisv_view(input.snf, output.snf)
+
+
+rule gafcall_eval_length_merge_all_snf:
+    input:
+        eval_length1 = expand("output/gafcall_eval/normal_v2_snf1/{cell_line_label1}_merged_eval.len.tsv", cell_line_label1=cell_lines_labels1),
+        eval_length2 = expand("output/gafcall_eval/normal_v2_snf2/{cell_line_label2}_merged_eval.len.tsv", cell_line_label2=cell_lines_labels2),
+    output:
+        eval_length = "output/gafcall_eval/normal_v2/snf_all_merged_eval.len.tsv"
+    shell:
+        #"echo -e 'translocation\t>1M\t>100k\t>20k\tall_except_inv\tinv\tfile' > {output.eval_length} && cat {input.eval_length1} {input.eval_length2} >> {output.eval_length}"
+        "cat {input.eval_length1} {input.eval_length2} >> {output.eval_length}"
+
 
 rule gafcall_eval_length_combine:
     input:
-        eval_length = expand("output/gafcall_eval/normal_v2/{{cell_line}}_{comb}_eval_len.tsv", comb=['chm13l+x', 'chm13l+g', 'chm13l+gs', 'chm13l+s', 'hg38l+x', 'hg38l+t', 'hg38l+ts', 'hg38l+tg', 'hg38l+tgs'])
+#"output/gafcall_eval/normal_v2/{cell_line}_{comb}_eval_len_count{cnt}.tsv"
+        eval_length = expand("output/gafcall_eval/normal_v2/{{cell_line}}_{comb}_eval_len_count{cnt}.tsv", comb=['chm13l+x', 'chm13l+g', 'chm13l+gs', 'chm13l+s', 'hg38l+x', 'hg38l+t', 'hg38l+ts', 'hg38l+tg', 'hg38l+tgs'], cnt=[2,3,4,5])
     output:
         eval_length = "output/gafcall_eval/normal_v2/{cell_line}_merged_eval.len.tsv"
-    shell:
-        "cat {input.eval_length} > {output.eval_length}"
+    run:
+        #"cat {input.eval_length} > {output.eval_length}"
+        cat_minisv_view(input.eval_length, output.eval_length)
+
 
 rule gafcall_eval_length_merge_all:
     input:
-        eval_length = expand("output/gafcall_eval/normal_v2/{cell_line}_merged_eval.len.tsv", cell_line=cell_lines)
+        eval_length = expand("output/gafcall_eval/normal_v2/{cell_line}_merged_eval.len.tsv", cell_line=cell_lines),
+        eval_length_severus = "output/gafcall_eval/normal_v2/severus_all_merged_eval.len.tsv",
+        eval_length_sniffles2 = "output/gafcall_eval/normal_v2/snf_all_merged_eval.len.tsv"
     output:
         eval_length = "output/gafcall_eval/normal_v2/all_merged_eval.len.tsv"
     shell:
-        "echo -e 'translocation\t>1M\t>100k\t>20k\tall_except_inv\tinv\tfile' > {output.eval_length} && cat {input.eval_length} >> {output.eval_length}"
+        "echo -e 'translocation\t>1M\t>100k\t>20k\tall_except_inv\tinv\tfile\tcount\tcount_file' > {output.eval_length} && cat {input.eval_length} {input.eval_length_severus} {input.eval_length_sniffles2} >> {output.eval_length}"
+
 
 rule plot_normal:
     input:
@@ -105,6 +281,8 @@ rule all:
         "output/gafcall_eval/normal_v2/hg38_paired_length_hifi.pdf",
         "output/gafcall_eval/normal_v2/chm13_paired_length_hifi.pdf",
         "output/gafcall_eval/normal_v2/hg38_normal_length_hifi.pdf",
+        "output/gafcall_eval/normal_v2/severus_all_merged_eval.len.tsv",
+        "output/gafcall_eval/normal_v2/snf_all_merged_eval.len.tsv",
         expand("output/minisv_phase/{cell_line}_grch38_phased_tg.msv", cell_line = cell_lines_sub),
         expand("output/minisv_phase/{cell_line}_grch38_phased_tg_filtered.msv", cell_line = cell_lines_sub)
     default_target: True

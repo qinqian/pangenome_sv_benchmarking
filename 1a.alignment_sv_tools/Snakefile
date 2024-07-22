@@ -143,8 +143,8 @@ platform_hifi  = [j for i,j in zip(config['samples']['tumor'], config['samples']
 
 hifiasm_mixed_fastq = expand(expand("output/align/{cell_line}_{platform}/{{assembly}}_mixdown.fastq.gz", zip, cell_line = cell_line_hifi, platform = platform_hifi), assembly=['chm13', 'grch38'])
 
-hifiasm_mixed_asm1 = expand("output/align/{cell_line}_{platform}/chm13_mixdown.asm.bp.hap1.p_ctg.gfa", zip, cell_line = cell_line_hifi, platform = platform_hifi)
-hifiasm_mixed_asm2 = expand("output/align/{cell_line}_{platform}/chm13_mixdown.asm.bp.hap2.p_ctg.gfa", zip, cell_line = cell_line_hifi, platform = platform_hifi)
+#hifiasm_mixed_asm1 = expand("output/align/{cell_line}_{platform}/chm13_mixdown.asm.bp.hap1.p_ctg.gfa", zip, cell_line = cell_line_hifi, platform = platform_hifi)
+#hifiasm_mixed_asm2 = expand("output/align/{cell_line}_{platform}/chm13_mixdown.asm.bp.hap2.p_ctg.gfa", zip, cell_line = cell_line_hifi, platform = platform_hifi)
 
 rule all:
     input:
@@ -172,5 +172,5 @@ rule all:
         minisv_eval_concensus,
         single_eval_performance,
         "output/minisv_view_single/single_sample_allsvtools_svlength.tsv", 
-        hifiasm_mixed_fastq, hifiasm_mixed_asm1, hifiasm_mixed_asm2
+        hifiasm_mixed_fastq, #hifiasm_mixed_asm1, hifiasm_mixed_asm2
     default_target: True 
