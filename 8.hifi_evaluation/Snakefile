@@ -136,7 +136,6 @@ rule gafcall_eval_length_combine_severus2:
         cat_minisv_view(input.severus, output.severus)
 
 
-
 rule gafcall_eval_length_merge_all_severus:
     input:
         eval_length1 = expand("output/gafcall_eval/normal_v2_severus1/{cell_line_label1}_merged_eval.len.tsv", cell_line_label1=cell_lines_labels1),
@@ -146,6 +145,41 @@ rule gafcall_eval_length_merge_all_severus:
     shell:
         #"echo -e 'translocation\t>1M\t>100k\t>20k\tall_except_inv\tinv\tfile' > {output.eval_length} && cat {input.eval_length1} {input.eval_length2} >> {output.eval_length}"
         "cat {input.eval_length1} {input.eval_length2} >> {output.eval_length}"
+
+
+
+rule gafcall_eval_length_cutesv_normal:
+    input:
+        cutesv = "../1b.alignment_sv_tools_normal/output/cutesv/{cell_line_label2}/{assembly}.vcf.gz"
+    output:
+        cutesv = "output/gafcall_eval/normal_v2_{assembly}_cutesv2/{cell_line_label2}_eval_len_count{cnt}.tsv"
+    shell:
+        """
+        for input in {input.cutesv}; do
+            if [[ $input =~ "chm13" ]]; then
+                ../gafcall/js/gafcall.js view -b ../4.gafcall_evaluation/chm13.reg.bed -c {wildcards.cnt} -C -I $input >> {output.cutesv} 
+            else
+                ../gafcall/js/gafcall.js view -b ../4.gafcall_evaluation/hg38.reg.bed -c {wildcards.cnt} -C -I $input >> {output.cutesv} 
+            fi
+        done
+        """
+
+rule gafcall_eval_length_combine_cutesv2:
+    input:
+        cutesv = expand("output/gafcall_eval/normal_v2_{assembly}_cutesv2/{{cell_line_label2}}_eval_len_count{cnt}.tsv", assembly=['chm13', 'grch38'], cnt=[2, 3, 4, 5])
+    output:
+        cutesv = "output/gafcall_eval/normal_v2_cutesv2/{cell_line_label2}_merged_eval.len.tsv"
+    run:
+        cat_minisv_view(input.cutesv, output.cutesv)
+
+
+rule gafcall_eval_length_merge_all_cutesv:
+    input:
+        eval_length2 = expand("output/gafcall_eval/normal_v2_cutesv2/{cell_line_label2}_merged_eval.len.tsv", cell_line_label2=cell_lines_labels2)
+    output:
+        eval_length = "output/gafcall_eval/normal_v2/cutesv_all_merged_eval.len.tsv"
+    shell:
+        "cat {input.eval_length2} >> {output.eval_length}"
 
 
 rule gafcall_eval_length_snf_BL:
@@ -227,11 +261,12 @@ rule gafcall_eval_length_merge_all:
     input:
         eval_length = expand("output/gafcall_eval/normal_v2/{cell_line}_merged_eval.len.tsv", cell_line=cell_lines),
         eval_length_severus = "output/gafcall_eval/normal_v2/severus_all_merged_eval.len.tsv",
-        eval_length_sniffles2 = "output/gafcall_eval/normal_v2/snf_all_merged_eval.len.tsv"
+        eval_length_sniffles2 = "output/gafcall_eval/normal_v2/snf_all_merged_eval.len.tsv",
+        eval_length_cutesv = "output/gafcall_eval/normal_v2/cutesv_all_merged_eval.len.tsv"
     output:
         eval_length = "output/gafcall_eval/normal_v2/all_merged_eval.len.tsv"
     shell:
-        "echo -e 'translocation\t>1M\t>100k\t>20k\tall_except_inv\tinv\tfile\tcount\tcount_file' > {output.eval_length} && cat {input.eval_length} {input.eval_length_severus} {input.eval_length_sniffles2} >> {output.eval_length}"
+        "echo -e 'translocation\t>1M\t>100k\t>20k\tall_except_inv\tinv\tfile\tcount\tcount_file' > {output.eval_length} && cat {input.eval_length} {input.eval_length_severus} {input.eval_length_sniffles2} {input.eval_length_cutesv} >> {output.eval_length}"
 
 
 rule plot_normal:
@@ -249,23 +284,61 @@ rule plot_normal:
         chm13normal = "output/gafcall_eval/normal_v2/chm13_normal_length_hifi.pdf",
 
         normal_germline = "output/gafcall_eval/normal_v2/germline_normal_length_hifi.pdf",
-        hg38normal_germline = "output/gafcall_eval/normal_v2/germline_hg38_normal_length_hifi.pdf"
+        hg38normal_germline = "output/gafcall_eval/normal_v2/germline_hg38_normal_length_hifi.pdf",
+  
+        paired_mosaic_thresholds = "output/gafcall_eval/normal_v2/mosaic_thresholds_hg38_normal_length_hifi.pdf",
+        normal_mosaic_thresholds = "output/gafcall_eval/normal_v2/normal_thresholds_hg38_normal_length_hifi.pdf"
     script:
         "scripts/plot_sv_num_per_length.R"
 
 
-rule colo829_hifi_evaluation:
+# Figure 3
+rule colo829_hifi_ont_evaluation:
     input:
-        expand(os.path.join("../1a.alignment_sv_tools/output/minisv_eval_tnpair", '{cell_line}_hifi1_{assembly}_count{count}_eval.tsv'), cell_line=['COLO829'], count=[2,3,4,5,10], assembly=['chm13', 'grch38'])
+        colo829_hifi = expand(os.path.join("../1a.alignment_sv_tools/output/minisv_eval_tnpair", '{cell_line}_hifi1_{assembly}_count{count}_eval.tsv'), cell_line=['COLO829'], count=[2,3,4,5,10], assembly=['chm13', 'grch38']),
+        colo829_hifi_mosaic = expand(os.path.join("../10.mixed_assembly/output/minisv_mosaic_asm", '{cell_line}_hifi1_grch38_count{count}_eval.tsv'), cell_line=['COLO829'], count=[2,3,4,5,10]),
+        # Ultralong
+        # colo829_ont  = expand(os.path.join("../1c.additional_ont/output/minisv_eval_tnpair", '{cell_line}_{assembly}_count{count}_eval.tsv'), cell_line=['COLO829'], count=[2,3,4,5,10], assembly=['chm13', 'grch38'])
+        # NOTE: non-ultralong is actually using the gafcall hifi data, look at ../1e.reps_merge/ instead
+        # colo829_ont  = expand(os.path.join("../1a.alignment_sv_tools/output/minisv_eval_tnpair", '{cell_line}_ont1_{assembly}_count{count}_eval.tsv'), cell_line=['COLO829'], count=[2,3,4,5,10], assembly=['chm13', 'grch38'])
+        # below are real non-ultralong ONT
+        colo829_ont  = expand(os.path.join("../1f.severus_colo829_ont/output/minisv_eval_tnpair", '{cell_line}_ont1_{assembly}_cutoff{count}_eval.tsv'), cell_line=['COLO829'], count=[2,3,4,5,10], assembly=['chm13', 'grch38'])
     conda: "plot"
     output:
         table="colo829_hifi_clean.tsv",
-        plot="colo829_hifi_clean.png",
-        hg38plot="hg38_colo829_hifi_clean.png",
-        chm13plot="chm13_colo829_hifi_clean.png",
-        f1plot="colo829_hifi_clean_max.png",
+        ont_table="colo829_ont_clean.tsv",
+        mixed_table="colo829_mixed_clean.tsv",
+        #plot="colo829_hifi_clean.png",
+        hg38plot="hg38_colo829_hifi_clean.pdf",
+        chm13plot="chm13_colo829_hifi_clean.pdf",
+        hg38plot_ont="hg38_colo829_ont_clean.pdf",
+        chm13plot_ont="chm13_colo829_ont_clean.pdf",
+        mixedhg38plot="mixedhg38_colo829_ont_clean.pdf",
+        #mixedchm13plot="mixedchm13_colo829_ont_clean.pdf",
+        ##f1plot="colo829_hifi_clean_max.png",
     script:
         "scripts/tn_pair_precision_recall.R"
+
+
+# Figure 4
+rule non_colo829_hifi_ont_evaluation:
+    input:
+        hifi = expand(os.path.join("../1a.alignment_sv_tools/output/minisv_eval_tnpair", '{cell_line}_hifi1_{assembly}_count{count}_eval.tsv'), cell_line=['COLO829', 'HCC1395', 'HCC1937', 'HCC1954', 'NCI1437', 'NCI2009'], count=[2,3,4,5,10], assembly=['chm13', 'grch38']),
+        # hifi_mosaic = expand(os.path.join("../10.mixed_assembly/output/minisv_mosaic_asm", '{cell_line}_hifi1_grch38_count{count}_eval.tsv'), cell_line=['COLO829'], count=[2,3,4,5,10]),
+        # below are real non-ultralong ONT
+        # ont  = expand(os.path.join("../1f.severus_colo829_ont/output/minisv_eval_tnpair", '{cell_line}_ont1_{assembly}_cutoff{count}_eval.tsv'), cell_line=['COLO829'], count=[2,3,4,5,10], assembly=['chm13', 'grch38'])
+    conda: "plot"
+    output:
+        table="non_colo829_hifi_clean.tsv",
+        ont_table="non_colo829_ont_clean.tsv",
+        mixed_table="non_colo829_mixed_clean.tsv",
+        hg38plot="non_hg38_colo829_hifi_clean.pdf",
+        chm13plot="non_chm13_colo829_hifi_clean.pdf",
+        hg38plot_ont="non_hg38_colo829_ont_clean.pdf",
+        chm13plot_ont="non_chm13_colo829_ont_clean.pdf",
+        #mixedhg38plot="non_mixedhg38_colo829_ont_clean.pdf",
+    script:
+        "scripts/tn_pair_precision_recall_noncolo829.R"
 
 
 rule all: 
@@ -273,14 +346,18 @@ rule all:
         "output/gafcall_eval/normal_v2/all_merged_eval.len.tsv",
         "output/gafcall_eval/normal_v2/normal_length_hifi.pdf",
         "colo829_hifi_clean.png",
-        "hg38_colo829_hifi_clean.png", 
-        "chm13_colo829_hifi_clean.png", 
+        "hg38_colo829_hifi_clean.pdf", 
+        "chm13_colo829_hifi_clean.pdf", 
+        "hg38_colo829_ont_clean.pdf", 
+        "chm13_colo829_ont_clean.pdf", 
+        "non_hg38_colo829_hifi_clean.pdf",
         "output/gafcall_eval/normal_v2/hg38_paired_length_hifi.pdf",
         "output/gafcall_eval/normal_v2/chm13_paired_length_hifi.pdf",
         "output/gafcall_eval/normal_v2/hg38_normal_length_hifi.pdf",
-        "output/gafcall_eval/normal_v2/germline_normal_length_hifi.pdf", "output/gafcall_eval/normal_v2/germline_hg38_normal_length_hifi.pdf",
+        "output/gafcall_eval/normal_v2/germline_normal_length_hifi.pdf", "output/gafcall_eval/normal_v2/germline_hg38_normal_length_hifi.pdf", "output/gafcall_eval/normal_v2/mosaic_thresholds_hg38_normal_length_hifi.pdf", "output/gafcall_eval/normal_v2/normal_thresholds_hg38_normal_length_hifi.pdf",
         "output/gafcall_eval/normal_v2/severus_all_merged_eval.len.tsv",
         "output/gafcall_eval/normal_v2/snf_all_merged_eval.len.tsv",
+        "output/gafcall_eval/normal_v2/cutesv_all_merged_eval.len.tsv",
         expand("output/minisv_phase/{cell_line}_grch38_phased_tg.msv", cell_line = cell_lines_sub),
         expand("output/minisv_phase/{cell_line}_grch38_phased_tg_filtered.msv", cell_line = cell_lines_sub)
     default_target: True

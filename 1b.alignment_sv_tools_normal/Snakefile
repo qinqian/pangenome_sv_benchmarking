@@ -12,6 +12,7 @@ sniffles_tbi_files  = expand("output/sniffles/{cell_line}/{assembly}.vcf.gz.tbi"
 sniffles_mo_files  = expand("output/sniffles_mosaic/{cell_line}/{assembly}.vcf.gz", cell_line=config['samples']['normal'], assembly=config['assembly'])
 sniffles_mo_tbi_files  = expand("output/sniffles_mosaic/{cell_line}/{assembly}.vcf.gz.tbi", cell_line=config['samples']['normal'], assembly=config['assembly'])
 cutesv_files  = expand("output/cutesv/{cell_line}/{assembly}.vcf.gz", cell_line=config['samples']['normal'], assembly=config['assembly'])
+cutesv_files_cutoff2  = expand("output/cutesv/{cell_line}_cutoff2/{assembly}.vcf.gz", cell_line=config['samples']['normal'], assembly=config['assembly'])
 
 svision_files  = expand("output/svision/{cell_line}/{assembly}/{cell_line}.svision_pro_v1.8.s5.vcf", cell_line=config['samples']['normal'], assembly=config['assembly'])
 
@@ -39,6 +40,7 @@ module severus_workflow:
 use rule * from severus_workflow as severus_workflow_*
 
 include: "rules/cutesv.smk"
+include: "rules/cutesv_cutoffs.smk"
 include: "rules/svision.smk"
 
 rule all:
@@ -46,5 +48,6 @@ rule all:
         rules.minimap2_workflow_all.input,
         rules.severus_workflow_all.input,
         sniffles_files, sniffles_tbi_files,
-        cutesv_files, sniffles_mo_files, sniffles_mo_tbi_files, svision_files, hp_tag_files
+        cutesv_files, sniffles_mo_files, sniffles_mo_tbi_files, svision_files, hp_tag_files,
+        cutesv_files_cutoff2
     default_target: True 

@@ -80,7 +80,7 @@ rule minisv_mosaic_mixed_ltg_e:
     shell:
         """
         # always use chm13 graph genome as graph filter
-        minisv.js e -n TUMOR -0b grch38.cen-mask.bed {input.paf[1]} {input.paf[0]} {input.gaf} | bash > {output.rsv}
+        minisv.js e -n TUMOR -b grch38.cen-mask.bed {input.paf[1]} {input.paf[0]} {input.gaf} | bash > {output.rsv}
         """
 
 rule minisv_mosaic_mixed_ltgs_e:
@@ -133,7 +133,7 @@ for cutoff in [2,3,4,5,10]:
             c = cutoff
         shell: 
             """
-            minisv.js eval -c {params.c} -b ~/data/pangenome_sv_benchmarking/minisv/data/hs38.reg.bed {input.truth} {input.minisv_ltgs} {input.sniffles_mosaic} > {output.eval}
+            minisv.js eval -c {params.c} -b ~/data/pangenome_sv_benchmarking/minisv/data/hs38.reg.bed {input.truth} {input.minisv_ltg} {input.minisv_ltgs} {input.sniffles_mosaic} > {output.eval}
 
             """
 

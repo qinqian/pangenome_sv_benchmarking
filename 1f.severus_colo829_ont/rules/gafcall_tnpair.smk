@@ -12,7 +12,7 @@ rule minisv_tnpair_tgs_extract_tumor_chm13:
     shell:
         """
 
-        minisv.js e -c "k8 --max-old-space-size={resources.mem_mb} `which minisv.js`" -n TUMOR -0b ~/data/pangenome_sv_benchmarking/minisv/data/hg38.cen-mask.bed {input.paf[2]} {input.gaf[2]} {input.asm[0]} | bash > {output.t_rsv}
+        minisv.js e -c "k8 --max-old-space-size={resources.mem_mb} `which minisv.js`" -n TUMOR -0b ~/data/pangenome_sv_benchmarking/minisv/data/chm13v2.cen-mask.bed {input.paf[2]} {input.gaf[2]} {input.asm[0]} | bash > {output.t_rsv}
 
         """
 
@@ -91,9 +91,7 @@ rule minisv_tnpair_tgs_extract_normal:
         run_time="4h"
     input:
         paf = expand("output/align/{{cell_line}}_{pair}_{{platform}}_{assembly}l.paf.gz", assembly=['grch38', 'chm13'], pair=['T', 'BL']),
-        gaf = expand("output/align/{{cell_line}}_{pair}_{{platform}}_{assembly}g.paf.gz", assembly=['grch38', 'chm13'], pair=['T', 'BL']),
         # ['output/align/{cell_line}_T_{platform}_grch38l.paf.gz', 'output/align/{cell_line}_BL_{platform}_grch38l.paf.gz', 'output/align/{cell_line}_T_{platform}_chm13l.paf.gz', 'output/align/{cell_line}_BL_{platform}_chm13l.paf.gz']
-        asm = expand("output/align/{{cell_line}}_{pair}_{{platform}}_self.paf.gz", pair=['T', 'BL'])
     output:
         n_rsv = "output/minisv_pair/{cell_line}_{platform}_normal_hg38l.rsv.gz"
     shell:
@@ -244,7 +242,7 @@ rule gafcall_merge_join_tg:
         mem_mb=24000, 
         run_time="8h"
     shell:
-        "k8 --max-old-space={resources.mem_mb} ~/data/pangenome_sv_benchmarking/minisv/minisv.js isec {input.rsv[1]} {input.rsv[0]} |k8 --max-old-space={resources.mem_mb} ~/data/pangenome_sv_benchmarking/minisv/minisv.js isec - {input.graph[0]} | sort -k1,1 -k2,2n -S4g | ~/data/pangenome_sv_benchmarking/minisv/minisv.js merge -c 1 -s 0 - | gzip > {output.msv}"
+        "k8 --max-old-space={resources.mem_mb} ~/data/pangenome_sv_benchmarking/minisv/minisv.js isec {input.rsv[1]} {input.rsv[0]} |k8 --max-old-space={resources.mem_mb} ~/data/pangenome_sv_benchmarking/minisv/minisv.js isec - {input.graph[0]} | sort -k1,1 -k2,2n -S4g | ~/data/pangenome_sv_benchmarking/minisv/minisv.js merge -c 2 -s 0 - | gzip > {output.msv}"
 
 
 use rule gafcall_merge_filter as gafcall_merge_join_tg_filter with:
@@ -326,6 +324,31 @@ use rule gafcall_merge_filter as tnpair_gafcall_merge_join_g_filter with:
         msv = rules.minisv_tnpair_somatic_call_tg.output.msv,
     output:
         msv = expand("output/minisv_pair/{{cell_line}}_{{platform}}_pair_hg38l_l+g_{cnt}.msv.gz", cnt=['c3s0', 'c4s0', 'c5s0'])
+    params:
+        c = [3, 4, 5],
+        s = [0, 0, 0]
+
+rule minisv_tnpair_somatic_call_lg_chm13:
+    input:
+        rsv = expand("output/minisv/{{cell_line}}_T_{{platform}}_{assembly}l.def.rsv.gz", assembly=['chm13', 'grch38']),
+        graph = expand("output/minisv/{{cell_line}}_T_{{platform}}_{assembly}g.def.rsv.gz", assembly=['chm13', 'grch38']),
+        n = rules.minisv_tnpair_tgs_extract_normal_chm13.output.n_rsv
+    resources:
+        mem_mb=24000, 
+        run_time="12h"
+    output:
+        msv="output/minisv_pair/{cell_line}_{platform}_pair_chm13l_l+g_c2s0.msv.gz"
+    shell:
+        """
+        cat <(k8 --max-old-space={resources.mem_mb} ~/data/pangenome_sv_benchmarking/minisv/minisv.js isec {input.rsv[0]} {input.graph[0]}) <(zcat {input.n}) | sort -k1,1 -k2,2n -S4g \
+          | minisv.js merge -c 2 -s 0 - | grep TUMOR | grep -v NORMAL | gzip > {output.msv}
+        """
+
+use rule gafcall_merge_filter as tnpair_gafcall_merge_join_lg_chm13_filter with:
+    input:
+        msv = rules.minisv_tnpair_somatic_call_lg_chm13.output.msv,
+    output:
+        msv = expand("output/minisv_pair/{{cell_line}}_{{platform}}_pair_chm13l_l+g_{cnt}.msv.gz", cnt=['c3s0', 'c4s0', 'c5s0'])
     params:
         c = [3, 4, 5],
         s = [0, 0, 0]
@@ -415,7 +438,8 @@ rule gafcall_merge_join_s:
         mem_mb=24000, 
         run_time="8h"
     shell:
-        "k8 --max-old-space={resources.mem_mb} ~/data/pangenome_sv_benchmarking/minisv/minisv.js isec {input.rsv} {input.asm} | sort -k1,1 -k2,2n -S4g | ~/data/pangenome_sv_benchmarking/minisv/minisv.js merge -c 1 -s 0 - | gzip > {output.msv}"
+        "k8 --max-old-space={resources.mem_mb} ~/data/pangenome_sv_benchmarking/minisv/minisv.js isec {input.rsv} {input.asm} | sort -k1,1 -k2,2n -S4g | ~/data/pangenome_sv_benchmarking/minisv/minisv.js merge -c 2 -s 0 - | gzip > {output.msv}"
+
 
 use rule gafcall_merge_filter as gafcall_merge_join_s_filter with:
     input:
@@ -436,7 +460,7 @@ rule gafcall_merge_join_ts:
     output:
         msv = "output/minisv/{cell_line}_{pair}_{platform}_grch38l_t+s_merge_c2s0.msv.gz"
     shell:
-        "k8 --max-old-space={resources.mem_mb} ~/data/pangenome_sv_benchmarking/minisv/minisv.js isec {input.rsv[1]} {input.rsv[0]} |k8 --max-old-space={resources.mem_mb} ~/data/pangenome_sv_benchmarking/minisv/minisv.js isec - {input.asm} | sort -k1,1 -k2,2n -S4g | ~/data/pangenome_sv_benchmarking/minisv/minisv.js merge -c 2 -s 0 - | gzip > {output.msv}"
+        "k8 --max-old-space={resources.mem_mb} ~/data/pangenome_sv_benchmarking/minisv/minisv.js isec {input.rsv[1]} {input.rsv[0]} | k8 --max-old-space={resources.mem_mb} ~/data/pangenome_sv_benchmarking/minisv/minisv.js isec - {input.asm} | sort -k1,1 -k2,2n -S4g | ~/data/pangenome_sv_benchmarking/minisv/minisv.js merge -c 2 -s 0 - | gzip > {output.msv}"
 
 
 use rule gafcall_merge_filter as gafcall_merge_join_ts_filter with:
@@ -508,7 +532,7 @@ rule minisv_view_length_single_count_grch38:
 
 use rule minisv_view_length_single_count_grch38 as minisv_view_length_single_count_chm13 with:
    input:
-        single=expand("output/minisv/{{cell_line}}_{pair}_{{platform}}_{assembly}l_{{comb}}_merge_{{cnt}}.msv.gz", assembly=['chm13', 'grch38'], pair=['T', 'BL'])
+        single=expand("output/minisv/{{cell_line}}_{pair}_{{platform}}_{assembly}l_{{comb}}_merge_{{cnt}}.msv.gz", assembly=['chm13'], pair=['T', 'BL'])
    output:
         single_eval_length = "output/minisv_view/single_chm13_{cell_line}_{platform}_{comb}_merge_{cnt}_eval_len.tsv"
 

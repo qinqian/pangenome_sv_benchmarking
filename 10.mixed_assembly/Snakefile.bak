@@ -1,0 +1,94 @@
+import os
+configfile: "config.yaml"
+
+rule gfa2fa:
+    input:
+         hap = "../1a.alignment_sv_tools/output/align/{cell_line}/chm13_mixdown.asm.bp.hap{hap}.p_ctg.gfa"
+    output:
+         "output/mixed_assembly/{cell_line}.asm.bp.hap{hap}.fa.gz"
+    shell:
+         """
+         ../5.assembly_evaluation/gfatools/gfatools gfa2fa {input.hap} | bgzip -c - > {output}
+         """
+
+
+rule minimap2_on_assembly:
+    input:
+        hap = expand("output/mixed_assembly/{{cell_line}}.asm.bp.hap{hap}.fa.gz", hap=[1, 2]),
+        fastq = "../1a.alignment_sv_tools/output/align/{cell_line}/chm13_mixdown.fastq.gz"
+    output:
+        paf = "output/align/{cell_line}_asm.paf.gz",
+    resources:
+        mem_mb=64000
+    threads: 28
+    shell:
+        """
+        ../1a.alignment_sv_tools/minimap2/minimap2 -t {threads} -cxmap-hifi -s50 <(zcat {input.hap}) -I100g --secondary=no {input.fastq} | gzip - > {output.paf}
+        """
+
+
+rule minimap2_on_defaultrefs:
+    input:
+        #../1a.alignment_sv_tools/chm13.fa.gz  ../1a.alignment_sv_tools/chm13.gfa.gz  ../1a.alignment_sv_tools/grch38.fa.gz
+        fasta = "../1a.alignment_sv_tools/{assembly}.fa.gz",
+        fastq = "../1a.alignment_sv_tools/output/align/{cell_line}/chm13_mixdown.fastq.gz"
+    output:
+        paf = "output/align/{cell_line}_{assembly}.paf.gz"
+    resources:
+        mem_mb=64000
+    threads: 28
+    shell:
+        """
+        ../1a.alignment_sv_tools/minimap2/minimap2 --ds -t {threads} -cxmap-hifi -s50 {input.fasta} --secondary=no {input.fastq} | gzip - > {output.paf}
+        """
+
+
+rule minigraph:
+    input:
+        assembly = "../1a.alignment_sv_tools/chm13.gfa.gz",
+        fastq = "../1a.alignment_sv_tools/output/align/{cell_line}/chm13_mixdown.fastq.gz"
+    output:
+        paf = "output/align/{cell_line}_chm13g.paf.gz"
+    threads: 28
+    resources:
+        mem_mb=64000
+    shell:
+        """
+        ~/data/pangenome_sv_benchmarking/1a.alignment_sv_tools/minigraph/minigraph -cxlr -t {threads} {input.assembly} {input.fastq} | gzip - > {output.paf}
+        """
+
+rule minisv_mosaic_mixed_ltg_e:
+    threads: 1
+    resources:
+        mem_mb=100000,
+        run_time="8h"
+    input:
+        paf = expand("output/align/{cell_line}_chm13g.paf.gz", assembly=['chm13', 'grch38']),
+        gaf = expand("output/align/{cell_line}_{assembly}.paf.gz", assembly=['chm13', 'grch38'])
+    output:
+        rsv = "output/minisv_mosaic/{cell_line}_{platform}/grch38l_l+t+g_mosaic.rsv"
+    shell:
+#minisv.js e -n TUMOR -0b data/hs38.cen-mask.bed tumor.hg38l.paf tumor.chm13l.paf \
+#  tumor.chm13g.paf tumor-to-normal.self.paf | bash > sv-tumor.hg38l+tgs.rsv
+        """
+        # always use chm13 graph genome as graph filter
+        minisv.js e -b grch38.cen-mask.bed {input.paf[1]} {input.paf[0]} {input.gaf[0]} | bash > {output.rsv}
+        """
+
+rule minisv_call:
+    input:
+        rsv = rules.minisv_mosaic_mixed_ltg_e.output.rsv
+    output:
+        msv = "output/minisv_mosaic/{cell_line}_{platform}/grch38l_l+t+g_mosaic.msv.gz"
+    shell:
+        """
+        cat {input.rsv} | sort -k1,1 -k2,2 -S4g | minisv.js merge -c2 -s0 - | gzip - > {output.msv}
+        """
+
+rule all:
+    input:
+        expand("output/mixed_assembly/{cell_line}.asm.bp.hap{hap}.fa.gz", cell_line = config['samples'], hap=[1, 2]),
+        expand("output/align/{cell_line}_asm.paf.gz", cell_line = config['samples']),
+        expand("output/align/{cell_line}_{assembly}.paf.gz", cell_line = config['samples'], assembly=['grch38', 'chm13']),
+        expand("output/align/{cell_line}_chm13g.paf.gz", cell_line = config['samples'])
+    default_target: True

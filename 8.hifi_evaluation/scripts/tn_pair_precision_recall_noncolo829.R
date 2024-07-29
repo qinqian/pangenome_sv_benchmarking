@@ -86,65 +86,67 @@ plot_f1 <- function(metrics) {
 }
 
 do_bar_chart <- function(input, out_path, threads, myparam) {
-    data_path = input[['colo829_hifi']]
-    data_path_mixed = input[['colo829_hifi_mosaic']]
-    data_path_ont = input[['colo829_ont']]
+    data_path = input[['hifi']]
+    #data_path_mixed = input[['colo829_hifi_mosaic']]
+    #data_path_ont = input[['colo829_ont']]
 
     metrics = load_metrics(data_path)
     metrics_hg38 = metrics %>% filter(genome == 'hg38' & count >= 2)
     metrics_chm13 = metrics %>% filter(genome == "chm13" & count >= 2)
     write_tsv(metrics, out_path[['table']])
 
-    metrics.ont = load_metrics(data_path_ont)
-    metrics_hg38.ont  = metrics.ont %>% filter(genome == 'hg38' & count >= 2)
-    metrics_chm13.ont = metrics.ont %>% filter(genome == "chm13" & count >= 2)
-    write_tsv(metrics.ont, out_path[['ont_table']])
+    #metrics.ont = load_metrics(data_path_ont)
+    #metrics_hg38.ont  = metrics.ont %>% filter(genome == 'hg38' & count >= 2)
+    #metrics_chm13.ont = metrics.ont %>% filter(genome == "chm13" & count >= 2)
+    #write_tsv(metrics.ont, out_path[['ont_table']])
 
-    metrics.mixed = load_metrics(data_path_mixed)
-    metrics_hg38.mixed  = metrics.mixed %>% filter(genome == 'hg38' & count >= 2)
-    #metrics_chm13.mixed = metrics.mixed %>% filter(genome == "chm13" & count >= 4)
-    write_tsv(metrics.mixed, out_path[['mixed_table']])
+    #metrics.mixed = load_metrics(data_path_mixed)
+    #metrics_hg38.mixed  = metrics.mixed %>% filter(genome == 'hg38' & count >= 2)
+    ##metrics_chm13.mixed = metrics.mixed %>% filter(genome == "chm13" & count >= 4)
+    #write_tsv(metrics.mixed, out_path[['mixed_table']])
 
     # remove minisvl+tg, minisvl+ts
     metrics_hg38 = metrics_hg38 %>% filter(!(tool %in% c('minisvl+ts')))
     metrics_chm13 = metrics_chm13 %>% filter(!(tool %in% c('minisvl+ts')))
 
-    metrics_hg38.ont = metrics_hg38.ont %>% filter(!(tool %in% c('minisvl+ts', 'minisvl+x', 'minisvl+g', 'minisvg+x', 'minisvl+t')))
-    metrics_hg38.ont$tool = gsub("minisvl\\+t\\+g\\+s", "minisvl\\+tgs", metrics_hg38.ont$tool)
-    print(metrics_hg38.mixed$tool)
-    metrics_hg38.mixed$tool = gsub("minisvl\\+t\\+g\\+s", "minisvl\\+tgs", gsub("_mosaic", "", gsub("_mosaic ", "", metrics_hg38.mixed$tool)))
-    metrics_hg38.mixed$tool = gsub("minisvl\\+t\\+g", "minisvl\\+tg", metrics_hg38.mixed$tool)
+    #metrics_hg38.ont = metrics_hg38.ont %>% filter(!(tool %in% c('minisvl+ts', 'minisvl+x', 'minisvl+g', 'minisvg+x', 'minisvl+t')))
+    #metrics_hg38.ont$tool = gsub("minisvl\\+t\\+g\\+s", "minisvl\\+tgs", metrics_hg38.ont$tool)
+    #print(metrics_hg38.mixed$tool)
+    #metrics_hg38.mixed$tool = gsub("minisvl\\+t\\+g\\+s", "minisvl\\+tgs", gsub("_mosaic", "", gsub("_mosaic ", "", metrics_hg38.mixed$tool)))
+    #metrics_hg38.mixed$tool = gsub("minisvl\\+t\\+g", "minisvl\\+tg", metrics_hg38.mixed$tool)
 
-    metrics_chm13.ont = metrics_chm13.ont %>% filter(!(tool %in% c('minisvl+ts', 'minisvl+x', 'minisvg+x')))
-    metrics_chm13.ont$tool = gsub("minisvl\\+t\\+g\\+s", "minisvl\\+gs", metrics_chm13.ont$tool)
+    #metrics_chm13.ont = metrics_chm13.ont %>% filter(!(tool %in% c('minisvl+ts', 'minisvl+x', 'minisvg+x')))
+    #metrics_chm13.ont$tool = gsub("minisvl\\+t\\+g\\+s", "minisvl\\+gs", metrics_chm13.ont$tool)
 
     #ggplot(metrics, aes(x=sensitivity, y=specificity, shape=factor(count))) + geom_point(aes(colour = factor(tool)), size = 5) + facet_wrap(~genome, scales='free')+xlim(0, 1) + ylim(0, 1) + ylab('Precision') + xlab("Recall") + defined_theme
     #ggsave(out_path[['plot']], width=15, height=5.5)
 
     grid <- generate_grid()
-    pdf(out_path[['mixedhg38plot']], width=5.5, height=5.6)
-    mixed_hg38_p = plot_prec_recall(grid, metrics_hg38.mixed) + ggtitle("COLO829 HiFi tumor-normal 1:4 mixed reads")
-    print(mixed_hg38_p)
-    dev.off()
+    #pdf(out_path[['mixedhg38plot']], width=5.5, height=5.6)
+    #mixed_hg38_p = plot_prec_recall(grid, metrics_hg38.mixed) + ggtitle("COLO829 HiFi tumor-normal 1:4 mixed reads")
+    #print(mixed_hg38_p)
+    #dev.off()
 
     # Plot contours of constant F1 score
     pdf(out_path[['hg38plot']], width=13.5, height=4.6)
-    hifi.p1 = plot_prec_recall(grid, metrics_hg38) + ggtitle("COLO829 HiFi tumor-normal pair")
-    ont.p2 = plot_prec_recall(grid, metrics_hg38.ont) + ggtitle("COLO829 ONT tumor-normal pair")
-    print((hifi.p1 + ont.p2 + mixed_hg38_p) + plot_layout(guides = "collect") +scale_colour_manual(values = custom_colors))
+    hifi.p1 = plot_prec_recall(grid, metrics_hg38) + ggtitle("non COLO829 HiFi tumor-normal pair")
+    #ont.p2 = plot_prec_recall(grid, metrics_hg38.ont) + ggtitle("non COLO829 ONT tumor-normal pair")
+    #print((hifi.p1 + ont.p2 + mixed_hg38_p) + plot_layout(guides = "collect") +scale_colour_manual(values = custom_colors))
+    print((hifi.p1) + plot_layout(guides = "collect") +scale_colour_manual(values = custom_colors))
     dev.off()
 
 
-    plot_prec_recall(grid, metrics_hg38.ont)
-    ggsave(out_path[['hg38plot_ont']], width=5.5, height=5.6)
+    #plot_prec_recall(grid, metrics_hg38.ont)
+    #ggsave(out_path[['hg38plot_ont']], width=5.5, height=5.6)
 
-    chm13_ont_p = plot_prec_recall(grid, metrics_chm13.ont)
-    ggsave(out_path[['chm13plot_ont']], width=5.5, height=5.6)
+    #chm13_ont_p = plot_prec_recall(grid, metrics_chm13.ont)
+    #ggsave(out_path[['chm13plot_ont']], width=5.5, height=5.6)
 
 
     pdf(out_path[['chm13plot']], width=10.5, height=5.6)
     p1 = plot_prec_recall(grid, metrics_chm13)
-    print((p1 + chm13_ont_p) + plot_layout(guides = "collect") +scale_colour_manual(values = custom_colors))
+    #print((p1 + chm13_ont_p) + plot_layout(guides = "collect") +scale_colour_manual(values = custom_colors))
+    print((p1) + plot_layout(guides = "collect") +scale_colour_manual(values = custom_colors))
     dev.off()
 
     #plot_prec_recall(grid, metrics_chm13.mixed)

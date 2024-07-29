@@ -29,6 +29,7 @@ for count_cutoff in [2, 3, 4, 5, 10]:
             sniffles_somatic = rules.snf_extract_tnpair.output.sniffles,
 
             minisv = "output/minisv_pair/{cell_line}_{platform}_pair_hg38l_l+t+g+s_c2s0.msv.gz",
+            minisv_ltg = "output/minisv_pair/{cell_line}_{platform}_pair_hg38l_l+tg_c2s0.msv.gz",
             minisv_lg = "output/minisv_pair/{cell_line}_{platform}_pair_hg38l_l+g_c2s0.msv.gz",
             minisv_lx = "output/minisv_pair/{cell_line}_{platform}_pair_grch38l_l+x_c2s0.msv.gz",
             minisv_lt = "output/minisv_pair/{cell_line}_{platform}_pair_hg38l_l+t_c2s0.msv.gz",
@@ -36,7 +37,7 @@ for count_cutoff in [2, 3, 4, 5, 10]:
 
             minisv_t2t = "output/minisv_pair/{cell_line}_{platform}_pair_chm13l_l+t+g+s_c2s0.msv.gz",
             # output/minisv_pair/HCC1937_ont1_pair_chm13l_l+g_c2s0.msv.gz
-            # minisv_t2t_lg = "output/minisv_pair/{cell_line}_{platform}_pair_chm13l_l+g_c2s0.msv.gz",
+            minisv_t2t_lg = "output/minisv_pair/{cell_line}_{platform}_pair_chm13l_l+g_c2s0.msv.gz",
             minisv_t2t_l = "output/minisv_pair/{cell_line}_{platform}_pair_chm13l_l+x_c2s0.msv.gz",
             minisv_t2t_gx = "output/minisv_pair/{cell_line}_{platform}_pair_chm13g_g+x_c2s0.msv.gz",
             truth = input_truth
@@ -47,9 +48,9 @@ for count_cutoff in [2, 3, 4, 5, 10]:
         shell: 
             """
             if [[ {wildcards.assembly} == "chm13" ]]; then
-                minisv.js eval -c {params.c} -b ~/data/pangenome_sv_benchmarking/minisv/data/chm13v2.reg.bed {input.truth} {input.severus} {input.minisv_t2t} {input.minisv_t2t_l} {input.minisv_t2t_gx} {input.nanomonsv} {input.savana}/{wildcards.assembly}.classified.somatic.vcf {input.svision} {input.sniffles_somatic} > {output.eval}
+                minisv.js eval -c {params.c} -b ~/data/pangenome_sv_benchmarking/minisv/data/chm13v2.reg.bed {input.truth} {input.severus} {input.minisv_t2t} {input.minisv_t2t_l} {input.minisv_t2t_lg} {input.minisv_t2t_gx} {input.nanomonsv} {input.savana}/{wildcards.assembly}.classified.somatic.vcf {input.svision} {input.sniffles_somatic} > {output.eval}
             else
-                minisv.js eval -c {params.c} -b ~/data/pangenome_sv_benchmarking/minisv/data/hs38.reg.bed {input.truth} {input.severus} {input.minisv} {input.minisv_lg} {input.minisv_lx} {input.minisv_lt} {input.minisv_gx} {input.nanomonsv} {input.savana}/{wildcards.assembly}.classified.somatic.vcf {input.svision} {input.sniffles_somatic} > {output.eval}
+                minisv.js eval -c {params.c} -b ~/data/pangenome_sv_benchmarking/minisv/data/hs38.reg.bed {input.truth} {input.severus} {input.minisv} {input.minisv_lg} {input.minisv_ltg} {input.minisv_lx} {input.minisv_lt} {input.minisv_gx} {input.nanomonsv} {input.savana}/{wildcards.assembly}.classified.somatic.vcf {input.svision} {input.sniffles_somatic} > {output.eval}
             fi
             """
 
