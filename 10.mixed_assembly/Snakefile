@@ -1,15 +1,17 @@
+import os
+configfile: "config.yaml"
+
 truth = {'chm13': '../2b.tumor_only_somatic_evaluation/output/truthset.colo829.out.chm13v2.crossmap_clean.vcf', 
          #'grch38': '../2b.tumor_only_somatic_evaluation/output/truthset_somaticSVs_COLO829_hg38_chrprefix.vcf'}
          'grch38': '/homes6/hli/hli1/gafcall/COLO829.truth.hs38.vcf'}
-
-import os
-configfile: "config.yaml"
 
 def input_truth(wildcards):
     if wildcards.cell_line == 'COLO829_hifi1':
         return truth['grch38']
     else:
-        return []
+        #return []
+        #severus = "output/severus/{cell_line}_{platform}/{assembly}/somatic_SVs/severus_somatic.vcf",
+        return "../1a.alignment_sv_tools/output/severus/{cell_line}/grch38/somatic_SVs/severus_somatic.vcf"
 
 rule gfa2fa:
     input:

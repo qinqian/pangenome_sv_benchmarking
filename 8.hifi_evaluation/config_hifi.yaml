@@ -1,0 +1,41 @@
+hifi_pwd: /hlilab/alvin/pangenome_sv_benchmarking/7.nanopore_evaluation
+
+hifi_samples:
+  normal:
+      batch1:
+          dir: ../1c.additional_ont/
+          cell_line:
+              - HG002rep1
+              - HG002rep2
+      batch3:
+          dir1: /cluster/hlilab/alvin/severus_data/
+          cell_line1:
+              - H1437
+              - HCC1395
+              - H2009
+              - HCC1954
+          dir2: /cluster/hlilab/alvin/severus_data2/
+          cell_line2:
+              - HCC1937
+
+          dir3: ../1c.additional_ont/
+          cell_line3:
+              - COLO829
+          dir4: ../1f.severus_colo829_ont/
+          cell_line4:
+              - COLO829
+
+  tumor_normal_pair:
+      batch1:
+          dir: ../1a.alignment_sv_tools/
+          cell_line1:
+              #- COLO829
+              - HCC1395
+              - HCC1937
+              - HCC1954
+              - NCI1437
+              - NCI2009
+
+hifi_reg:
+  chm13: ../4.gafcall_evaluation/chm13.reg.bed
+  grch38: ../4.gafcall_evaluation/grch38.reg.bed

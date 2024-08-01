@@ -135,6 +135,8 @@ minisv_eval_concensus = expand(expand("output/minisv_eval_tnpair_concensus/{cell
 
 single_eval_performance = expand(expand("output/minisv_eval_single{{pair}}/single_{cell_line}_{platform}_{{assembly}}_count{{cutoff}}_eval.tsv", zip, cell_line=config['samples']['tumor'], platform=config['samples']['platform']), pair=['T', 'BL'], assembly=['chm13', 'grch38'], cutoff=[2,3,4,5,10])
 
+single_eval_performance_20kb = expand(expand("output/minisv_eval_single{{pair}}/single_{cell_line}_{platform}_{{assembly}}_count{{cutoff}}_eval_len20kb.tsv", zip, cell_line=config['samples']['tumor'], platform=config['samples']['platform']), pair=['T', 'BL'], assembly=['chm13', 'grch38'], cutoff=[2,3,4,5,10])
+
 minisv_eval_mixed_files = expand(expand("output/minisv_eval_tnpair/{cell_line}_{platform}_{{assembly}}_count{{cutoff}}_eval_mixed.tsv", zip, cell_line=config['samples']['tumor'], platform=config['samples']['platform']), assembly=['chm13', 'grch38'], cutoff=[2,3,4,5,10])
 
 tn_eval_length = expand(expand("output/alltools_view/tn_{cell_line}_{platform}_{{assembly}}_eval_len.tsv", zip, cell_line=config['samples']['tumor'], platform=config['samples']['platform']), assembly=['chm13', 'grch38'])
@@ -176,7 +178,7 @@ rule all:
         #single_eval_length, mixed_eval_length,  pair_eval_single_length,
         minisv_eval_files, minisv_eval_mixed_files, # tn_eval_length, 
         minisv_eval_concensus,
-        single_eval_performance,
+        single_eval_performance, single_eval_performance_20kb,
         "output/minisv_view_single/single_sample_allsvtools_svlength.tsv", 
         hifiasm_mixed_fastq, #hifiasm_mixed_asm1, hifiasm_mixed_asm2
     default_target: True 
