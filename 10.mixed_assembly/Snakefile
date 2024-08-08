@@ -2,16 +2,13 @@ import os
 configfile: "config.yaml"
 
 truth = {'chm13': '../2b.tumor_only_somatic_evaluation/output/truthset.colo829.out.chm13v2.crossmap_clean.vcf', 
-         #'grch38': '../2b.tumor_only_somatic_evaluation/output/truthset_somaticSVs_COLO829_hg38_chrprefix.vcf'}
          'grch38': '/homes6/hli/hli1/gafcall/COLO829.truth.hs38.vcf'}
 
 def input_truth(wildcards):
     if wildcards.cell_line == 'COLO829_hifi1':
         return truth['grch38']
     else:
-        #return []
-        #severus = "output/severus/{cell_line}_{platform}/{assembly}/somatic_SVs/severus_somatic.vcf",
-        return "../1a.alignment_sv_tools/output/severus/{cell_line}/grch38/somatic_SVs/severus_somatic.vcf"
+        return ["../1a.alignment_sv_tools/output/severus/{cell_line}/grch38/somatic_SVs/severus_somatic.vcf", "../1a.alignment_sv_tools/output/savana/{cell_line}/grch38/grch38.classified.somatic.vcf", "../1a.alignment_sv_tools/output/nanomonsv/{cell_line}/grch38_tnpair.vcf"]
 
 rule gfa2fa:
     input:
@@ -135,8 +132,36 @@ for cutoff in [2,3,4,5,10]:
             c = cutoff
         shell: 
             """
-            minisv.js eval -c {params.c} -b ~/data/pangenome_sv_benchmarking/minisv/data/hs38.reg.bed {input.truth} {input.minisv_ltg} {input.minisv_ltgs} {input.sniffles_mosaic} > {output.eval}
+            if [ {wildcards.cell_line} == 'COLO829_hifi1' ]; then
+                minisv.js eval -c {params.c} -b ~/data/pangenome_sv_benchmarking/minisv/data/hs38.reg.bed {input.truth} {input.minisv_ltg} {input.minisv_ltgs} {input.sniffles_mosaic} > {output.eval}
+            else
+                for input in {input.sniffles_mosaic} {input.minisv_ltgs} {input.minisv_ltg}; do
+                    minisv.js eval -M -c {params.c} -b ~/data/pangenome_sv_benchmarking/minisv/data/hs38.reg.bed $input {input.truth} | head -2 >> {output.eval}
+                done
+            fi
 
+            """
+
+    rule:
+        name: f"minisv_eval_mixed_count{cutoff}_100kb"
+        input:
+            sniffles_mosaic = "../1a.alignment_sv_tools/output/sniffles_mosaic/{cell_line}/grch38_mixdown_mosaic.vcf.gz",
+            minisv_ltgs = "output/minisv_mosaic_asm/{cell_line}/grch38l_l+t+g+s_mosaic.msv.gz",
+            minisv_ltg = "output/minisv_mosaic_asm/{cell_line}/grch38l_l+t+g_mosaic.msv.gz",
+            truth = input_truth
+        output:
+            eval = f"output/minisv_mosaic_asm/{{cell_line}}_grch38_count{cutoff}_eval_100kb.tsv"
+        params:
+            c = cutoff
+        shell: 
+            """
+            if [ {wildcards.cell_line} == 'COLO829_hifi1' ]; then
+                minisv.js eval -l 100000 -c {params.c} -b ~/data/pangenome_sv_benchmarking/minisv/data/hs38.reg.bed {input.truth} {input.minisv_ltg} {input.minisv_ltgs} {input.sniffles_mosaic} > {output.eval}
+            else
+                for input in {input.sniffles_mosaic} {input.minisv_ltgs} {input.minisv_ltg}; do
+                    minisv.js eval -M -l 100000 -c {params.c} -b ~/data/pangenome_sv_benchmarking/minisv/data/hs38.reg.bed $input {input.truth} | head -2 >> {output.eval}
+                done
+            fi
             """
 
 rule all:
@@ -146,5 +171,6 @@ rule all:
         expand("output/align/{cell_line}_{assembly}.paf.gz", cell_line = config['samples'], assembly=['grch38', 'chm13']),
         expand("output/align/{cell_line}_chm13g.paf.gz", cell_line = config['samples']),
         expand("output/minisv_mosaic_asm/{cell_line}/grch38l_l+t+g+s_mosaic.msv.gz", cell_line = config['samples']),
-        expand("output/minisv_mosaic_asm/{cell_line}_grch38_count{cutoff}_eval.tsv", cell_line = config['samples'], cutoff = [2,3,4,5,10])
+        expand("output/minisv_mosaic_asm/{cell_line}_grch38_count{cutoff}_eval.tsv", cell_line = config['samples'], cutoff = [2,3,4,5,10]),
+        expand("output/minisv_mosaic_asm/{cell_line}_grch38_count{cutoff}_eval_100kb.tsv", cell_line = config['samples'], cutoff = [2,3,4,5,10])
     default_target: True

@@ -25,6 +25,20 @@ wildcard_constraints:
     platform = "ont1|ont2|hifi1"
 
 
+include: "rules/minisv_eval_all_tools_from1a.smk"
+minisv_eval_tnpair_files_hifi = expand(expand("output/minisv_eval_tnpair_from1a/{cell_line}_{platform}_{{assembly}}_count{{cutoff}}_eval.tsv", zip, cell_line=config['hifi_samples']['tumor_normal_pair']['batch1']['cell_line1'], platform=config['hifi_samples']['tumor_normal_pair']['batch1']['platform1']), assembly=['chm13', 'grch38'], cutoff=[3,4,5,10])
+minisv_eval_tnpair_concensus_files_hifi = expand(expand("output/minisv_eval_tnpair_concensus_from1a/{cell_line}_{platform}_{{assembly}}_count{{cutoff}}_eval.tsv", zip, cell_line=config['hifi_samples']['tumor_normal_pair']['batch1']['cell_line1'], platform=config['hifi_samples']['tumor_normal_pair']['batch1']['platform1']), assembly=['chm13', 'grch38'], cutoff=[3,4,5,10])
+minisv_eval_tnpair_concensus_files_ont = expand(expand("output/minisv_eval_tnpair_concensus_from1a/{{folder}}_{cell_line}_{platform}_{{assembly}}_count{{cutoff}}_eval_tg.tsv", zip, cell_line=config['samples']['tumor_normal_pair']['batch3']['cell_line3'], platform=config['samples']['tumor_normal_pair']['batch3']['platform3']), assembly=['chm13', 'grch38'], cutoff=[3,4,5,10], folder=config['samples']['tumor_normal_pair']['batch3']['label']) + expand(expand("output/minisv_eval_tnpair_concensus_from1a/{{folder}}_{cell_line}_{platform}_{{assembly}}_count{{cutoff}}_eval_tg.tsv", zip, cell_line=config['samples']['tumor_normal_pair']['batch4']['cell_line4'], platform=config['samples']['tumor_normal_pair']['batch4']['platform4']), assembly=['chm13', 'grch38'], cutoff=[3,4,5,10], folder=config['samples']['tumor_normal_pair']['batch4']['label'])
+minisv_eval_tnpair_concensus_files_ont_tgs = expand(expand("output/minisv_eval_tnpair_concensus_from1a/{{folder}}_{cell_line}_{platform}_{{assembly}}_count{{cutoff}}_eval_tgs.tsv", zip, cell_line=config['samples']['tumor_normal_pair']['batch3']['cell_line3'], platform=config['samples']['tumor_normal_pair']['batch3']['platform3']), assembly=['chm13', 'grch38'], cutoff=[3,4,5,10], folder=config['samples']['tumor_normal_pair']['batch3']['label']) + expand(expand("output/minisv_eval_tnpair_concensus_from1a/{{folder}}_{cell_line}_{platform}_{{assembly}}_count{{cutoff}}_eval_tgs.tsv", zip, cell_line=config['samples']['tumor_normal_pair']['batch4']['cell_line4'], platform=config['samples']['tumor_normal_pair']['batch4']['platform4']), assembly=['chm13', 'grch38'], cutoff=[3,4,5,10], folder=config['samples']['tumor_normal_pair']['batch4']['label'])
+
+minisv_eval_singlemode_files_hifi = expand(expand("output/minisv_eval_singleT/single_{cell_line}_{platform}_{{assembly}}_count{{cutoff}}_eval.tsv", zip, cell_line=config['hifi_samples']['tumor_normal_pair']['batch1']['cell_line1'], platform=config['hifi_samples']['tumor_normal_pair']['batch1']['platform1']), assembly=['chm13', 'grch38'], cutoff=[3,4,5,10])
+minisv_eval_singlemode_files_hifi_100kb = expand(expand("output/minisv_eval_singleT/single_{cell_line}_{platform}_{{assembly}}_count{{cutoff}}_eval_100kb.tsv", zip, cell_line=config['hifi_samples']['tumor_normal_pair']['batch1']['cell_line1'], platform=config['hifi_samples']['tumor_normal_pair']['batch1']['platform1']), assembly=['chm13', 'grch38'], cutoff=[3,4,5,10])
+
+# output/minisv_eval_singleT/{{folder}}_single_{{cell_line}}_{{platform}}_{{assembly}}_count{cutoff}_eval_ont_100kb.tsv
+minisv_eval_singlemode_files_ont_100kb = expand(expand("output/minisv_eval_singleT/{{folder}}_single_{cell_line}_{platform}_{{assembly}}_count{{cutoff}}_eval_ont_100kb.tsv", zip, cell_line=config['samples']['tumor_normal_pair']['batch3']['cell_line3'], platform=config['samples']['tumor_normal_pair']['batch3']['platform3']), assembly=['chm13', 'grch38'], cutoff=[3,4,5,10], folder=config['samples']['tumor_normal_pair']['batch3']['label']) + expand(expand("output/minisv_eval_singleT/{{folder}}_single_{cell_line}_{platform}_{{assembly}}_count{{cutoff}}_eval_ont_100kb.tsv", zip, cell_line=config['samples']['tumor_normal_pair']['batch4']['cell_line4'], platform=config['samples']['tumor_normal_pair']['batch4']['platform4']), assembly=['chm13', 'grch38'], cutoff=[3,4,5,10], folder=config['samples']['tumor_normal_pair']['batch4']['label'])
+
+
+
 def cat_minisv_view(input_files, output):
     import pandas as pd
     df_list = []
@@ -272,6 +286,7 @@ rule gafcall_eval_length_merge_all:
         "echo -e 'translocation\t>1M\t>100k\t>20k\tall_except_inv\tinv\tfile\tcount\tcount_file' > {output.eval_length} && cat {input.eval_length} {input.eval_length_severus} {input.eval_length_sniffles2} {input.eval_length_cutesv} >> {output.eval_length}"
 
 
+# Figure 1
 rule plot_normal:
     input:
         eval_length = "output/gafcall_eval/normal_v2/all_merged_eval.len.tsv"
@@ -298,14 +313,14 @@ rule plot_normal:
 # Figure 3
 rule colo829_hifi_ont_evaluation:
     input:
-        colo829_hifi = expand(os.path.join("../1a.alignment_sv_tools/output/minisv_eval_tnpair", '{cell_line}_hifi1_{assembly}_count{count}_eval.tsv'), cell_line=['COLO829'], count=[2,3,4,5,10], assembly=['chm13', 'grch38']),
-        colo829_hifi_mosaic = expand(os.path.join("../10.mixed_assembly/output/minisv_mosaic_asm", '{cell_line}_hifi1_grch38_count{count}_eval.tsv'), cell_line=['COLO829'], count=[2,3,4,5,10]),
+        colo829_hifi = expand(os.path.join("../1a.alignment_sv_tools/output/minisv_eval_tnpair", '{cell_line}_hifi1_{assembly}_count{count}_eval.tsv'), cell_line=['COLO829'], count=[3,4,5,10], assembly=['chm13', 'grch38']),
+        colo829_hifi_mosaic = expand(os.path.join("../10.mixed_assembly/output/minisv_mosaic_asm", '{cell_line}_hifi1_grch38_count{count}_eval.tsv'), cell_line=['COLO829'], count=[3,4,5,10]),
         # Ultralong
-        # colo829_ont  = expand(os.path.join("../1c.additional_ont/output/minisv_eval_tnpair", '{cell_line}_{assembly}_count{count}_eval.tsv'), cell_line=['COLO829'], count=[2,3,4,5,10], assembly=['chm13', 'grch38'])
+        # colo829_ont  = expand(os.path.join("../1c.additional_ont/output/minisv_eval_tnpair", '{cell_line}_{assembly}_count{count}_eval.tsv'), cell_line=['COLO829'], count=[3,4,5,10], assembly=['chm13', 'grch38'])
         # NOTE: non-ultralong is actually using the gafcall hifi data, look at ../1e.reps_merge/ instead
-        # colo829_ont  = expand(os.path.join("../1a.alignment_sv_tools/output/minisv_eval_tnpair", '{cell_line}_ont1_{assembly}_count{count}_eval.tsv'), cell_line=['COLO829'], count=[2,3,4,5,10], assembly=['chm13', 'grch38'])
+        # colo829_ont  = expand(os.path.join("../1a.alignment_sv_tools/output/minisv_eval_tnpair", '{cell_line}_ont1_{assembly}_count{count}_eval.tsv'), cell_line=['COLO829'], count=[3,4,5,10], assembly=['chm13', 'grch38'])
         # below are real non-ultralong ONT
-        colo829_ont  = expand(os.path.join("../1f.severus_colo829_ont/output/minisv_eval_tnpair", '{cell_line}_ont1_{assembly}_cutoff{count}_eval.tsv'), cell_line=['COLO829'], count=[2,3,4,5,10], assembly=['chm13', 'grch38'])
+        colo829_ont  = expand(os.path.join("../1f.severus_colo829_ont/output/minisv_eval_tnpair", '{cell_line}_ont1_{assembly}_cutoff{count}_eval.tsv'), cell_line=['COLO829'], count=[3,4,5,10], assembly=['chm13', 'grch38'])
     conda: "plot"
     output:
         table="colo829_hifi_clean.tsv",
@@ -323,16 +338,28 @@ rule colo829_hifi_ont_evaluation:
         "scripts/tn_pair_precision_recall.R"
 
 
-# Figure 4: mixed non-colo829 evaluation
-rule noncolo829_hifi_ont_evaluation:
+# Figure 3 local eval
+rule colo829_hifi_ont_evaluation_local:
     input:
-        mixed_noncolo829_hifi = expand(os.path.join("../10.mixed_assembly/output/minisv_mosaic_asm", '{cell_line}_hifi1_grch38_count{count}_eval.tsv'), cell_line=['HCC1395', 'HCC1937', 'HCC1954', 'NCI1437', 'NCI2009'], count=[2,3,4,5,10]),
+        colo829_hifi = expand(os.path.join("output/minisv_eval_tnpair_from1a", '{cell_line}_hifi1_{assembly}_count{count}_eval.tsv'), cell_line=['COLO829'], count=[3,4,5,10], assembly=['chm13', 'grch38']),
+        colo829_hifi_mosaic = expand(os.path.join("../10.mixed_assembly/output/minisv_mosaic_asm", '{cell_line}_hifi1_grch38_count{count}_eval.tsv'), cell_line=['COLO829'], count=[3,4,5,10]),
+        colo829_hifi_mosaic_100kb = expand(os.path.join("../10.mixed_assembly/output/minisv_mosaic_asm", '{cell_line}_hifi1_grch38_count{count}_eval_100kb.tsv'), cell_line=['COLO829'], count=[3,4,5,10]),
+        colo829_ont  = expand(os.path.join("../1f.severus_colo829_ont/output/minisv_eval_tnpair", '{cell_line}_ont1_{assembly}_cutoff{count}_eval.tsv'), cell_line=['COLO829'], count=[3,4,5,10], assembly=['chm13', 'grch38'])
     conda: "plot"
     output:
-        mixed_table="noncolo829_mixed_clean.tsv",
-        mixedhg38plot="mixedhg38_noncolo829_hifi_clean.pdf",
+        table="output/local/colo829_hifi_clean.tsv",
+        ont_table="output/local/colo829_ont_clean.tsv",
+        mixed_table="output/local/colo829_mixed_clean.tsv",
+        mixed_table_100kb="output/local/colo829_mixed_clean100kb.tsv",
+        hg38plot="output/local/hg38_colo829_hifi_clean.pdf",
+        chm13plot="output/local/chm13_colo829_hifi_clean.pdf",
+        hg38plot_ont="output/local/hg38_colo829_ont_clean.pdf",
+        chm13plot_ont="output/local/chm13_colo829_ont_clean.pdf",
+        mixedhg38plot="output/local/mixedhg38_colo829_ont_clean.pdf",
+        #mixedchm13plot="mixedchm13_colo829_ont_clean.pdf",
+        ##f1plot="colo829_hifi_clean_max.png",
     script:
-        "scripts/tn_pair_precision_recall_noncolo829.R"
+        "scripts/tn_pair_precision_recall.R"
 
 
 module tnpair_plot_concensus_workflow:
@@ -342,17 +369,56 @@ module tnpair_plot_concensus_workflow:
 use rule * from tnpair_plot_concensus_workflow as r_tnpair_plot_concensus_workflow_*
 
 
+# Figure 5: tumor-only mode
+rule noncolo829_hifi_tumor_only_evaluation:
+    input:
+        # output/minisv_eval_single{{pair}}/single_{{cell_line}}_{{platform}}_{{assembly}}_count{cutoff}_eval_len20kb.tsv
+        tumor_only_hifi = expand("../1a.alignment_sv_tools/output/minisv_eval_singleT/single_{cell_line}_hifi1_{assembly}_count{cutoff}_eval_len100kb.tsv", cell_line=['HCC1395', 'HCC1937', 'HCC1954', 'NCI1437', 'NCI2009'], cutoff=[2,3,4,5,10], assembly=['chm13', 'grch38']),
+    conda: "plot"
+    output:
+        tumor_only_table="noncolo829_tumor_only_clean.tsv",
+        hg38plot="tumor_only_hg38_noncolo829_hifi_clean.pdf",
+    script:
+        "scripts/tn_pair_precision_recall_noncolo829_tumoronly.R"
+
+
+minisv_eval_singlemode_files_hifi_100kb = expand(expand("output/minisv_eval_singleT/single_{cell_line}_{platform}_{{assembly}}_count{{cutoff}}_eval_100kb.tsv", zip, cell_line=config['hifi_samples']['single_sample_mode']['batch1']['cell_line1'], platform=config['hifi_samples']['single_sample_mode']['batch1']['platform1']), assembly=['chm13', 'grch38'], cutoff=[3,4,5,10])
+
+minisv_eval_singlemode_files_ont_100kb = expand(expand("output/minisv_eval_singleT/{{folder}}_single_{cell_line}_{platform}_{{assembly}}_count{{cutoff}}_eval_ont_100kb.tsv", zip, cell_line=config['samples']['tumor_normal_pair']['batch3']['cell_line3'], platform=config['samples']['tumor_normal_pair']['batch3']['platform3']), assembly=['chm13', 'grch38'], cutoff=[3,4,5,10], folder=config['samples']['tumor_normal_pair']['batch3']['label']) + expand(expand("output/minisv_eval_singleT/{{folder}}_single_{cell_line}_{platform}_{{assembly}}_count{{cutoff}}_eval_ont_100kb.tsv", zip, cell_line=config['samples']['tumor_normal_pair']['batch4']['cell_line4'], platform=config['samples']['tumor_normal_pair']['batch4']['platform4']), assembly=['chm13', 'grch38'], cutoff=[3,4,5,10], folder=config['samples']['tumor_normal_pair']['batch4']['label'])
+
+print(minisv_eval_singlemode_files_hifi_100kb)
+
+# Figure 5: tumor-only mode local evaluation using somatic concensus from severus, savana, nanomonsv
+rule noncolo829_hifi_tumor_only_evaluation_somatic_SV:
+    input:
+        # f"output/minisv_eval_singleT/{{folder}}_single_{{cell_line}}_{{platform}}_{{assembly}}_count{cutoff}_eval_ont_100kb.tsv"
+        tumor_only_hifi = minisv_eval_singlemode_files_hifi_100kb,
+        tumor_only_ont_100kb = minisv_eval_singlemode_files_ont_100kb
+    conda: "plot"
+    output:
+        tumor_only_table="output/local/noncolo829_tumor_only_clean.tsv",
+        tumor_only_table_ont="output/local/ont_noncolo829_tumor_only_clean.tsv",
+        hg38plot="output/local/tumor_only_hg38_noncolo829_hifi_clean.pdf",
+    script:
+        "scripts/tn_pair_precision_recall_noncolo829_tumoronly_local.R"
+
+
 rule all: 
     input:
+        minisv_eval_tnpair_files_hifi, # evaluate out of ../1a.alignment_sv_tools/
+        minisv_eval_tnpair_concensus_files_hifi,
+        minisv_eval_tnpair_concensus_files_ont, minisv_eval_tnpair_concensus_files_ont_tgs,
+        minisv_eval_singlemode_files_hifi, minisv_eval_singlemode_files_hifi_100kb,
+        minisv_eval_singlemode_files_ont_100kb,
+
         "output/gafcall_eval/normal_v2/all_merged_eval.len.tsv",
         "output/gafcall_eval/normal_v2/normal_length_hifi.pdf",
-        "colo829_hifi_clean.png",
-        "hg38_colo829_hifi_clean.pdf", 
-        "chm13_colo829_hifi_clean.pdf", 
-        "hg38_colo829_ont_clean.pdf", 
-        "chm13_colo829_ont_clean.pdf", 
-        "mixedhg38_noncolo829_hifi_clean.pdf", "noncolo829_mixed_clean.tsv",
+        "tumor_only_hg38_noncolo829_hifi_clean.pdf",
         rules.r_tnpair_plot_concensus_workflow_all.input,
+
+        "hg38_colo829_hifi_clean.pdf", 
+        "output/local/hg38_colo829_hifi_clean.pdf",
+        "output/local/tumor_only_hg38_noncolo829_hifi_clean.pdf",
 
         "output/gafcall_eval/normal_v2/hg38_paired_length_hifi.pdf",
         "output/gafcall_eval/normal_v2/chm13_paired_length_hifi.pdf",

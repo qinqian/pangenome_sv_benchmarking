@@ -1,6 +1,4 @@
-
 truth = {'chm13': '../2b.tumor_only_somatic_evaluation/output/truthset.colo829.out.chm13v2.crossmap_clean.vcf', 
-         #'grch38': '../2b.tumor_only_somatic_evaluation/output/truthset_somaticSVs_COLO829_hg38_chrprefix.vcf'}
          'grch38': '/homes6/hli/hli1/gafcall/COLO829.truth.hs38.vcf'}
 
 def input_truth(wildcards):
@@ -25,7 +23,6 @@ for count_cutoff in [2, 3, 4, 5, 10]:
             nanomonsv = "../1a.alignment_sv_tools/output/nanomonsv/{cell_line}_{platform}/{assembly}_tnpair.vcf",
             savana = "../1a.alignment_sv_tools/output/savana/{cell_line}_{platform}/{assembly}",
             svision = "../1a.alignment_sv_tools/output/svision/{cell_line}_{platform}/somatic/{cell_line}_{assembly}_tn.svision_pro_v1.8.s5.somatic_s1.vcf",
-            #sniffles_mosaic = "../1a.alignment_sv_tools/output/sniffles_mosaic/{cell_line}_{platform}/T/{assembly}.vcf.gz",
             sniffles_somatic = rules.snf_extract_tnpair.output.sniffles,
 
             minisv = "output/minisv_pair/{cell_line}_{platform}_pair_hg38l_l+t+g+s_c2s0.msv.gz",

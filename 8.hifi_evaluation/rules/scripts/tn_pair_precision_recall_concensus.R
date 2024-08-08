@@ -24,7 +24,7 @@ generate_grid <- function() {
 plot_prec_recall <- function(grid, metrics) {
     p = ggplot() +
         geom_contour(data=grid, aes(x = precision, y = sensitivity, z = F1), linetype="dashed", linewidth=0.45, color='gray', bins = 10) + 
-        geom_point(data=metrics, aes(x=sensitivity, y=precision, colour = factor(tool), size=count), alpha=0.5) + scale_size(range = c(1, 4)) + xlim(0, 1) + ylim(0, 1) + ylab('Precision') + xlab("Recall") +  
+        geom_point(data=metrics, aes(x=sensitivity, y=precision, colour = factor(tool), size=count), alpha=0.5) + scale_size_continuous(name = "Count", breaks = c(3, 4, 5, 10), range = c(1, 5)) + xlim(0, 1) + ylim(0, 1) + ylab('Precision') + xlab("Recall") +  
         geom_path(data=metrics[order(metrics$count),], aes(x=sensitivity, y=precision, colour = factor(tool))) + 
         #geom_line(data=metrics, aes(x=sensitivity, y=precision, colour = factor(tool))) + 
         facet_wrap(cell_line~genome, nrow=5, ncol=2, scales = "free") + get_theme()
@@ -37,6 +37,7 @@ parse_list_metrics_files <- function(data_path) {
     df_list = list()
     for (path in unlist(data_path)) {
         res = read_tsv(path, col_names = FALSE)
+        print(res)
         res = res %>% mutate(X4=1-X4) %>% select(X1, X4, X5)
         res = res %>% pivot_wider(names_from = X1, values_from=X4, values_fill=NA)
         colnames(res) = c("file", "sensitivity", "precision")
@@ -49,15 +50,22 @@ parse_list_metrics_files <- function(data_path) {
 
     metrics = do.call(rbind, df_list)
     metrics$count = as.numeric(metrics$count)
+ 
+    # start from 3 read counts
+    metrics = metrics %>% filter(count >= 3)
+
     metrics$genome = ifelse(grepl("chm13", metrics$eval_file), "chm13", "hg38")
-    metrics$cell_line = str_extract(metrics$eval_file, "(HCC1937|H1437|HCC1395|H2009|HCC1954|NCI1437|NCI2009)", group=1)
+    metrics$cell_line = str_extract(metrics$eval_file, "(COLO829|HCC1937|H1437|HCC1395|H2009|HCC1954|NCI1437|NCI2009)", group=1)
+  
+    # Exclude COLO829 from the analysis
+    metrics = metrics %>% filter(!grepl("COLO829", metrics$cell_line))
 
     #NOTE: is H2009 equal to NCI2009?
     #NOTE: is H1437 equal to NCI1437?
     metrics$cell_line = gsub("H2009", "NCI2009",  metrics$cell_line)
     metrics$cell_line = gsub("H1437", "NCI1437",  metrics$cell_line)
 
-    metrics$tool = str_extract(metrics$file, "(gafcall|minisv_pair|minisv_mosaic|nanomonsv|savana|severus|sniffles_mosaic|sniffles|svision|cutesv)", group=1)
+    metrics$tool = str_extract(metrics$file, "(gafcall|minisv_pair|minisv_mosaic|nanomonsv|savana|severus\\/|sniffles_mosaic|sniffles|svision|cutesv)", group=1)
 #l_l+t+g+s
     metrics$tool = gsub('gafcall', 'minisv', metrics$tool)
     print(table(metrics$tool))
@@ -68,7 +76,10 @@ parse_list_metrics_files <- function(data_path) {
 
     metrics$tool = gsub('minisv_pairl_l\\+t\\+g\\+s', 'minisvl\\+tgs', metrics$tool)
     metrics$tool = ifelse(metrics$genome == 'chm13' & (grepl("l\\+gs", metrics$tool)), gsub("l\\+gs", "l\\+tgs", metrics$tool), metrics$tool)
+    metrics$tool = gsub('minisvl\\+tgs', 'msv:tgs', metrics$tool)
+
     metrics = metrics %>% filter(!(tool %in% c("minisvl+g", "minisvl+tg", "minisvl+ts")))
+    print(table(metrics$tool))
     metrics
 }
 

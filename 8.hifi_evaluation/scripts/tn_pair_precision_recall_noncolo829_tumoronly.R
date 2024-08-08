@@ -24,6 +24,7 @@ get_theme <- function(size=7, angle=0) {
 
 load_metrics <- function(data_path) {
     df_list = list()
+    # with truthset 
     for (path in unlist(data_path)) {
         res = read_tsv(path, col_names = FALSE)
         print(res)
@@ -44,8 +45,9 @@ load_metrics <- function(data_path) {
     metrics = do.call(rbind, df_list)
     metrics$genome = ifelse(grepl("chm13", metrics$tool), "chm13", "hg38")
     metrics$file = metrics$tool
-    metrics$tool = gsub("_pair", "", gsub("gafcall", "msv:", str_extract(metrics$tool, "(gafcall|minisv_pair|minisv_mosaic|nanomonsv|savana|severus|sniffles_mosaic|sniffles|svision)", group=1)))
-    #metrics$tool = gsub("minisv", "msv:", metrics$tool)
+    print(table(metrics$tool))
+    metrics$tool = gsub("_pair", "", gsub("gafcall", "minisv", str_extract(metrics$tool, "(gafcall|minisv_pair|minisv_mosaic|nanomonsv|savana|severus|sniffles_mosaic|sniffles|svision)", group=1)))
+    print(table(metrics$tool))
     metrics$cell_line = str_extract(metrics$file, "(HCC1937|H1437|HCC1395|H2009|HCC1954|NCI1437|NCI2009)", group=1)
     print(table(metrics$cell_line))
    
@@ -55,10 +57,10 @@ load_metrics <- function(data_path) {
 
     metrics$param = ifelse(grepl('minisv_pair|minisv_mosaic_asm', metrics$file), str_extract(metrics$file, "(l\\+t\\+g|l\\+g|l\\+t\\+g\\+s|l\\+x|g\\+x|l\\+t|l\\+tg)_(c2s0|mosaic)", group=1), str_extract(metrics$file, "(l\\+tg|l\\+g|l\\+gs|l\\+tgs|l\\+ts|l\\+tg)\\.pair", group=1))
 
-    #metrics$param = gsub("l\\+", "", metrics$param)
-
     metrics$param[is.na(metrics$param)] = ""
     metrics$tool = paste0(metrics$tool, metrics$param)
+
+    print(table(metrics$tool))
     metrics
 }
 
@@ -103,15 +105,12 @@ plot_prec_recall <- function(grid, metrics) {
 }
 
 do_bar_chart <- function(input, out_path, threads, myparam) {
-    data_path = input[['mixed_noncolo829_hifi']]
-    print(data_path)
+    data_path = input[['tumor_only_hifi']]
     metrics = load_metrics(data_path)
     print(head(metrics))
-    write_tsv(metrics, out_path[['mixed_table']])
-    print(metrics)
-
+    write_tsv(metrics, out_path[['tumor_only_table']])
     grid <- generate_grid()
-    pdf(out_path[['mixedhg38plot']], width=5.5, height=5.6)
+    pdf(out_path[['hg38plot']], width=5.5, height=5.6)
     mixed_hg38_p = plot_prec_recall(grid, metrics) + ggtitle("non-COLO829 HiFi tumor-normal 1:4 mixed reads")
     print(mixed_hg38_p)
     dev.off()

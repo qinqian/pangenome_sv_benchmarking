@@ -3,7 +3,8 @@ rule savana:
         crams = expand("output/align/{{cell_line}}_{{platform}}/{pair}/{{assembly}}.cram", pair=["T", "BL"]),
         crais = expand("output/align/{{cell_line}}_{{platform}}/{pair}/{{assembly}}.cram.crai", pair=["T", "BL"])
     output:
-        outdir = directory("output/savana/{cell_line}_{platform}/{assembly}")
+        outdir = directory("output/savana/{cell_line}_{platform}/{assembly}"),
+        vcf = "output/savana/{cell_line}_{platform}/{assembly}/{assembly}.classified.somatic.vcf"
     conda: "savana"
     threads: 24
     resources:

@@ -29,12 +29,35 @@ hifi_samples:
       batch1:
           dir: ../1a.alignment_sv_tools/
           cell_line1:
-              #- COLO829
+              - COLO829
               - HCC1395
               - HCC1937
               - HCC1954
               - NCI1437
               - NCI2009
+          platform1:
+              - hifi1
+              - hifi1
+              - hifi1
+              - hifi1
+              - hifi1
+              - hifi1
+
+  single_sample_mode:
+      batch1:
+          dir: ../1a.alignment_sv_tools/
+          cell_line1:
+              - HCC1395
+              - HCC1937
+              - HCC1954
+              - NCI1437
+              - NCI2009
+          platform1:
+              - hifi1
+              - hifi1
+              - hifi1
+              - hifi1
+              - hifi1
 
 hifi_reg:
   chm13: ../4.gafcall_evaluation/chm13.reg.bed

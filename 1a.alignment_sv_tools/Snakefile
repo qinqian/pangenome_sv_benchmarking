@@ -24,6 +24,11 @@ sniffles_mo_multi_vcf_files  = expand(expand("output/sniffles_mosaic/{cell_line}
 
 nanomonsv_files  = expand(expand("output/nanomonsv/{cell_line}_{platform}/{{assembly}}_tnpair.txt", zip, cell_line=config['samples']['tumor'], platform=config['samples']['platform']), assembly=config['assembly'])
 savana_outdir  = expand(expand("output/savana/{cell_line}_{platform}/{{assembly}}", zip, cell_line=config['samples']['tumor'], platform=config['samples']['platform']), assembly=config['assembly'])
+savana_vcf  = expand(expand("output/savana/{cell_line}_{platform}/{{assembly}}/{{assembly}}.classified.somatic.vcf", zip, cell_line=config['samples']['tumor'], platform=config['samples']['platform']), assembly=config['assembly'])
+
+savana12_outdir  = expand(expand("output/savana12/{cell_line}_{platform}/{{assembly}}", zip, cell_line=config['samples']['tumor'], platform=config['samples']['platform']), assembly=config['assembly'])
+savana12_vcf  = expand(expand("output/savana12/{cell_line}_{platform}/{{assembly}}/{{assembly}}.classified.somatic.vcf", zip, cell_line=config['samples']['tumor'], platform=config['samples']['platform']), assembly=config['assembly'])
+
 severus_outdir  = expand(expand("output/severus/{cell_line}_{platform}/{{assembly}}", zip, cell_line=config['samples']['tumor'], platform=config['samples']['platform']), assembly=config['assembly'])
 severus_single_outdir  = expand(expand("output/severus_{platform}/{cell_line}_{{pair}}_{{assembly}}", zip, cell_line=config['samples']['tumor'], platform=config['samples']['platform']), pair=["T", "BL"], assembly=config['assembly'])
 severus_mixdown_outdir  = expand(expand("output/severus_{platform}/{cell_line}_{{assembly}}_mixdown", zip, cell_line=config['samples']['tumor'], platform=config['samples']['platform']), assembly=config['assembly'])
@@ -49,6 +54,7 @@ use rule * from aligner_workflow as minimap2_workflow_*
 
 include: "rules/sniffles2.smk"
 include: "rules/savana.smk"
+include: "rules/savana1.2.smk"
 include: "rules/clair3.smk"
 
 module severus_workflow:
@@ -131,11 +137,16 @@ include: "rules/hifiasm.smk"
 include: "rules/minisv_eval_all_tools.smk"
 
 minisv_eval_files = expand(expand("output/minisv_eval_tnpair/{cell_line}_{platform}_{{assembly}}_count{{cutoff}}_eval.tsv", zip, cell_line=config['samples']['tumor'], platform=config['samples']['platform']), assembly=['chm13', 'grch38'], cutoff=[2,3,4,5,10])
+
 minisv_eval_concensus = expand(expand("output/minisv_eval_tnpair_concensus/{cell_line}_{platform}_{{assembly}}_count{{cutoff}}_eval.tsv", zip, cell_line=config['samples']['tumor'], platform=config['samples']['platform']), assembly=['chm13', 'grch38'], cutoff=[2,3,4,5,10])
 
 single_eval_performance = expand(expand("output/minisv_eval_single{{pair}}/single_{cell_line}_{platform}_{{assembly}}_count{{cutoff}}_eval.tsv", zip, cell_line=config['samples']['tumor'], platform=config['samples']['platform']), pair=['T', 'BL'], assembly=['chm13', 'grch38'], cutoff=[2,3,4,5,10])
 
 single_eval_performance_20kb = expand(expand("output/minisv_eval_single{{pair}}/single_{cell_line}_{platform}_{{assembly}}_count{{cutoff}}_eval_len20kb.tsv", zip, cell_line=config['samples']['tumor'], platform=config['samples']['platform']), pair=['T', 'BL'], assembly=['chm13', 'grch38'], cutoff=[2,3,4,5,10])
+single_eval_performance_20kb_concensus = expand(expand("output/minisv_eval_single{{pair}}/single_{cell_line}_{platform}_{{assembly}}_count{{cutoff}}_eval_len20kb_concensus.tsv", zip, cell_line=config['samples']['tumor'], platform=config['samples']['platform']), pair=['T', 'BL'], assembly=['chm13', 'grch38'], cutoff=[2,3,4,5,10])
+
+single_eval_performance_100kb = expand(expand("output/minisv_eval_single{{pair}}/single_{cell_line}_{platform}_{{assembly}}_count{{cutoff}}_eval_len100kb.tsv", zip, cell_line=config['samples']['tumor'], platform=config['samples']['platform']), pair=['T', 'BL'], assembly=['chm13', 'grch38'], cutoff=[2,3,4,5,10])
+single_eval_performance_100kb_concensus = expand(expand("output/minisv_eval_single{{pair}}/single_{cell_line}_{platform}_{{assembly}}_count{{cutoff}}_eval_len100kb_concensus.tsv", zip, cell_line=config['samples']['tumor'], platform=config['samples']['platform']), pair=['T', 'BL'], assembly=['chm13', 'grch38'], cutoff=[2,3,4,5,10])
 
 minisv_eval_mixed_files = expand(expand("output/minisv_eval_tnpair/{cell_line}_{platform}_{{assembly}}_count{{cutoff}}_eval_mixed.tsv", zip, cell_line=config['samples']['tumor'], platform=config['samples']['platform']), assembly=['chm13', 'grch38'], cutoff=[2,3,4,5,10])
 
@@ -162,7 +173,8 @@ rule all:
         sniffles_mosaic_files, sniffles_mosaic_tbi_files,
         sniffles_multi_files, sniffles_multi_vcf_files,
         sniffles_mo_multi_files, sniffles_mo_multi_vcf_files,
-        savana_outdir, clair3_outdir, 
+        savana_outdir, savana12_outdir, savana_vcf, savana12_vcf,
+        clair3_outdir, 
         severus_outdir, severus_single_outdir,
         nanomonsv_files,
         svision_outdir, svision_single_vcfs,
@@ -178,7 +190,7 @@ rule all:
         #single_eval_length, mixed_eval_length,  pair_eval_single_length,
         minisv_eval_files, minisv_eval_mixed_files, # tn_eval_length, 
         minisv_eval_concensus,
-        single_eval_performance, single_eval_performance_20kb,
+        single_eval_performance, single_eval_performance_20kb, single_eval_performance_20kb_concensus, single_eval_performance_100kb, single_eval_performance_100kb_concensus,
         "output/minisv_view_single/single_sample_allsvtools_svlength.tsv", 
         hifiasm_mixed_fastq, #hifiasm_mixed_asm1, hifiasm_mixed_asm2
     default_target: True 

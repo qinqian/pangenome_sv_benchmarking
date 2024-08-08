@@ -127,6 +127,73 @@ for cutoff in [2,3,4,5,10]:
                 minisv.js eval -l 20e3 -c {params.c} -b ~/data/pangenome_sv_benchmarking/minisv/data/hs38.reg.bed {input.truth} {input.single} {input.severus}/all_SVs/severus_all.vcf {input.svision} {input.sniffles_single} {input.sniffles_single_mosaic} > {output.eval}
             fi
             """
+
+    rule:
+        name: f"minisv_eval_single_mode{cutoff}_20kb_concensus"
+        input:
+            single = input_single_minisv_hg38,
+            single2 = input_single_minisv_t2t,
+            severus = "output/severus_{platform}/{cell_line}_{pair}_{assembly}",
+            svision = "output/svision_single/{cell_line}_{platform}_{pair}/{assembly}/{cell_line}.svision_pro_v1.8.s5.vcf",
+            sniffles_single_mosaic = "output/sniffles_mosaic/{cell_line}_{platform}/{pair}/{assembly}.vcf.gz",
+            sniffles_single = "output/sniffles/{cell_line}_{platform}/{pair}/{assembly}.vcf.gz",
+        output:
+            eval = f"output/minisv_eval_single{{pair}}/single_{{cell_line}}_{{platform}}_{{assembly}}_count{cutoff}_eval_len20kb_concensus.tsv"
+        params:
+            c = cutoff
+        shell: 
+            """
+            if [[ {wildcards.assembly} == "chm13" ]]; then
+                minisv.js eval -M -l 20e3 -c {params.c} -b ~/data/pangenome_sv_benchmarking/minisv/data/chm13v2.reg.bed {input.single2} {input.severus}/all_SVs/severus_all.vcf {input.svision} {input.sniffles_single} {input.sniffles_single_mosaic} > {output.eval}
+            else
+                minisv.js eval -M -l 20e3 -c {params.c} -b ~/data/pangenome_sv_benchmarking/minisv/data/hs38.reg.bed {input.single} {input.severus}/all_SVs/severus_all.vcf {input.svision} {input.sniffles_single} {input.sniffles_single_mosaic} > {output.eval}
+            fi
+            """
+
+    rule:
+        name: f"minisv_eval_single_mode{cutoff}_100kb"
+        input:
+            single = input_single_minisv_hg38,
+            single2 = input_single_minisv_t2t,
+            severus = "output/severus_{platform}/{cell_line}_{pair}_{assembly}",
+            svision = "output/svision_single/{cell_line}_{platform}_{pair}/{assembly}/{cell_line}.svision_pro_v1.8.s5.vcf",
+            sniffles_single_mosaic = "output/sniffles_mosaic/{cell_line}_{platform}/{pair}/{assembly}.vcf.gz",
+            sniffles_single = "output/sniffles/{cell_line}_{platform}/{pair}/{assembly}.vcf.gz",
+            truth = input_truth,
+        output:
+            eval = f"output/minisv_eval_single{{pair}}/single_{{cell_line}}_{{platform}}_{{assembly}}_count{cutoff}_eval_len100kb.tsv"
+        params:
+            c = cutoff
+        shell: 
+            """
+            if [[ {wildcards.assembly} == "chm13" ]]; then
+                minisv.js eval -l 100e3 -c {params.c} -b ~/data/pangenome_sv_benchmarking/minisv/data/chm13v2.reg.bed {input.truth} {input.single2} {input.severus}/all_SVs/severus_all.vcf {input.svision} {input.sniffles_single} {input.sniffles_single_mosaic} > {output.eval}
+            else
+                minisv.js eval -l 100e3 -c {params.c} -b ~/data/pangenome_sv_benchmarking/minisv/data/hs38.reg.bed {input.truth} {input.single} {input.severus}/all_SVs/severus_all.vcf {input.svision} {input.sniffles_single} {input.sniffles_single_mosaic} > {output.eval}
+            fi
+            """
+
+    rule:
+        name: f"minisv_eval_single_mode{cutoff}_100kb_concensus"
+        input:
+            single = input_single_minisv_hg38,
+            single2 = input_single_minisv_t2t,
+            severus = "output/severus_{platform}/{cell_line}_{pair}_{assembly}",
+            svision = "output/svision_single/{cell_line}_{platform}_{pair}/{assembly}/{cell_line}.svision_pro_v1.8.s5.vcf",
+            sniffles_single_mosaic = "output/sniffles_mosaic/{cell_line}_{platform}/{pair}/{assembly}.vcf.gz",
+            sniffles_single = "output/sniffles/{cell_line}_{platform}/{pair}/{assembly}.vcf.gz",
+        output:
+            eval = f"output/minisv_eval_single{{pair}}/single_{{cell_line}}_{{platform}}_{{assembly}}_count{cutoff}_eval_len100kb_concensus.tsv"
+        params:
+            c = cutoff
+        shell: 
+            """
+            if [[ {wildcards.assembly} == "chm13" ]]; then
+                minisv.js eval -M -l 100e3 -c {params.c} -b ~/data/pangenome_sv_benchmarking/minisv/data/chm13v2.reg.bed {input.single2} {input.severus}/all_SVs/severus_all.vcf {input.svision} {input.sniffles_single} {input.sniffles_single_mosaic} > {output.eval}
+            else
+                minisv.js eval -M -l 100e3 -c {params.c} -b ~/data/pangenome_sv_benchmarking/minisv/data/hs38.reg.bed {input.single} {input.severus}/all_SVs/severus_all.vcf {input.svision} {input.sniffles_single} {input.sniffles_single_mosaic} > {output.eval}
+            fi
+            """
     
     rule:
         name: f"minisv_mosaic_mixed_count{cutoff}"

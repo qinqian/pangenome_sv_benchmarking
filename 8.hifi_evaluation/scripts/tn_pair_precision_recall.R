@@ -7,8 +7,12 @@ library(patchwork)
 custom_colors <- c(
   "minisvl+tg" = rgb(249, 134, 130, maxColorValue = 255),
   "minisvl+tgs" = rgb(187, 142, 33, maxColorValue = 255),
+  "msv:tgs" = rgb(187, 142, 33, maxColorValue = 255),
   "minisvl+gs" = rgb(187, 142, 33, maxColorValue = 255),
+  "msv:gs" = rgb(187, 142, 33, maxColorValue = 255),
   "minisvl+g" = rgb(249, 134, 130, maxColorValue = 255),
+  "msv:g" = rgb(249, 134, 130, maxColorValue = 255),
+  "msv:tg" = rgb(249, 134, 130, maxColorValue = 255),
   "nanomonsv" = rgb(147, 203, 118, maxColorValue = 255),
   "savana" = rgb(22, 183, 139, maxColorValue = 255),
   "severus" = rgb(16, 174, 228, maxColorValue = 255),
@@ -17,7 +21,7 @@ custom_colors <- c(
 )
 
 get_theme <- function(size=7, angle=0) {
-    defined_theme = theme_clean(base_size=size) + theme(legend.title=element_text(size=size), strip.text=element_text(size=size), legend.text=element_text(size=size), axis.title.x=element_text(size=size), axis.title.y=element_text(size=size), axis.text.y=element_text(size=size), axis.text.x=element_text(size=size, angle=angle, hjust = 1, vjust=1.05)) #, legend.position="bottom", legend.box = "horizontal") 
+    defined_theme = theme_bw(base_size=size) + theme(legend.title=element_text(size=size), strip.text=element_text(size=size), legend.text=element_text(size=size), axis.title.x=element_text(size=size), axis.title.y=element_text(size=size), axis.text.y=element_text(size=size), axis.text.x=element_text(size=size, angle=angle, hjust = 1, vjust=1.05)) #, legend.position="bottom", legend.box = "horizontal") 
     defined_theme
 }
 
@@ -26,7 +30,6 @@ load_metrics <- function(data_path) {
     df_list = list()
     for (path in unlist(data_path)) {
         res = read_tsv(path, col_names = FALSE)
-        print(res)
         # sensitivity
         sensitivity = res %>% select(X2) %>% pull()
         # precision
@@ -38,7 +41,6 @@ load_metrics <- function(data_path) {
         tools = res[, ncol(res)] %>% pull()
         metrics = data.frame(sensitivity=sensitivity[-1], specificity=specificity[-1], f1=2*specificity[-1]*sensitivity[-1]/(sensitivity[-1]+specificity[-1]),
                              tool=tools[-1], count=as.numeric(count), path=path)
-        print(metrics)
         df_list[[path]] = metrics
     }
     metrics = do.call(rbind, df_list)
@@ -71,10 +73,10 @@ generate_grid <- function() {
 
 plot_prec_recall <- function(grid, metrics) {
     p = ggplot() +
-        geom_contour(data=grid, aes(x = Precision, y = Recall, z = F1), linetype="dashed", linewidth=0.45, color='gray', bins = 10) + 
-        geom_point(data=metrics, aes(x=sensitivity, y=specificity, colour = factor(tool), size=count), alpha=0.5) + scale_size(range = c(1, 4)) + xlim(0, 1) + ylim(0, 1) + ylab('Precision') + xlab("Recall") +  
+        #geom_contour(data=grid, aes(x = Precision, y = Recall, z = F1), linetype="dashed", linewidth=0.45, color='gray', bins = 10) + 
+        geom_contour(data=grid, aes(x = Recall, y = Precision, z = F1), linetype="dashed", linewidth=0.45, color='gray', bins = 10) + 
+        geom_point(data=metrics, aes(x=sensitivity, y=specificity, colour = factor(tool), size=count), alpha=0.5) + ylab('Precision') + xlab("Recall") + scale_size_continuous(name = "Count", breaks = c(3, 4, 5, 10), range = c(1, 5)) +  #scale_size(range = c(1, 4)) + + xlim(0, 1) + ylim(0, 1) 
         geom_path(data=metrics[order(metrics$count),], aes(x=sensitivity, y=specificity, colour = factor(tool))) + 
-        #geom_line(data=metrics, aes(x=sensitivity, y=specificity, colour = factor(tool))) + 
         get_theme()
     p
 }
@@ -88,6 +90,7 @@ plot_f1 <- function(metrics) {
 do_bar_chart <- function(input, out_path, threads, myparam) {
     data_path = input[['colo829_hifi']]
     data_path_mixed = input[['colo829_hifi_mosaic']]
+    data_path_mixed_100kb = input[['colo829_hifi_mosaic_100kb']]
     data_path_ont = input[['colo829_ont']]
 
     metrics = load_metrics(data_path)
@@ -105,35 +108,58 @@ do_bar_chart <- function(input, out_path, threads, myparam) {
     #metrics_chm13.mixed = metrics.mixed %>% filter(genome == "chm13" & count >= 4)
     write_tsv(metrics.mixed, out_path[['mixed_table']])
 
+    print(data_path_mixed_100kb)
+    plot_100kb = F
+    if (length(unlist(data_path_mixed_100kb)) > 0) {
+        plot_100kb = T
+        metrics.mixed_100kb = load_metrics(data_path_mixed_100kb)
+        metrics.hg38_mixed_100kb = metrics.mixed_100kb %>% filter(genome == 'hg38' & count >= 2)
+        write_tsv(metrics.hg38_mixed_100kb, out_path[['mixed_table_100kb']])
+    }
+
     # remove minisvl+tg, minisvl+ts
     metrics_hg38 = metrics_hg38 %>% filter(!(tool %in% c('minisvl+ts')))
     metrics_chm13 = metrics_chm13 %>% filter(!(tool %in% c('minisvl+ts')))
 
     metrics_hg38.ont = metrics_hg38.ont %>% filter(!(tool %in% c('minisvl+ts', 'minisvl+x', 'minisvl+g', 'minisvg+x', 'minisvl+t')))
     metrics_hg38.ont$tool = gsub("minisvl\\+t\\+g\\+s", "minisvl\\+tgs", metrics_hg38.ont$tool)
-    print(metrics_hg38.mixed$tool)
+
     metrics_hg38.mixed$tool = gsub("minisvl\\+t\\+g\\+s", "minisvl\\+tgs", gsub("_mosaic", "", gsub("_mosaic ", "", metrics_hg38.mixed$tool)))
     metrics_hg38.mixed$tool = gsub("minisvl\\+t\\+g", "minisvl\\+tg", metrics_hg38.mixed$tool)
 
     metrics_chm13.ont = metrics_chm13.ont %>% filter(!(tool %in% c('minisvl+ts', 'minisvl+x', 'minisvg+x')))
     metrics_chm13.ont$tool = gsub("minisvl\\+t\\+g\\+s", "minisvl\\+gs", metrics_chm13.ont$tool)
-
-    #ggplot(metrics, aes(x=sensitivity, y=specificity, shape=factor(count))) + geom_point(aes(colour = factor(tool)), size = 5) + facet_wrap(~genome, scales='free')+xlim(0, 1) + ylim(0, 1) + ylab('Precision') + xlab("Recall") + defined_theme
-    #ggsave(out_path[['plot']], width=15, height=5.5)
+    metrics_chm13$tool = gsub("minisvl\\+", "msv:", metrics_chm13$tool)
+    metrics_chm13.ont$tool = gsub("minisvl\\+", "msv:", metrics_chm13.ont$tool)
+    metrics_hg38$tool = gsub("minisvl\\+", "msv:", metrics_hg38$tool)
+    metrics_hg38.ont$tool = gsub("minisvl\\+", "msv:", metrics_hg38.ont$tool)
+    metrics_hg38.mixed$tool = gsub("minisvl\\+", "msv:", metrics_hg38.mixed$tool)
+    
+    if (plot_100kb) {
+        metrics.hg38_mixed_100kb$tool = gsub("minisvl\\+t\\+g\\+s", "msv:tgs", gsub("_mosaic", "", metrics.hg38_mixed_100kb$tool))
+        metrics.hg38_mixed_100kb$tool = gsub("minisvl\\+t\\+g", "msv:tg", metrics.hg38_mixed_100kb$tool)
+    }
 
     grid <- generate_grid()
     pdf(out_path[['mixedhg38plot']], width=5.5, height=5.6)
-    mixed_hg38_p = plot_prec_recall(grid, metrics_hg38.mixed) + ggtitle("COLO829 HiFi tumor-normal 1:4 mixed reads")
+    mixed_hg38_p = plot_prec_recall(grid, metrics_hg38.mixed) + ggtitle("COLO829 HiFi tumor-normal 1:4 mixed reads")+scale_colour_manual(values = custom_colors)
     print(mixed_hg38_p)
     dev.off()
 
     # Plot contours of constant F1 score
-    pdf(out_path[['hg38plot']], width=13.5, height=4.6)
-    hifi.p1 = plot_prec_recall(grid, metrics_hg38) + ggtitle("COLO829 HiFi tumor-normal pair")
-    ont.p2 = plot_prec_recall(grid, metrics_hg38.ont) + ggtitle("COLO829 ONT tumor-normal pair")
-    print((hifi.p1 + ont.p2 + mixed_hg38_p) + plot_layout(guides = "collect") +scale_colour_manual(values = custom_colors))
+    if (plot_100kb) {
+        pdf(out_path[['hg38plot']], width=8.5, height=7.6)
+        hifi.p1 = plot_prec_recall(grid, metrics_hg38) + ggtitle("COLO829 HiFi tumor-normal pair")
+        ont.p2 = plot_prec_recall(grid, metrics_hg38.ont) + ggtitle("COLO829 ONT tumor-normal pair")
+        mixed_hg38_p_100kb = plot_prec_recall(grid, metrics.hg38_mixed_100kb) + ggtitle("COLO829 HiFi tumor-normal 1:4 mixed reads >100kb SV")
+        print((hifi.p1 + ont.p2 +scale_colour_manual(values = custom_colors)) / (mixed_hg38_p + mixed_hg38_p_100kb+scale_colour_manual(values = custom_colors)) + plot_layout(guides = "collect"))
+    } else {
+        pdf(out_path[['hg38plot']], width=13.5, height=4.6)
+        hifi.p1 = plot_prec_recall(grid, metrics_hg38) + ggtitle("COLO829 HiFi tumor-normal pair")
+        ont.p2 = plot_prec_recall(grid, metrics_hg38.ont) + ggtitle("COLO829 ONT tumor-normal pair")
+        print((hifi.p1 + ont.p2 + mixed_hg38_p) + plot_layout(guides = "collect") +scale_colour_manual(values = custom_colors))
+    }
     dev.off()
-
 
     plot_prec_recall(grid, metrics_hg38.ont)
     ggsave(out_path[['hg38plot_ont']], width=5.5, height=5.6)
@@ -141,8 +167,8 @@ do_bar_chart <- function(input, out_path, threads, myparam) {
     chm13_ont_p = plot_prec_recall(grid, metrics_chm13.ont)
     ggsave(out_path[['chm13plot_ont']], width=5.5, height=5.6)
 
-
     pdf(out_path[['chm13plot']], width=10.5, height=5.6)
+    print(table(metrics_chm13.ont$tool))
     p1 = plot_prec_recall(grid, metrics_chm13)
     print((p1 + chm13_ont_p) + plot_layout(guides = "collect") +scale_colour_manual(values = custom_colors))
     dev.off()
