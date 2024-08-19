@@ -13,7 +13,7 @@ custom_colors <- c(
 )
 
 
-get_theme <- function(size=7, angle=45) {
+get_theme <- function(size=12, angle=45) {
     defined_theme = theme_clean(base_size=size) + theme(legend.title=element_text(size=size), strip.text=element_text(size=size), legend.text=element_text(size=size), axis.title.x=element_text(size=size), axis.title.y=element_text(size=size), axis.text.y=element_text(size=size), axis.text.x=element_text(size=size, angle=angle, hjust = 1, vjust=1.05), legend.position="bottom", legend.box = "horizontal") 
     defined_theme
 }
@@ -100,7 +100,7 @@ clean_meta <- function(x, param) {
 }
 
 
-plot_bar <- function(x, is_germline=F, add_break=F, facet_wrap=F, size=7) {
+plot_bar <- function(x, is_germline=F, add_break=F, facet_wrap=F, size=12) {
     if (is_germline) {
         if (facet_wrap) {
             p=ggplot(x, aes(x=reorder(file, value), y=value, fill=Size)) + geom_bar(position='stack', stat='identity') + facet_wrap(~cell_line, scales='free')+ylab(expression("#germline SV")) + xlab("") + get_theme(size, 45)
@@ -198,12 +198,12 @@ do_bar_chart <- function(data_path, out_path, threads, myparam) {
 
     write_tsv(res.normal.mosaic.thresholds, file="thresholds_normal_hifi_sv_length.tsv")
     write_tsv(res.paired.mosaic.thresholds, file="thresholds_paired_hifi_sv_length.tsv")
-    pdf(out_path[['paired_mosaic_thresholds']], width=8.6, height=3)
-    p_normal = plot_bar_thresholds(res.normal.mosaic.thresholds)
+    pdf(out_path[['paired_mosaic_thresholds']], width=6.6, height=3)
+    p_normal = plot_bar_thresholds(res.normal.mosaic.thresholds) + scale_fill_manual(values = custom_colors)
     print(p_normal)
     dev.off()
-    pdf(out_path[['normal_mosaic_thresholds']], width=8.6, height=3)
-    p_normal = plot_bar_thresholds(res.paired.mosaic.thresholds)
+    pdf(out_path[['normal_mosaic_thresholds']], width=6.6, height=3)
+    p_normal = plot_bar_thresholds(res.paired.mosaic.thresholds) + scale_fill_manual(values = custom_colors)
     print(p_normal)
     dev.off()
 
@@ -252,7 +252,7 @@ do_bar_chart <- function(data_path, out_path, threads, myparam) {
     res.small.normal.germline.hg38 = res.small.germline.normal %>% filter(genome == 'hg38')
     res.small.normal.germline.chm13 = res.small.germline.normal %>% filter(genome == 'chm13')
 
-    pdf(out_path[['hg38normal']], width=9.8, height=3.4)
+    pdf(out_path[['hg38normal']], width=15, height=4.6)
     res.normal.hg38 = res.normal.hg38 %>% filter(!grepl('l\\+x$|l\\+tgs$|l\\+ts$|l\\+t$', res.normal.hg38$file))
     res.normal.hg38$file = gsub("l\\+", "msv:", res.normal.hg38$file)
 
@@ -262,22 +262,22 @@ do_bar_chart <- function(data_path, out_path, threads, myparam) {
     res.normal.germline.hg38$file = gsub("l\\+", "msv:", res.normal.germline.hg38$file)
     res.small.normal.hg38$file = gsub("l\\+", "msv:", res.small.normal.hg38$file)
 
-    p_big_germline = plot_bar(res.normal.germline.hg38, is_germline=T, size=6)
-    p_big = plot_bar(res.normal.hg38, facet_wrap=F, size=6)
-    p_small = plot_bar(res.small.normal.hg38, facet_wrap=F, size=6)
+    p_big_germline = plot_bar(res.normal.germline.hg38, is_germline=T, size=12)
+    p_big = plot_bar(res.normal.hg38, facet_wrap=F, size=12)
+    p_small = plot_bar(res.small.normal.hg38, facet_wrap=F, size=12)
     print((p_big_germline + p_big + p_small) + scale_fill_manual(values = custom_colors)) # +plot_layout(guides = "collect")
     dev.off()
 
-    pdf(out_path[['hg38normal_germline']], width=8.6, height=3.2)
+    pdf(out_path[['hg38normal_germline']], width=9.6, height=3.2)
     res.small.normal.germline.hg38$file = gsub("(HG002|HG00099|HG01192|NA18983|HG03225)\\.", "", res.small.normal.germline.hg38$file)
     res.small.normal.germline.hg38 = res.small.normal.germline.hg38 %>% filter(!grepl('l\\+x$|l\\+tgs$|l\\+ts$|l\\+t$', res.small.normal.germline.hg38$file))
     res.small.normal.germline.hg38$file = gsub("l\\+", "msv:", res.small.normal.germline.hg38$file)
-    p_big   = plot_bar(res.normal.germline.hg38, is_germline=T)
-    p_small = plot_bar(res.small.normal.germline.hg38, is_germline=T)
+    p_big   = plot_bar(res.normal.germline.hg38, is_germline=T, size=12)
+    p_small = plot_bar(res.small.normal.germline.hg38, is_germline=T, size=12)
     print((p_big + p_small) + scale_fill_manual(values = custom_colors))
     dev.off()
 
-    pdf(out_path[['chm13normal']], width=8.6, height=3.2)
+    pdf(out_path[['chm13normal']], width=9.6, height=3.2)
     res.normal.chm13 = res.normal.chm13 %>% filter(!grepl('l\\+x$|l\\+tgs$|l\\+ts$|l\\+t$', res.normal.chm13$file))
     p_big = plot_bar(res.normal.chm13)
     p_small = plot_bar(res.small.normal.chm13)

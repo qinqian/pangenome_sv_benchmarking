@@ -286,7 +286,7 @@ rule gafcall_eval_length_merge_all:
         "echo -e 'translocation\t>1M\t>100k\t>20k\tall_except_inv\tinv\tfile\tcount\tcount_file' > {output.eval_length} && cat {input.eval_length} {input.eval_length_severus} {input.eval_length_sniffles2} {input.eval_length_cutesv} >> {output.eval_length}"
 
 
-# Figure 1
+# Figure 2 
 rule plot_normal:
     input:
         eval_length = "output/gafcall_eval/normal_v2/all_merged_eval.len.tsv"
@@ -298,11 +298,11 @@ rule plot_normal:
         normal = "output/gafcall_eval/normal_v2/normal_length_hifi.pdf",
         hg38paired = "output/gafcall_eval/normal_v2/hg38_paired_length_hifi.pdf",
         chm13paired = "output/gafcall_eval/normal_v2/chm13_paired_length_hifi.pdf",
-        hg38normal = "output/gafcall_eval/normal_v2/hg38_normal_length_hifi.pdf",
+        hg38normal = "output/gafcall_eval/normal_v2/Figure2_hg38_normal_length_hifi.pdf",
         chm13normal = "output/gafcall_eval/normal_v2/chm13_normal_length_hifi.pdf",
 
         normal_germline = "output/gafcall_eval/normal_v2/germline_normal_length_hifi.pdf",
-        hg38normal_germline = "output/gafcall_eval/normal_v2/germline_hg38_normal_length_hifi.pdf",
+        hg38normal_germline = "output/gafcall_eval/normal_v2/Figure2_germline_hg38_normal_length_hifi.pdf",
   
         paired_mosaic_thresholds = "output/gafcall_eval/normal_v2/mosaic_thresholds_hg38_normal_length_hifi.pdf",
         normal_mosaic_thresholds = "output/gafcall_eval/normal_v2/normal_thresholds_hg38_normal_length_hifi.pdf"
@@ -351,7 +351,7 @@ rule colo829_hifi_ont_evaluation_local:
         ont_table="output/local/colo829_ont_clean.tsv",
         mixed_table="output/local/colo829_mixed_clean.tsv",
         mixed_table_100kb="output/local/colo829_mixed_clean100kb.tsv",
-        hg38plot="output/local/hg38_colo829_hifi_clean.pdf",
+        hg38plot="output/local/Figure3_hg38_colo829_hifi_clean.pdf",
         chm13plot="output/local/chm13_colo829_hifi_clean.pdf",
         hg38plot_ont="output/local/hg38_colo829_ont_clean.pdf",
         chm13plot_ont="output/local/chm13_colo829_ont_clean.pdf",
@@ -370,9 +370,9 @@ use rule * from tnpair_plot_concensus_workflow as r_tnpair_plot_concensus_workfl
 
 
 # Figure 5: tumor-only mode
+# Now it changes to be Supplementary Figure 
 rule noncolo829_hifi_tumor_only_evaluation:
     input:
-        # output/minisv_eval_single{{pair}}/single_{{cell_line}}_{{platform}}_{{assembly}}_count{cutoff}_eval_len20kb.tsv
         tumor_only_hifi = expand("../1a.alignment_sv_tools/output/minisv_eval_singleT/single_{cell_line}_hifi1_{assembly}_count{cutoff}_eval_len100kb.tsv", cell_line=['HCC1395', 'HCC1937', 'HCC1954', 'NCI1437', 'NCI2009'], cutoff=[2,3,4,5,10], assembly=['chm13', 'grch38']),
     conda: "plot"
     output:
@@ -388,7 +388,7 @@ minisv_eval_singlemode_files_ont_100kb = expand(expand("output/minisv_eval_singl
 
 print(minisv_eval_singlemode_files_hifi_100kb)
 
-# Figure 5: tumor-only mode local evaluation using somatic concensus from severus, savana, nanomonsv
+# Figure 5: tumor-only mode local evaluation using somatic concensus from severus, savana, nanomonsv or msv, savana, nanomonsv
 rule noncolo829_hifi_tumor_only_evaluation_somatic_SV:
     input:
         # f"output/minisv_eval_singleT/{{folder}}_single_{{cell_line}}_{{platform}}_{{assembly}}_count{cutoff}_eval_ont_100kb.tsv"
@@ -417,13 +417,13 @@ rule all:
         rules.r_tnpair_plot_concensus_workflow_all.input,
 
         "hg38_colo829_hifi_clean.pdf", 
-        "output/local/hg38_colo829_hifi_clean.pdf",
+        "output/local/Figure3_hg38_colo829_hifi_clean.pdf",
         "output/local/tumor_only_hg38_noncolo829_hifi_clean.pdf",
 
         "output/gafcall_eval/normal_v2/hg38_paired_length_hifi.pdf",
         "output/gafcall_eval/normal_v2/chm13_paired_length_hifi.pdf",
-        "output/gafcall_eval/normal_v2/hg38_normal_length_hifi.pdf",
-        "output/gafcall_eval/normal_v2/germline_normal_length_hifi.pdf", "output/gafcall_eval/normal_v2/germline_hg38_normal_length_hifi.pdf", "output/gafcall_eval/normal_v2/mosaic_thresholds_hg38_normal_length_hifi.pdf", "output/gafcall_eval/normal_v2/normal_thresholds_hg38_normal_length_hifi.pdf",
+        "output/gafcall_eval/normal_v2/Figure2_hg38_normal_length_hifi.pdf",
+        "output/gafcall_eval/normal_v2/germline_normal_length_hifi.pdf", "output/gafcall_eval/normal_v2/Figure2_germline_hg38_normal_length_hifi.pdf", "output/gafcall_eval/normal_v2/mosaic_thresholds_hg38_normal_length_hifi.pdf", "output/gafcall_eval/normal_v2/normal_thresholds_hg38_normal_length_hifi.pdf",
         "output/gafcall_eval/normal_v2/severus_all_merged_eval.len.tsv",
         "output/gafcall_eval/normal_v2/snf_all_merged_eval.len.tsv",
         "output/gafcall_eval/normal_v2/cutesv_all_merged_eval.len.tsv",

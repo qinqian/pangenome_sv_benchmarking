@@ -5,7 +5,23 @@ library(tidytext)
 library(ggthemes)
 library(patchwork)
 
-get_theme <- function(size=7, angle=0) {
+custom_colors <- c(
+  "minisvl+tg" = rgb(249, 134, 130, maxColorValue = 255),
+  "minisvl+tgs" = rgb(187, 142, 33, maxColorValue = 255),
+  "msv:tgs" = rgb(187, 142, 33, maxColorValue = 255),
+  "minisvl+gs" = rgb(187, 142, 33, maxColorValue = 255),
+  "msv:gs" = rgb(187, 142, 33, maxColorValue = 255),
+  "minisvl+g" = rgb(249, 134, 130, maxColorValue = 255),
+  "msv:g" = rgb(249, 134, 130, maxColorValue = 255),
+  "msv:tg" = rgb(187, 142, 33, maxColorValue = 255),
+  "nanomonsv" = rgb(147, 203, 118, maxColorValue = 255),
+  "savana" = rgb(22, 183, 139, maxColorValue = 255),
+  "severus" = rgb(16, 174, 228, maxColorValue = 255),
+  "sniffles" = rgb(154, 130, 251, maxColorValue = 255),
+  "svision" = rgb(248, 89, 206, maxColorValue = 255)
+)
+
+get_theme <- function(size=12, angle=0) {
     defined_theme = theme_bw(base_size=size) + theme(legend.title=element_text(size=size), strip.text=element_text(size=size), legend.text=element_text(size=size), axis.title.x=element_text(size=size), axis.title.y=element_text(size=size), axis.text.y=element_text(size=size), axis.text.x=element_text(size=size, angle=angle, hjust = 1, vjust=1.05)) #, legend.position="bottom", legend.box = "horizontal") 
     defined_theme
 }
@@ -21,13 +37,21 @@ generate_grid <- function() {
     grid
 }
 
-plot_prec_recall <- function(grid, metrics) {
-    p = ggplot() +
-        geom_contour(data=grid, aes(x = precision, y = sensitivity, z = F1), linetype="dashed", linewidth=0.45, color='gray', bins = 10) + 
-        geom_point(data=metrics, aes(x=sensitivity, y=precision, colour = factor(tool), size=count), alpha=0.5) + scale_size_continuous(name = "Count", breaks = c(3, 4, 5, 10), range = c(1, 5)) + xlim(0, 1) + ylim(0, 1) + ylab('Precision') + xlab("Recall") +  
-        geom_path(data=metrics[order(metrics$count),], aes(x=sensitivity, y=precision, colour = factor(tool))) + 
-        #geom_line(data=metrics, aes(x=sensitivity, y=precision, colour = factor(tool))) + 
-        facet_wrap(cell_line~genome, nrow=5, ncol=2, scales = "free") + get_theme()
+plot_prec_recall <- function(grid, metrics, ncol=2) {
+    if (ncol == 2) {
+        p = ggplot() +
+            geom_contour(data=grid, aes(x = precision, y = sensitivity, z = F1), linetype="dashed", linewidth=0.45, color='gray', bins = 10) + 
+            geom_point(data=metrics, aes(x=sensitivity, y=precision, colour = factor(tool), size=count), alpha=0.5) + scale_size_continuous(name = "Count", breaks = c(3, 4, 5, 10), range = c(1, 5)) + xlim(0, 1) + ylim(0, 1) + ylab('Precision') + xlab("Recall") +  
+            geom_path(data=metrics[order(metrics$count),], aes(x=sensitivity, y=precision, colour = factor(tool))) + 
+            #geom_line(data=metrics, aes(x=sensitivity, y=precision, colour = factor(tool))) + 
+            facet_wrap(cell_line~genome, nrow=5, ncol=ncol, scales = "free") + get_theme()
+    } else {
+        p = ggplot() +
+            geom_contour(data=grid, aes(x = precision, y = sensitivity, z = F1), linetype="dashed", linewidth=0.45, color='gray', bins = 10) + 
+            geom_point(data=metrics, aes(x=sensitivity, y=precision, colour = factor(tool), size=count), alpha=0.5) + scale_size_continuous(name = "Count", breaks = c(3, 4, 5, 10), range = c(1, 5)) + xlim(0, 1) + ylim(0, 1) + ylab('Precision') + xlab("Recall") +  
+            geom_path(data=metrics[order(metrics$count),], aes(x=sensitivity, y=precision, colour = factor(tool))) + 
+            facet_wrap(~cell_line, nrow=5, ncol=ncol, scales = "free") + get_theme()
+    }
     p
     #ggplot(metrics, aes(x=sensitivity, y=precision, shape=factor(count))) + geom_point(aes(colour = factor(tool)), size = 5) + facet_grid(cell_line~genome, scales='free')+theme_bw() + xlim(0, 1) + ylim(0, 1) + ylab('Precision') + xlab("Recall") + get_theme()
 }
@@ -76,7 +100,11 @@ parse_list_metrics_files <- function(data_path) {
 
     metrics$tool = gsub('minisv_pairl_l\\+t\\+g\\+s', 'minisvl\\+tgs', metrics$tool)
     metrics$tool = ifelse(metrics$genome == 'chm13' & (grepl("l\\+gs", metrics$tool)), gsub("l\\+gs", "l\\+tgs", metrics$tool), metrics$tool)
+    metrics$tool = ifelse(metrics$genome == 'chm13' & (grepl("l\\+\\t\\+g", metrics$tool)), gsub("l\\+\\t\\+g", "l\\+tg", metrics$tool), metrics$tool)
+
     metrics$tool = gsub('minisvl\\+tgs', 'msv:tgs', metrics$tool)
+    metrics$tool = gsub('minisv_pairl\\+tg', 'msv:tg', metrics$tool)
+    metrics$tool = gsub('severus\\/', 'severus', metrics$tool)
 
     metrics = metrics %>% filter(!(tool %in% c("minisvl+g", "minisvl+tg", "minisvl+ts")))
     print(table(metrics$tool))
@@ -92,14 +120,16 @@ do_bar_chart <- function(data_path, out_path, threads, myparam) {
     write_tsv(metrics_hifi, out_path[['table1_hifi']])
 
     grid = generate_grid()
-    hifi.p = plot_prec_recall(grid, metrics_hifi)
+    hifi.p = plot_prec_recall(grid, metrics_hifi, ncol=2)
     ggsave(out_path[['plot1_hifi']], width=9, height=13.5)
-
-    ont.p = plot_prec_recall(grid, metrics)
+    ont.p = plot_prec_recall(grid, metrics, ncol=2)
     ggsave(out_path[['plot1']], width=9, height=13.5)
 
-    pdf(out_path[['joint_plot']], width=18, height=13.5)
-    print(hifi.p + ont.p)
+    hifi.p.hg38 = plot_prec_recall(grid, metrics_hifi %>% filter(genome=='hg38'), ncol=1) + scale_colour_manual(values = custom_colors)
+    ont.p.hg38  = plot_prec_recall(grid, metrics %>% filter(genome == 'hg38'), ncol=1) + scale_colour_manual(values = custom_colors)
+
+    pdf(out_path[['joint_plot']], width=9.5, height=14.5)
+    print(hifi.p.hg38 + ont.p.hg38 + plot_layout(guides = "collect"))
     dev.off()
 
     metrics = metrics %>% group_by(tool, cell_line, genome) %>% slice_max(order_by=f1, n=1, with_ties=F)

@@ -7,18 +7,18 @@ rule savana12:
         phased_vcf = expand("output/clair3/{{cell_line}}_{{platform}}/{pair}/{{assembly}}", pair=["T", "BL"])
     output:
         outdir = directory("output/savana12/{cell_line}_{platform}/{assembly}"),
-        vcf = "output/savana12/{cell_line}_{platform}/{assembly}/{assembly}_T_tag.classified.somatic.vcf"
+        #vcf = "output/savana12/{cell_line}_{platform}/{assembly}/{assembly}.classified.somatic.vcf"
     conda: "savana1.2"
-    threads: 16
+    threads: 24
     resources:
         mem_mb=64000,
+        runtime="32h",
         tmpdir="local_tmp/"
     shell:
-        #NOTE: turn off the copy number 
         """
         if [[ {input.crams[0]} =~ "hifi" ]]; then
-            savana --threads {threads} --tumour {input.crams[0]} --normal {input.crams[1]} --outdir {output.outdir} --ref {wildcards.assembly}.fa --pb --cn_binsize 10 --phased_vcf {input.phased_vcf[1]}/phased_merge_output.vcf.gz --contigs savana/example/contigs.chr.hg38.txt
+            savana --threads {threads} --tumour {input.crams[0]} --normal {input.crams[1]} --outdir {output.outdir} --ref {wildcards.assembly}.fa --pb --phased_vcf {input.phased_vcf[1]}/phased_merge_output.vcf.gz --cn_binsize 10 --contigs ~/data/pangenome_sv_benchmarking/1a.alignment_sv_tools/savana/example/contigs.chr.hg38.txt
         else
-            savana --threads {threads} --tumour {input.crams[0]} --normal {input.crams[1]} --outdir {output.outdir} --ref {wildcards.assembly}.fa --ont --cn_binsize 10 --phased_vcf {input.phased_vcf[1]}/phased_merge_output.vcf.gz --contigs savana/example/contigs.chr.hg38.txt
+            savana --threads {threads} --tumour {input.crams[0]} --normal {input.crams[1]} --outdir {output.outdir} --ref {wildcards.assembly}.fa --ont --phased_vcf {input.phased_vcf[1]}/phased_merge_output.vcf.gz --cn_binsize 10 --contigs ~/data/pangenome_sv_benchmarking/1a.alignment_sv_tools/savana/example/contigs.chr.hg38.txt
         fi
         """

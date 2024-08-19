@@ -27,7 +27,7 @@ savana_outdir  = expand(expand("output/savana/{cell_line}_{platform}/{{assembly}
 savana_vcf  = expand(expand("output/savana/{cell_line}_{platform}/{{assembly}}/{{assembly}}.classified.somatic.vcf", zip, cell_line=config['samples']['tumor'], platform=config['samples']['platform']), assembly=config['assembly'])
 
 savana12_outdir  = expand(expand("output/savana12/{cell_line}_{platform}/{{assembly}}", zip, cell_line=config['samples']['tumor'], platform=config['samples']['platform']), assembly=config['assembly'])
-savana12_vcf  = expand(expand("output/savana12/{cell_line}_{platform}/{{assembly}}/{{assembly}}.classified.somatic.vcf", zip, cell_line=config['samples']['tumor'], platform=config['samples']['platform']), assembly=config['assembly'])
+savana12_vcf  = expand(expand("output/savana12/{cell_line}_{platform}/{{assembly}}/{{assembly}}_T_tag.classified.somatic.vcf", zip, cell_line=config['samples']['tumor'], platform=config['samples']['platform']), assembly=config['assembly'])
 
 severus_outdir  = expand(expand("output/severus/{cell_line}_{platform}/{{assembly}}", zip, cell_line=config['samples']['tumor'], platform=config['samples']['platform']), assembly=config['assembly'])
 severus_single_outdir  = expand(expand("output/severus_{platform}/{cell_line}_{{pair}}_{{assembly}}", zip, cell_line=config['samples']['tumor'], platform=config['samples']['platform']), pair=["T", "BL"], assembly=config['assembly'])

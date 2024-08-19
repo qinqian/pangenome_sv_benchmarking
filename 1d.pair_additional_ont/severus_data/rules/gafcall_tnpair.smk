@@ -1,19 +1,3 @@
-rule minisv_tnpair_tgs_extract_tumor_chm13:
-    threads: 1
-    resources:
-        mem_mb=24000, 
-        run_time="8h"
-    input:
-        paf = expand("output/align/{{cell_line}}_{pair}_{{platform}}_{assembly}l.paf.gz", assembly=['grch38', 'chm13'], pair=['T', 'BL']),
-        gaf = expand("output/align/{{cell_line}}_{pair}_{{platform}}_{assembly}g.paf.gz", assembly=['grch38', 'chm13'], pair=['T', 'BL']),
-        asm = expand("../severus_data_self/output/align/{{cell_line}}_{pair}_{{platform}}_self.paf.gz", pair=['T', 'BL'])
-    output:
-        t_rsv = "output/minisv_pair/{cell_line}_{platform}_tumor_chm13l+tgs.rsv"
-    shell:
-        """
-        minisv.js e -c "k8 --max-old-space-size={resources.mem_mb} `which minisv.js`" -n TUMOR -0b ~/data/pangenome_sv_benchmarking/minisv/data/hg38.cen-mask.bed {input.paf[2]} {input.gaf[2]} {input.asm[0]} | bash > {output.t_rsv}
-        """
-
 rule minisv_tnpair_tgs_extract_normal_chm13:
     threads: 1
     resources:
@@ -29,6 +13,57 @@ rule minisv_tnpair_tgs_extract_normal_chm13:
         """
         minisv.js extract -n NORMAL {input.paf[3]} | gzip - > {output.n_rsv}
         """
+
+rule minisv_tnpair_tg_extract_tumor_chm13:
+    threads: 1
+    resources:
+        mem_mb=24000, 
+        run_time="8h"
+    input:
+        paf = expand("output/align/{{cell_line}}_{pair}_{{platform}}_{assembly}l.paf.gz", assembly=['grch38', 'chm13'], pair=['T', 'BL']),
+        gaf = expand("output/align/{{cell_line}}_{pair}_{{platform}}_{assembly}g.paf.gz", assembly=['grch38', 'chm13'], pair=['T', 'BL']),
+        asm = expand("../severus_data_self/output/align/{{cell_line}}_{pair}_{{platform}}_self.paf.gz", pair=['T', 'BL'])
+    output:
+        t_rsv = "output/minisv_pair/{cell_line}_{platform}_tumor_chm13l+tg.rsv"
+    shell:
+        """
+        minisv.js e -c "k8 --max-old-space-size={resources.mem_mb} `which minisv.js`" -n TUMOR -b ~/data/pangenome_sv_benchmarking/minisv/data/chm13v2.cen-mask.bed {input.paf[2]} {input.gaf[2]} | bash > {output.t_rsv}
+        """
+
+
+rule minisv_tnpair_somatic_call_chm13_tg:
+    input:
+        t = rules.minisv_tnpair_tg_extract_tumor_chm13.output.t_rsv,
+        n = rules.minisv_tnpair_tgs_extract_normal_chm13.output.n_rsv
+    resources:
+        mem_mb=24000, 
+        run_time="12h"
+    output:
+        msv = "output/minisv_pair/{cell_line}_{platform}_pair_chm13l_l+t+g_c2s0.msv.gz"
+    shell:
+        """
+        cat {input.t} <(zcat {input.n}) | sort -k1,1 -k2,2n -S4g \
+          | minisv.js merge -c 2 -s 0 - | grep TUMOR | grep -v NORMAL | gzip > {output}
+        """
+
+
+
+rule minisv_tnpair_tgs_extract_tumor_chm13:
+    threads: 1
+    resources:
+        mem_mb=24000, 
+        run_time="8h"
+    input:
+        paf = expand("output/align/{{cell_line}}_{pair}_{{platform}}_{assembly}l.paf.gz", assembly=['grch38', 'chm13'], pair=['T', 'BL']),
+        gaf = expand("output/align/{{cell_line}}_{pair}_{{platform}}_{assembly}g.paf.gz", assembly=['grch38', 'chm13'], pair=['T', 'BL']),
+        asm = expand("../severus_data_self/output/align/{{cell_line}}_{pair}_{{platform}}_self.paf.gz", pair=['T', 'BL'])
+    output:
+        t_rsv = "output/minisv_pair/{cell_line}_{platform}_tumor_chm13l+tgs.rsv"
+    shell:
+        """
+        minisv.js e -c "k8 --max-old-space-size={resources.mem_mb} `which minisv.js`" -n TUMOR -0b ~/data/pangenome_sv_benchmarking/minisv/data/chm13v2.cen-mask.bed {input.paf[2]} {input.gaf[2]} {input.asm[0]} | bash > {output.t_rsv}
+        """
+
 
 rule minisv_tnpair_somatic_call_chm13:
     input:

@@ -16,7 +16,7 @@ custom_colors <- c(
   "svision" = rgb(248, 89, 206, maxColorValue = 255)
 )
 
-get_theme <- function(size=7, angle=0) {
+get_theme <- function(size=12, angle=0) {
     defined_theme = theme_bw(base_size=size) + theme(legend.title=element_text(size=size), strip.text=element_text(size=size), legend.text=element_text(size=size), axis.title.x=element_text(size=size), axis.title.y=element_text(size=size), axis.text.y=element_text(size=size), axis.text.x=element_text(size=size, angle=angle, hjust = 1, vjust=1.05)) #, legend.position="bottom", legend.box = "horizontal") 
     defined_theme
 }
@@ -135,14 +135,14 @@ plot_prec_recall <- function(grid, metrics) {
     p = ggplot() +
         geom_contour(data=grid, aes(x = precision, y = sensitivity, z = F1), linetype="dashed", linewidth=0.45, color='gray', bins = 10) + 
         geom_point(data=metrics, aes(x=sensitivity, y=precision, colour = factor(tool), size=count), alpha=0.5) + xlim(0, 1) + ylim(0, 1) + ylab('Precision') + xlab("Recall") + scale_size_continuous(name = "Count", breaks = c(3, 4, 5, 10), range = c(1, 5)) + geom_path(data=metrics[order(metrics$count),], aes(x=sensitivity, y=precision, colour = factor(tool))) + 
-        facet_wrap(cell_line~genome, nrow=5, ncol=2, scales = "free") + get_theme()
+        #facet_wrap(cell_line~genome, nrow=5, ncol=2, scales = "free") + get_theme()
+        facet_wrap(~cell_line, nrow=5, ncol=1, scales = "free") + get_theme()
     p
 }
 
 do_bar_chart <- function(input, out_path, threads, myparam) {
     data_path = input[['tumor_only_hifi']]
     metrics = load_metrics(data_path)
-    print(head(metrics))
     write_tsv(metrics, out_path[['tumor_only_table']])
 
     data_path = input[['tumor_only_ont_100kb']]
@@ -150,11 +150,11 @@ do_bar_chart <- function(input, out_path, threads, myparam) {
     write_tsv(metrics.ont, out_path[['tumor_only_table_ont']])
 
     grid <- generate_grid()
-    pdf(out_path[['hg38plot']], width=9.5, height=10.6)
-    mixed_hg38_p = plot_prec_recall(grid, metrics) + ggtitle("non-COLO829 HiFi tumor-only mode >100kb SV evaluation")
-    mixed_hg38_p.ont = plot_prec_recall(grid, metrics.ont) + ggtitle("non-COLO829 HiFi tumor-only mode >100kb SV evaluation")
+    pdf(out_path[['hg38plot']], width=7.5, height=11.6)
+    mixed_hg38_p = plot_prec_recall(grid, metrics %>% filter(genome=='hg38')) + ggtitle("non-COLO829 HiFi\ntumor-only >100kb SV evaluation")
+    mixed_hg38_p.ont = plot_prec_recall(grid, metrics.ont %>% filter(genome=='hg38')) + ggtitle("non-COLO829 ONT\ntumor-only >100kb SV evaluation")
 
-    print(mixed_hg38_p + mixed_hg38_p.ont)
+    print(mixed_hg38_p + mixed_hg38_p.ont + plot_layout(guides = "collect"))
     dev.off()
 }
 

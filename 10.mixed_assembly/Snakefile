@@ -8,7 +8,8 @@ def input_truth(wildcards):
     if wildcards.cell_line == 'COLO829_hifi1':
         return truth['grch38']
     else:
-        return ["../1a.alignment_sv_tools/output/severus/{cell_line}/grch38/somatic_SVs/severus_somatic.vcf", "../1a.alignment_sv_tools/output/savana/{cell_line}/grch38/grch38.classified.somatic.vcf", "../1a.alignment_sv_tools/output/nanomonsv/{cell_line}/grch38_tnpair.vcf"]
+        #return ["../1a.alignment_sv_tools/output/severus/{cell_line}/grch38/somatic_SVs/severus_somatic.vcf", "../1a.alignment_sv_tools/output/savana/{cell_line}/grch38/grch38.classified.somatic.vcf", "../1a.alignment_sv_tools/output/nanomonsv/{cell_line}/grch38_tnpair.vcf"]
+        return ["../1a.alignment_sv_tools/output/severus/{cell_line}/grch38/somatic_SVs/severus_somatic.vcf", "../1a.alignment_sv_tools/output/savana12/{cell_line}/grch38/grch38_T_tag.classified.somatic.vcf", "../1a.alignment_sv_tools/output/nanomonsv/{cell_line}/grch38_tnpair.vcf"]
 
 rule gfa2fa:
     input:
@@ -132,6 +133,7 @@ for cutoff in [2,3,4,5,10]:
             c = cutoff
         shell: 
             """
+
             if [ {wildcards.cell_line} == 'COLO829_hifi1' ]; then
                 minisv.js eval -c {params.c} -b ~/data/pangenome_sv_benchmarking/minisv/data/hs38.reg.bed {input.truth} {input.minisv_ltg} {input.minisv_ltgs} {input.sniffles_mosaic} > {output.eval}
             else
@@ -139,6 +141,7 @@ for cutoff in [2,3,4,5,10]:
                     minisv.js eval -M -c {params.c} -b ~/data/pangenome_sv_benchmarking/minisv/data/hs38.reg.bed $input {input.truth} | head -2 >> {output.eval}
                 done
             fi
+
 
             """
 
@@ -155,6 +158,7 @@ for cutoff in [2,3,4,5,10]:
             c = cutoff
         shell: 
             """
+
             if [ {wildcards.cell_line} == 'COLO829_hifi1' ]; then
                 minisv.js eval -l 100000 -c {params.c} -b ~/data/pangenome_sv_benchmarking/minisv/data/hs38.reg.bed {input.truth} {input.minisv_ltg} {input.minisv_ltgs} {input.sniffles_mosaic} > {output.eval}
             else
@@ -162,6 +166,7 @@ for cutoff in [2,3,4,5,10]:
                     minisv.js eval -M -l 100000 -c {params.c} -b ~/data/pangenome_sv_benchmarking/minisv/data/hs38.reg.bed $input {input.truth} | head -2 >> {output.eval}
                 done
             fi
+
             """
 
 rule all:

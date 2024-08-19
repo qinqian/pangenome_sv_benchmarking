@@ -12,16 +12,19 @@ def input_truth_hifi_single_tumor_nomsv(wildcards):
     if wildcards.cell_line == 'COLO829':
         return truth[wildcards.assembly]
     else:
-        return ["../1a.alignment_sv_tools/output/severus/{cell_line}_{platform}/{assembly}/somatic_SVs/severus_somatic.vcf", "../1a.alignment_sv_tools/output/savana/{cell_line}_{platform}/{assembly}/{assembly}.classified.somatic.vcf", "../1a.alignment_sv_tools/output/nanomonsv/{cell_line}_{platform}/{assembly}_tnpair.vcf"]
+        ###return ["../1a.alignment_sv_tools/output/severus/{cell_line}_{platform}/{assembly}/somatic_SVs/severus_somatic.vcf", "../1a.alignment_sv_tools/output/savana/{cell_line}_{platform}/{assembly}/{assembly}.classified.somatic.vcf", "../1a.alignment_sv_tools/output/nanomonsv/{cell_line}_{platform}/{assembly}_tnpair.vcf"]
+        return ["../1a.alignment_sv_tools/output/severus/{cell_line}_{platform}/{assembly}/somatic_SVs/severus_somatic.vcf", "../1a.alignment_sv_tools/output/savana12/{cell_line}_{platform}/{assembly}/{assembly}_T_tag.classified.somatic.vcf", "../1a.alignment_sv_tools/output/nanomonsv/{cell_line}_{platform}/{assembly}_tnpair.vcf"]
 
 def input_truth_hifi_single_tumor_noseverus(wildcards):
     if wildcards.cell_line == 'COLO829':
         return truth[wildcards.assembly]
     else:
         if wildcards.assembly == 'grch38':
-            return ["/hlilab/hli/gafcall/pair_v2/msv/{cell_line}T.hg38l+tgs.pair-c2s0.msv", "../1a.alignment_sv_tools/output/savana/{cell_line}_{platform}/{assembly}/{assembly}.classified.somatic.vcf", "../1a.alignment_sv_tools/output/nanomonsv/{cell_line}_{platform}/{assembly}_tnpair.vcf"]
+            ###return ["/hlilab/hli/gafcall/pair_v2/msv/{cell_line}T.hg38l+tgs.pair-c2s0.msv", "../1a.alignment_sv_tools/output/savana/{cell_line}_{platform}/{assembly}/{assembly}.classified.somatic.vcf", "../1a.alignment_sv_tools/output/nanomonsv/{cell_line}_{platform}/{assembly}_tnpair.vcf"]
+            return ["/hlilab/hli/gafcall/pair_v2/msv/{cell_line}T.hg38l+tgs.pair-c2s0.msv", "../1a.alignment_sv_tools/output/savana12/{cell_line}_{platform}/{assembly}/{assembly}_T_tag.classified.somatic.vcf", "../1a.alignment_sv_tools/output/nanomonsv/{cell_line}_{platform}/{assembly}_tnpair.vcf"]
         else:
-            return ["/hlilab/hli/gafcall/pair_v2/msv/{cell_line}T.chm13l+gs.pair-c2s0.msv", "../1a.alignment_sv_tools/output/savana/{cell_line}_{platform}/{assembly}/{assembly}.classified.somatic.vcf", "../1a.alignment_sv_tools/output/nanomonsv/{cell_line}_{platform}/{assembly}_tnpair.vcf"]
+            ###return ["/hlilab/hli/gafcall/pair_v2/msv/{cell_line}T.chm13l+gs.pair-c2s0.msv", "../1a.alignment_sv_tools/output/savana/{cell_line}_{platform}/{assembly}/{assembly}.classified.somatic.vcf", "../1a.alignment_sv_tools/output/nanomonsv/{cell_line}_{platform}/{assembly}_tnpair.vcf"]
+            return ["/hlilab/hli/gafcall/pair_v2/msv/{cell_line}T.chm13l+gs.pair-c2s0.msv", "../1a.alignment_sv_tools/output/savana12/{cell_line}_{platform}/{assembly}/{assembly}_T_tag.classified.somatic.vcf", "../1a.alignment_sv_tools/output/nanomonsv/{cell_line}_{platform}/{assembly}_tnpair.vcf"]
 
 
 def input_truth_ont_pair(wildcards):
@@ -34,16 +37,19 @@ def input_truth_ont_single_nomsv(wildcards):
     if wildcards.cell_line == 'COLO829':
         return truth[wildcards.assembly]
     else:
-        return ["/cluster/hlilab/alvin/{folder}/output/severus/{cell_line}_{platform}/{assembly}/somatic_SVs/severus_somatic.vcf", "/cluster/hlilab/alvin/{folder}/output/savana/{cell_line}_{platform}/{assembly}/{assembly}.classified.somatic.vcf", "/cluster/hlilab/alvin/{folder}/output/nanomonsv/{cell_line}_{platform}/{assembly}_tnpair.vcf"]
+        ###return ["/cluster/hlilab/alvin/{folder}/output/severus/{cell_line}_{platform}/{assembly}/somatic_SVs/severus_somatic.vcf", "/cluster/hlilab/alvin/{folder}/output/savana/{cell_line}_{platform}/{assembly}/{assembly}.classified.somatic.vcf", "/cluster/hlilab/alvin/{folder}/output/nanomonsv/{cell_line}_{platform}/{assembly}_tnpair.vcf"]
+        return ["/cluster/hlilab/alvin/{folder}/output/severus/{cell_line}_{platform}/{assembly}/somatic_SVs/severus_somatic.vcf", "/cluster/hlilab/alvin/{folder}/output/savana12/{cell_line}_{platform}/{assembly}/{assembly}_T_tag.classified.somatic.vcf", "/cluster/hlilab/alvin/{folder}/output/nanomonsv/{cell_line}_{platform}/{assembly}_tnpair.vcf"]
 
 def input_truth_ont_single_noseverus(wildcards):
     if wildcards.cell_line == 'COLO829':
         return truth[wildcards.assembly]
     else:
         if wildcards.assembly == 'grch38':
-            return ["/cluster/hlilab/alvin/{folder}/output/minisv_pair/{cell_line}_ont1_pair_hg38l_l+t+g+s_c2s0.msv.gz", "/cluster/hlilab/alvin/{folder}/output/savana/{cell_line}_{platform}/{assembly}/{assembly}.classified.somatic.vcf", "/cluster/hlilab/alvin/{folder}/output/nanomonsv/{cell_line}_{platform}/{assembly}_tnpair.vcf"]
+            ###return ["/cluster/hlilab/alvin/{folder}/output/minisv_pair/{cell_line}_ont1_pair_hg38l_l+t+g+s_c2s0.msv.gz", "/cluster/hlilab/alvin/{folder}/output/savana/{cell_line}_{platform}/{assembly}/{assembly}.classified.somatic.vcf", "/cluster/hlilab/alvin/{folder}/output/nanomonsv/{cell_line}_{platform}/{assembly}_tnpair.vcf"]
+            return ["/cluster/hlilab/alvin/{folder}/output/minisv_pair/{cell_line}_ont1_pair_hg38l_l+t+g+s_c2s0.msv.gz", "/cluster/hlilab/alvin/{folder}/output/savana12/{cell_line}_{platform}/{assembly}/{assembly}_T_tag.classified.somatic.vcf", "/cluster/hlilab/alvin/{folder}/output/nanomonsv/{cell_line}_{platform}/{assembly}_tnpair.vcf"]
         else:
-            return ["/cluster/hlilab/alvin/{folder}/output/minisv_pair/{cell_line}_ont1_pair_chm13l_l+t+g+s_c2s0.msv.gz", "/cluster/hlilab/alvin/{folder}/output/savana/{cell_line}_{platform}/{assembly}/{assembly}.classified.somatic.vcf", "/cluster/hlilab/alvin/{folder}/output/nanomonsv/{cell_line}_{platform}/{assembly}_tnpair.vcf"]
+            ###return ["/cluster/hlilab/alvin/{folder}/output/minisv_pair/{cell_line}_ont1_pair_chm13l_l+t+g+s_c2s0.msv.gz", "/cluster/hlilab/alvin/{folder}/output/savana/{cell_line}_{platform}/{assembly}/{assembly}.classified.somatic.vcf", "/cluster/hlilab/alvin/{folder}/output/nanomonsv/{cell_line}_{platform}/{assembly}_tnpair.vcf"]
+            return ["/cluster/hlilab/alvin/{folder}/output/minisv_pair/{cell_line}_ont1_pair_chm13l_l+t+g+s_c2s0.msv.gz", "/cluster/hlilab/alvin/{folder}/output/savana12/{cell_line}_{platform}/{assembly}/{assembly}_T_tag.classified.somatic.vcf", "/cluster/hlilab/alvin/{folder}/output/nanomonsv/{cell_line}_{platform}/{assembly}_tnpair.vcf"]
 
 
 def input_single_minisv_hg38(wildcards):
@@ -67,7 +73,8 @@ for cutoff in [3,4,5,10]:
         input:
             severus = "../1a.alignment_sv_tools/output/severus/{cell_line}_{platform}/{assembly}/somatic_SVs/severus_somatic.vcf",
             nanomonsv = "../1a.alignment_sv_tools/output/nanomonsv/{cell_line}_{platform}/{assembly}_tnpair.vcf",
-            savana = "../1a.alignment_sv_tools/output/savana/{cell_line}_{platform}/{assembly}",
+            ###savana = "../1a.alignment_sv_tools/output/savana/{cell_line}_{platform}/{assembly}",
+            savana = "../1a.alignment_sv_tools/output/savana12/{cell_line}_{platform}/{assembly}",
             svision = "../1a.alignment_sv_tools/output/svision/{cell_line}_{platform}/somatic/{cell_line}_{assembly}_tn.svision_pro_v1.8.s5.somatic_s1.vcf",
             sniffles_somatic = "../1a.alignment_sv_tools/output/sniffles/{cell_line}_{platform}/{assembly}_somatic.vcf",
             minisv = expand("/hlilab/hli/gafcall/pair_v2/msv/{{cell_line}}T.hg38l+{comb}.pair-c2s0.msv", comb=['tgs', 'tg']),
@@ -80,9 +87,9 @@ for cutoff in [3,4,5,10]:
         shell: 
             """
             if [[ {wildcards.assembly} == "chm13" ]]; then
-                minisv.js eval -c {params.c} -b ~/data/pangenome_sv_benchmarking/minisv/data/chm13v2.reg.bed {input.truth} {input.severus} {input.minisv_t2t} {input.nanomonsv} {input.savana}/{wildcards.assembly}.classified.somatic.vcf {input.svision} {input.sniffles_somatic}> {output.eval}
+                minisv.js eval -c {params.c} -b ~/data/pangenome_sv_benchmarking/minisv/data/chm13v2.reg.bed {input.truth} {input.severus} {input.minisv_t2t} {input.nanomonsv} {input.savana}/{wildcards.assembly}_T_tag.classified.somatic.vcf {input.svision} {input.sniffles_somatic}> {output.eval}
             else
-                minisv.js eval -c {params.c} -b ~/data/pangenome_sv_benchmarking/minisv/data/hs38.reg.bed {input.truth} {input.severus} {input.minisv} {input.nanomonsv} {input.savana}/{wildcards.assembly}.classified.somatic.vcf {input.svision} {input.sniffles_somatic} > {output.eval}
+                minisv.js eval -c {params.c} -b ~/data/pangenome_sv_benchmarking/minisv/data/hs38.reg.bed {input.truth} {input.severus} {input.minisv} {input.nanomonsv} {input.savana}/{wildcards.assembly}_T_tag.classified.somatic.vcf {input.svision} {input.sniffles_somatic} > {output.eval}
             fi
             """
 
@@ -91,7 +98,8 @@ for cutoff in [3,4,5,10]:
         input:
             severus = "../1a.alignment_sv_tools/output/severus/{cell_line}_{platform}/{assembly}/somatic_SVs/severus_somatic.vcf",
             nanomonsv = "../1a.alignment_sv_tools/output/nanomonsv/{cell_line}_{platform}/{assembly}_tnpair.vcf",
-            savana = "../1a.alignment_sv_tools/output/savana/{cell_line}_{platform}/{assembly}",
+            ###savana = "../1a.alignment_sv_tools/output/savana/{cell_line}_{platform}/{assembly}",
+            savana = "../1a.alignment_sv_tools/output/savana12/{cell_line}_{platform}/{assembly}",
             svision = "../1a.alignment_sv_tools/output/svision/{cell_line}_{platform}/somatic/{cell_line}_{assembly}_tn.svision_pro_v1.8.s5.somatic_s1.vcf",
             sniffles_somatic = "../1a.alignment_sv_tools/output/sniffles/{cell_line}_{platform}/{assembly}_somatic.vcf",
             minisv = expand("/hlilab/hli/gafcall/pair_v2/msv/{{cell_line}}T.hg38l+{comb}.pair-c2s0.msv", comb=['tgs']),
@@ -104,9 +112,9 @@ for cutoff in [3,4,5,10]:
         shell: 
             """
             if [[ {wildcards.assembly} == "chm13" ]]; then
-                minisv.js eval -M -c {params.c} -b ~/data/pangenome_sv_benchmarking/minisv/data/chm13v2.reg.bed {input.truth} {input.severus} {input.minisv_t2t} {input.nanomonsv} {input.savana}/{wildcards.assembly}.classified.somatic.vcf {input.svision} {input.sniffles_somatic}> {output.eval}
+                minisv.js eval -M -c {params.c} -b ~/data/pangenome_sv_benchmarking/minisv/data/chm13v2.reg.bed {input.truth} {input.severus} {input.minisv_t2t} {input.nanomonsv} {input.savana}/{wildcards.assembly}_T_tag.classified.somatic.vcf {input.svision} {input.sniffles_somatic}> {output.eval}
             else
-                minisv.js eval -M -c {params.c} -b ~/data/pangenome_sv_benchmarking/minisv/data/hs38.reg.bed {input.truth} {input.severus} {input.minisv} {input.nanomonsv} {input.savana}/{wildcards.assembly}.classified.somatic.vcf {input.svision} {input.sniffles_somatic} > {output.eval}
+                minisv.js eval -M -c {params.c} -b ~/data/pangenome_sv_benchmarking/minisv/data/hs38.reg.bed {input.truth} {input.severus} {input.minisv} {input.nanomonsv} {input.savana}/{wildcards.assembly}_T_tag.classified.somatic.vcf {input.svision} {input.sniffles_somatic} > {output.eval}
             fi
             """
 
@@ -115,7 +123,8 @@ for cutoff in [3,4,5,10]:
         input:
              ###ont = expand(os.path.join(config['samples']['tumor_normal_pair']['batch3']['dir'], 'output/minisv_eval_tnpair_concensus', '{cell_line}_ont1_{assembly}_eval_count{count}.tsv'), cell_line=config['samples']['tumor_normal_pair']['batch3']['cell_line3'], count=[2,3,4,5,10], assembly=['chm13', 'grch38'])+expand(os.path.join(config['samples']['tumor_normal_pair']['batch4']['dir'], 'output/minisv_eval_tnpair_concensus', '{cell_line}_ont1_{assembly}_eval_count{count}.tsv'), cell_line=config['samples']['tumor_normal_pair']['batch4']['cell_line4'], count=[2,3,4,5,10], assembly=['chm13', 'grch38']),
             severus = "/cluster/hlilab/alvin/{folder}/output/severus/{cell_line}_{platform}/{assembly}/somatic_SVs/severus_somatic.vcf",
-            savana = "/cluster/hlilab/alvin/{folder}/output/savana/{cell_line}_{platform}/{assembly}/",
+            ###savana = "/cluster/hlilab/alvin/{folder}/output/savana/{cell_line}_{platform}/{assembly}/",
+            savana = "/cluster/hlilab/alvin/{folder}/output/savana12/{cell_line}_{platform}/{assembly}/",
             nanomonsv = "/cluster/hlilab/alvin/{folder}/output/nanomonsv/{cell_line}_{platform}/{assembly}_tnpair.vcf",
             svision = "/cluster/hlilab/alvin/{folder}/output/svision/{cell_line}_{platform}/somatic/{cell_line}_{assembly}_tn.svision_pro_v1.8.s5.somatic_s1.vcf",
             sniffles_somatic = "/cluster/hlilab/alvin/{folder}/output/sniffles/{cell_line}_{platform}/{assembly}_somatic.vcf",
@@ -130,9 +139,9 @@ for cutoff in [3,4,5,10]:
         shell: 
             """
             if [[ {wildcards.assembly} == "chm13" ]]; then
-                minisv.js eval -M -c {params.c} -b ~/data/pangenome_sv_benchmarking/minisv/data/chm13v2.reg.bed {input.truth} {input.severus} {input.minisv_t2t} {input.nanomonsv} {input.savana}/{wildcards.assembly}.classified.somatic.vcf {input.svision} {input.sniffles_somatic}> {output.eval}
+                minisv.js eval -M -c {params.c} -b ~/data/pangenome_sv_benchmarking/minisv/data/chm13v2.reg.bed {input.truth} {input.severus} {input.minisv_t2t} {input.nanomonsv} {input.savana}/{wildcards.assembly}_T_tag.classified.somatic.vcf {input.svision} {input.sniffles_somatic}> {output.eval}
             else
-                minisv.js eval -M -c {params.c} -b ~/data/pangenome_sv_benchmarking/minisv/data/hs38.reg.bed {input.truth} {input.severus} {input.minisv} {input.nanomonsv} {input.savana}/{wildcards.assembly}.classified.somatic.vcf {input.svision} {input.sniffles_somatic} > {output.eval}
+                minisv.js eval -M -c {params.c} -b ~/data/pangenome_sv_benchmarking/minisv/data/hs38.reg.bed {input.truth} {input.severus} {input.minisv} {input.nanomonsv} {input.savana}/{wildcards.assembly}_T_tag.classified.somatic.vcf {input.svision} {input.sniffles_somatic} > {output.eval}
             fi
             """
 
@@ -141,13 +150,16 @@ for cutoff in [3,4,5,10]:
         input:
              ###ont = expand(os.path.join(config['samples']['tumor_normal_pair']['batch3']['dir'], 'output/minisv_eval_tnpair_concensus', '{cell_line}_ont1_{assembly}_eval_count{count}.tsv'), cell_line=config['samples']['tumor_normal_pair']['batch3']['cell_line3'], count=[2,3,4,5,10], assembly=['chm13', 'grch38'])+expand(os.path.join(config['samples']['tumor_normal_pair']['batch4']['dir'], 'output/minisv_eval_tnpair_concensus', '{cell_line}_ont1_{assembly}_eval_count{count}.tsv'), cell_line=config['samples']['tumor_normal_pair']['batch4']['cell_line4'], count=[2,3,4,5,10], assembly=['chm13', 'grch38']),
             severus = "/cluster/hlilab/alvin/{folder}/output/severus/{cell_line}_{platform}/{assembly}/somatic_SVs/severus_somatic.vcf",
-            savana = "/cluster/hlilab/alvin/{folder}/output/savana/{cell_line}_{platform}/{assembly}/",
+            ###savana = "/cluster/hlilab/alvin/{folder}/output/savana/{cell_line}_{platform}/{assembly}/",
+            savana = "/cluster/hlilab/alvin/{folder}/output/savana12/{cell_line}_{platform}/{assembly}/",
             nanomonsv = "/cluster/hlilab/alvin/{folder}/output/nanomonsv/{cell_line}_{platform}/{assembly}_tnpair.vcf",
             svision = "/cluster/hlilab/alvin/{folder}/output/svision/{cell_line}_{platform}/somatic/{cell_line}_{assembly}_tn.svision_pro_v1.8.s5.somatic_s1.vcf",
             sniffles_somatic = "/cluster/hlilab/alvin/{folder}/output/sniffles/{cell_line}_{platform}/{assembly}_somatic.vcf",
 
-            minisv = "/cluster/hlilab/alvin/{folder}/output/minisv_pair/{cell_line}_ont1_pair_hg38l_l+t+g+s_c2s0.msv.gz",
-            minisv_t2t = "/cluster/hlilab/alvin/{folder}/output/minisv_pair/{cell_line}_ont1_pair_chm13l_l+t+g+s_c2s0.msv.gz",
+            minisv = "/cluster/hlilab/alvin/{folder}/output/minisv_pair/{cell_line}_ont1_pair_hg38l_l+tg_c2s0.msv.gz",
+            # Need to replace this with tg
+#output/minisv_pair/HCC1937_ont1_pair_chm13l_l+t+g_c2s0.msv.gz
+            minisv_t2t = "/cluster/hlilab/alvin/{folder}/output/minisv_pair/{cell_line}_ont1_pair_chm13l_l+t+g_c2s0.msv.gz",
             truth = input_truth_ont_pair,
         output:
             eval = f"output/minisv_eval_tnpair_concensus_from1a/{{folder}}_{{cell_line}}_{{platform}}_{{assembly}}_count{cutoff}_eval_tg.tsv"
@@ -155,11 +167,13 @@ for cutoff in [3,4,5,10]:
             c = cutoff
         shell: 
             """
+
             if [[ {wildcards.assembly} == "chm13" ]]; then
-                minisv.js eval -M -c {params.c} -b ~/data/pangenome_sv_benchmarking/minisv/data/chm13v2.reg.bed {input.truth} {input.severus} {input.minisv_t2t} {input.nanomonsv} {input.savana}/{wildcards.assembly}.classified.somatic.vcf {input.svision} {input.sniffles_somatic}> {output.eval}
+                minisv.js eval -M -c {params.c} -b ~/data/pangenome_sv_benchmarking/minisv/data/chm13v2.reg.bed {input.truth} {input.severus} {input.minisv_t2t} {input.nanomonsv} {input.savana}/{wildcards.assembly}_T_tag.classified.somatic.vcf {input.svision} {input.sniffles_somatic}> {output.eval}
             else
-                minisv.js eval -M -c {params.c} -b ~/data/pangenome_sv_benchmarking/minisv/data/hs38.reg.bed {input.truth} {input.severus} {input.minisv} {input.nanomonsv} {input.savana}/{wildcards.assembly}.classified.somatic.vcf {input.svision} {input.sniffles_somatic} > {output.eval}
+                minisv.js eval -M -c {params.c} -b ~/data/pangenome_sv_benchmarking/minisv/data/hs38.reg.bed {input.truth} {input.severus} {input.minisv} {input.nanomonsv} {input.savana}/{wildcards.assembly}_T_tag.classified.somatic.vcf {input.svision} {input.sniffles_somatic} > {output.eval}
             fi
+
             """
     
     rule:

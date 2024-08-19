@@ -39,6 +39,7 @@ module aligner_workflow:
 use rule * from aligner_workflow as minimap2_workflow_*
 include: "rules/sniffles2.smk"
 include: "rules/savana.smk"
+include: "rules/savana1.2.smk"
 include: "rules/clair3.smk"
 
 module severus_workflow:
@@ -69,6 +70,10 @@ sniffles_mo_multi_vcf_files  = expand(expand("output/sniffles_mosaic/{cell_line}
 
 nanomonsv_files  = expand(expand("output/nanomonsv/{cell_line}_{platform}/{{assembly}}_tnpair.txt", zip, cell_line=config['samples']['tumor'], platform=config['samples']['platform']), assembly=config['assembly'])
 savana_outdir  = expand(expand("output/savana/{cell_line}_{platform}/{{assembly}}", zip, cell_line=config['samples']['tumor'], platform=config['samples']['platform']), assembly=config['assembly'])
+savana12_outdir  = expand(expand("output/savana12/{cell_line}_{platform}/{{assembly}}", zip, cell_line=config['samples']['tumor'], platform=config['samples']['platform']), assembly=config['assembly'])
+
+savana12_vcf  = expand(expand("output/savana12/{cell_line}_{platform}/{{assembly}}/{{assembly}}.classified.somatic.vcf", zip, cell_line=config['samples']['tumor'], platform=config['samples']['platform']), assembly=config['assembly'])
+
 severus_outdir  = expand(expand("output/severus/{cell_line}_{platform}/{{assembly}}", zip, cell_line=config['samples']['tumor'], platform=config['samples']['platform']), assembly=config['assembly'])
 severus_single_outdir  = expand(expand("output/severus_{platform}/{cell_line}_{{pair}}_{{assembly}}", zip, cell_line=config['samples']['tumor'], platform=config['samples']['platform']), pair=["T", "BL"], assembly=config['assembly'])
 
@@ -143,7 +148,10 @@ pair_eval_single_length = expand(expand("output/minisv_view_single{{pair}}/singl
 
 
 minisv_eval_files = expand(expand("output/minisv_eval_tnpair/{cell_line}_{platform}_{{assembly}}_eval_count{{count}}.tsv", zip, cell_line=config['samples']['tumor'], platform=config['samples']['platform']), assembly=['chm13', 'grch38'], count=[2,3,4,5,10])
+
 minisv_eval_files_M = expand(expand(expand("output/minisv_eval_tnpair_concensus/{cell_line}_{platform}_{{assembly}}_eval_count{{count}}.tsv", zip, cell_line=config['samples']['tumor'], platform=config['samples']['platform']), assembly=['chm13', 'grch38'], count=[2,3,4,5,10]))
+
+minisv_pair_t2t_tg = expand(expand("output/minisv_pair/{cell_line}_{platform}_pair_chm13l_l+t+g_{{cnt}}.msv.gz", zip, cell_line=config['samples']['tumor'], platform=config['samples']['platform']), cnt=['c2s0'])
 
 rule all:
     input:
@@ -154,7 +162,7 @@ rule all:
         sniffles_multi_files, sniffles_multi_vcf_files,
         sniffles_mo_multi_files, sniffles_mo_multi_vcf_files,
         sniffles_mix, sniffles_mix_tbi,
-        savana_outdir, clair3_outdir, 
+        savana_outdir, savana12_outdir, clair3_outdir, #savana12_vcf,
         rules.severus_workflow_all.input,
         severus_outdir, 
         severus_single_outdir,
@@ -166,7 +174,7 @@ rule all:
         minisv_self_extract,
         minisv_linear_def_extract, minisv_graph_def_extract,
         minisv_single_call, minisv_single_graph_call, minisv_single_tg_call, minisv_single_tgs_call,
-        minisv_single_ts_call, minisv_single_s_call,
+        minisv_single_ts_call, minisv_single_s_call, minisv_pair_t2t_tg,
         paf_mixed, gaf_mixed,
         minisv_mixed_mosaic_l, minisv_mixed_mosaic_g, minisv_mixed_mosaic_lg, minisv_mixed_mosaic_lt, minisv_mixed_mosaic_ltg,
         tn_eval_length, single_eval_length, svision_outdir_somatic, minisv_eval_files,

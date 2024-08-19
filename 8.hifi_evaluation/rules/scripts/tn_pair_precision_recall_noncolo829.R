@@ -19,7 +19,7 @@ custom_colors <- c(
   "svision" = rgb(248, 89, 206, maxColorValue = 255)
 )
 
-get_theme <- function(size=7, angle=0) {
+get_theme <- function(size=12, angle=0) {
     defined_theme = theme_bw(base_size=size) + theme(legend.title=element_text(size=size), strip.text=element_text(size=size), legend.text=element_text(size=size), axis.title.x=element_text(size=size), axis.title.y=element_text(size=size), axis.text.y=element_text(size=size), axis.text.x=element_text(size=size, angle=angle, hjust = 1, vjust=1.05)) #, legend.position="bottom", legend.box = "horizontal") 
     defined_theme
 }
@@ -143,7 +143,8 @@ plot_prec_recall <- function(grid, metrics) {
         geom_contour(data=grid, aes(x = precision, y = sensitivity, z = F1), linetype="dashed", linewidth=0.45, color='gray', bins = 10) + 
         geom_point(data=metrics, aes(x=sensitivity, y=precision, colour = factor(tool), size=count), alpha=0.5) + xlim(0, 1) + ylim(0, 1) + ylab('Precision') + xlab("Recall") +  scale_size_continuous(name = "Count", breaks = c(2, 3, 4, 5, 10), range = c(1, 4)) +
         geom_path(data=metrics[order(metrics$count),], aes(x=sensitivity, y=precision, colour = factor(tool))) + 
-        facet_grid(cell_line~genome, scales = "free") + get_theme()
+        facet_wrap(~cell_line, scales = "free", ncol=1, nrow=5) + get_theme()
+        #facet_grid(cell_line~genome, scales = "free") + get_theme()
     p
 }
 
@@ -158,9 +159,9 @@ do_bar_chart <- function(input, out_path, threads, myparam) {
 
     grid <- generate_grid()
 
-    pdf(out_path[['mixedhg38plot']], width=6.5, height=8.2)
-    mixed_hg38_p = plot_prec_recall(grid, metrics) + ggtitle("non-COLO829 HiFi tumor-normal 1:4 mixed") + scale_colour_manual(values = custom_colors)
-    mixed_hg38_p_100kb = plot_prec_recall(grid, metrics.100kb) + ggtitle("non-COLO829 HiFi tumor-normal 1:4 mixed >100kb SV")+ scale_colour_manual(values = custom_colors)
+    pdf(out_path[['mixedhg38plot']], width=6.5, height=9.2)
+    mixed_hg38_p = plot_prec_recall(grid, metrics) + ggtitle("non-COLO829 HiFi\nmixed reads all SVs") + scale_colour_manual(values = custom_colors)
+    mixed_hg38_p_100kb = plot_prec_recall(grid, metrics.100kb) + ggtitle("non-COLO829 HiFi\nmixed reads >100kb SV")+ scale_colour_manual(values = custom_colors)
     print(mixed_hg38_p + mixed_hg38_p_100kb + plot_layout(guides = "collect"))
     dev.off()
 }

@@ -40,6 +40,7 @@ module aligner_workflow:
 use rule * from aligner_workflow as minimap2_workflow_*
 include: "rules/sniffles2.smk"
 include: "rules/savana.smk"
+include: "rules/savana1.2.smk"
 include: "rules/clair3.smk"
 
 module severus_workflow:
@@ -70,6 +71,9 @@ sniffles_mo_multi_vcf_files  = expand(expand("output/sniffles_mosaic/{cell_line}
 
 nanomonsv_files  = expand(expand("output/nanomonsv/{cell_line}_{platform}/{{assembly}}_tnpair.txt", zip, cell_line=config['samples']['tumor'], platform=config['samples']['platform']), assembly=config['assembly'])
 savana_outdir  = expand(expand("output/savana/{cell_line}_{platform}/{{assembly}}", zip, cell_line=config['samples']['tumor'], platform=config['samples']['platform']), assembly=config['assembly'])
+savana12_outdir  = expand(expand("output/savana12/{cell_line}_{platform}/{{assembly}}", zip, cell_line=config['samples']['tumor'], platform=config['samples']['platform']), assembly=config['assembly'])
+savana12_vcf  = expand(expand("output/savana12/{cell_line}_{platform}/{{assembly}}/{{assembly}}_T_tag.classified.somatic.vcf", zip, cell_line=config['samples']['tumor'], platform=config['samples']['platform']), assembly=config['assembly'])
+
 severus_outdir  = expand(expand("output/severus/{cell_line}_{platform}/{{assembly}}", zip, cell_line=config['samples']['tumor'], platform=config['samples']['platform']), assembly=config['assembly'])
 severus_outdir_repeat2  = expand(expand("output/severus/{cell_line}_{platform}/{{assembly}}_repeat2", zip, cell_line=config['samples']['tumor'], platform=config['samples']['platform']), assembly=config['assembly'])
 severus_single_outdir  = expand(expand("output/severus_{platform}/{cell_line}_{{pair}}_{{assembly}}", zip, cell_line=config['samples']['tumor'], platform=config['samples']['platform']), pair=["T", "BL"], assembly=config['assembly'])
@@ -92,6 +96,8 @@ gaf_mixed  = expand(expand("output/align/{cell_line}_{platform}/{{assembly}}g_mi
 # TN pair minisv
 minisv_pair = expand(expand("output/minisv_pair/{cell_line}_{platform}_pair_hg38l_l+t+g+s_{{cnt}}.msv.gz", zip, cell_line=config['samples']['tumor'], platform=config['samples']['platform']), cnt=['c2s0', 'c3s0', 'c4s0', 'c5s0'])
 minisv_pair_t2t = expand(expand("output/minisv_pair/{cell_line}_{platform}_pair_chm13l_l+t+g+s_{{cnt}}.msv.gz", zip, cell_line=config['samples']['tumor'], platform=config['samples']['platform']), cnt=['c2s0', 'c3s0', 'c4s0', 'c5s0'])
+minisv_pair_t2t_tg = expand(expand("output/minisv_pair/{cell_line}_{platform}_pair_chm13l_l+t+g_{{cnt}}.msv.gz", zip, cell_line=config['samples']['tumor'], platform=config['samples']['platform']), cnt=['c2s0'])
+
 minisv_pair_t = expand(expand("output/minisv_pair/{cell_line}_{platform}_pair_hg38l_l+t_{{cnt}}.msv.gz", zip, cell_line=config['samples']['tumor'], platform=config['samples']['platform']), cnt=['c2s0', 'c3s0', 'c4s0', 'c5s0'])
 minisv_pair_g = expand(expand("output/minisv_pair/{cell_line}_{platform}_pair_hg38l_l+g_{{cnt}}.msv.gz", zip, cell_line=config['samples']['tumor'], platform=config['samples']['platform']), cnt=['c2s0', 'c3s0', 'c4s0', 'c5s0'])
 minisv_pair_tg = expand(expand("output/minisv_pair/{cell_line}_{platform}_pair_hg38l_l+tg_{{cnt}}.msv.gz", zip, cell_line=config['samples']['tumor'], platform=config['samples']['platform']), cnt=['c2s0', 'c3s0', 'c4s0', 'c5s0'])
@@ -155,7 +161,7 @@ rule all:
         sniffles_multi_files, sniffles_multi_vcf_files,
         sniffles_mo_multi_files, sniffles_mo_multi_vcf_files,
         sniffles_mix, sniffles_mix_tbi,
-        savana_outdir, clair3_outdir, 
+        savana_outdir,  clair3_outdir, savana12_outdir, savana12_vcf, 
         rules.severus_workflow_all.input,
         severus_outdir, 
         severus_single_outdir,
@@ -163,7 +169,7 @@ rule all:
         nanomonsv_files,
         extract_linear_files, extract_graph_files,
         svision_outdir, svision_vcfs, svision_outdir_somatic, svision_single_vcfs,
-        minisv_pair, minisv_pair_t2t,
+        minisv_pair, minisv_pair_t2t, minisv_pair_t2t_tg,
         minisv_self_extract,
         minisv_linear_def_extract, minisv_graph_def_extract, 
         minisv_single_call, minisv_single_graph_call, minisv_single_tg_call, minisv_single_tgs_call, minisv_single_lg_call,

@@ -20,7 +20,7 @@ custom_colors <- c(
   "svision" = rgb(248, 89, 206, maxColorValue = 255)
 )
 
-get_theme <- function(size=7, angle=0) {
+get_theme <- function(size=12, angle=0) {
     defined_theme = theme_bw(base_size=size) + theme(legend.title=element_text(size=size), strip.text=element_text(size=size), legend.text=element_text(size=size), axis.title.x=element_text(size=size), axis.title.y=element_text(size=size), axis.text.y=element_text(size=size), axis.text.x=element_text(size=size, angle=angle, hjust = 1, vjust=1.05)) #, legend.position="bottom", legend.box = "horizontal") 
     defined_theme
 }
@@ -142,16 +142,16 @@ do_bar_chart <- function(input, out_path, threads, myparam) {
 
     grid <- generate_grid()
     pdf(out_path[['mixedhg38plot']], width=5.5, height=5.6)
-    mixed_hg38_p = plot_prec_recall(grid, metrics_hg38.mixed) + ggtitle("COLO829 HiFi tumor-normal 1:4 mixed reads")+scale_colour_manual(values = custom_colors)
+    mixed_hg38_p = plot_prec_recall(grid, metrics_hg38.mixed) + ggtitle("COLO829 HiFi tumor-normal\nmixed reads all SVs")+scale_colour_manual(values = custom_colors)
     print(mixed_hg38_p)
     dev.off()
 
     # Plot contours of constant F1 score
     if (plot_100kb) {
-        pdf(out_path[['hg38plot']], width=8.5, height=7.6)
-        hifi.p1 = plot_prec_recall(grid, metrics_hg38) + ggtitle("COLO829 HiFi tumor-normal pair")
-        ont.p2 = plot_prec_recall(grid, metrics_hg38.ont) + ggtitle("COLO829 ONT tumor-normal pair")
-        mixed_hg38_p_100kb = plot_prec_recall(grid, metrics.hg38_mixed_100kb) + ggtitle("COLO829 HiFi tumor-normal 1:4 mixed reads >100kb SV")
+        pdf(out_path[['hg38plot']], width=8.5, height=6.9)
+        hifi.p1 = plot_prec_recall(grid, metrics_hg38) + ggtitle("COLO829 HiFi\ntumor-normal pair")
+        ont.p2 = plot_prec_recall(grid, metrics_hg38.ont) + ggtitle("COLO829 ONT\ntumor-normal pair")
+        mixed_hg38_p_100kb = plot_prec_recall(grid, metrics.hg38_mixed_100kb) + ggtitle("COLO829 HiFi tumor-normal\nmixed reads >100kb SVs")
         print((hifi.p1 + ont.p2 +scale_colour_manual(values = custom_colors)) / (mixed_hg38_p + mixed_hg38_p_100kb+scale_colour_manual(values = custom_colors)) + plot_layout(guides = "collect"))
     } else {
         pdf(out_path[['hg38plot']], width=13.5, height=4.6)
@@ -167,7 +167,7 @@ do_bar_chart <- function(input, out_path, threads, myparam) {
     chm13_ont_p = plot_prec_recall(grid, metrics_chm13.ont)
     ggsave(out_path[['chm13plot_ont']], width=5.5, height=5.6)
 
-    pdf(out_path[['chm13plot']], width=10.5, height=5.6)
+    pdf(out_path[['chm13plot']], width=9.5, height=4.6)
     print(table(metrics_chm13.ont$tool))
     p1 = plot_prec_recall(grid, metrics_chm13)
     print((p1 + chm13_ont_p) + plot_layout(guides = "collect") +scale_colour_manual(values = custom_colors))
