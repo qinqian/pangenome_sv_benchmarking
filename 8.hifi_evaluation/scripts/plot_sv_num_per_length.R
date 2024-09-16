@@ -95,7 +95,6 @@ clean_meta <- function(x, param) {
     x.normal$file[grepl('severus', x.normal$file)] = 'Severus'
     x.normal$file[grepl('sniffles\\/', x.normal$file)] = 'snf'
     x.normal$file[grepl('sniffles_mosaic\\/', x.normal$file)] = 'snf_mosaic'
-
     list(x, x.normal)
 }
 
@@ -103,13 +102,15 @@ clean_meta <- function(x, param) {
 plot_bar <- function(x, is_germline=F, add_break=F, facet_wrap=F, size=12) {
     if (is_germline) {
         if (facet_wrap) {
-            p=ggplot(x, aes(x=reorder(file, value), y=value, fill=Size)) + geom_bar(position='stack', stat='identity') + facet_wrap(~cell_line, scales='free')+ylab(expression("#germline SV")) + xlab("") + get_theme(size, 45)
+            p=ggplot(x, aes(x=reorder(file, value), y=value, fill=Size)) + geom_bar(position='stack', stat='identity') + facet_wrap(~cell_line, ncol=5)+ylab(expression("#germline SV")) + xlab("") + get_theme(size, 45)
         } else {
-            p=ggplot(x, aes(x=reorder(file, value), y=value, fill=Size)) + geom_bar(position='stack', stat='identity') + facet_grid(genome~cell_line, scales='free')+ylab(expression("#germline SV")) + xlab("") + get_theme(size, 45)
+            #p=ggplot(x, aes(x=reorder(file, value), y=value, fill=Size)) + geom_bar(position='stack', stat='identity') + facet_grid(genome~cell_line, scales='free')+ylab(expression("#germline SV")) + xlab("") + get_theme(size, 45)
+            p=ggplot(x, aes(x=reorder(file, value), y=value, fill=Size)) + geom_bar(position='stack', stat='identity') + ylab(expression("#germline SV")) + xlab("") + get_theme(size, 45)
         }
     } else {
         if (facet_wrap) {
-            p=ggplot(x, aes(x=reorder(file, value), y=value, fill=Size)) + geom_bar(position='stack', stat='identity') + facet_wrap(~cell_line, scales='free')+ylab(expression("#mosaic SV")) + xlab("") + get_theme(size, 45)
+            p=ggplot(x, aes(x=reorder(file, value), y=value, fill=Size)) + geom_bar(position='stack', stat='identity') + facet_wrap(~cell_line, ncol=5)+ylab(expression("#mosaic SV")) + xlab("") + get_theme(size, 45)
+            #p=ggplot(x, aes(x=reorder(file, value), y=value, fill=Size)) + geom_bar(position='stack', stat='identity') + ylab(expression("#mosaic SV")) + xlab("") + get_theme(size, 45)
         } else {
             p=ggplot(x, aes(x=reorder(file, value), y=value, fill=Size)) + geom_bar(position='stack', stat='identity') + facet_grid(genome~cell_line, scales='free')+ylab(expression("#mosaic SV")) + xlab("") + get_theme(size, 45) #+ scale_y_cut(breaks=c(50, 500), which=c(1, 3), scales=c(3, 0.5))
         }
@@ -118,8 +119,9 @@ plot_bar <- function(x, is_germline=F, add_break=F, facet_wrap=F, size=12) {
 }
 
 
-plot_bar_thresholds <- function(x, add_break=F) {
-    p=ggplot(x, aes(x=count, y=value, fill=Size)) + geom_bar(position='stack', stat='identity') + facet_grid(genome~cell_line, scales='free') + ylab(expression("#mosaic SV")) + xlab("") + get_theme(size=7, angle=0)
+plot_bar_thresholds <- function(x, size=12, add_break=F) {
+    #p=ggplot(x, aes(x=count, y=value, fill=Size)) + geom_bar(position='stack', stat='identity') + facet_grid(genome~cell_line, scales='free') + ylab(expression("#mosaic SV")) + xlab("") + get_theme(size=size, angle=0)
+    p=ggplot(x, aes(x=count, y=value, fill=Size)) + geom_bar(position='stack', stat='identity') + facet_wrap(~cell_line, ncol=5) + ylab(expression("#mosaic SV")) + xlab("") + get_theme(size=size, angle=0)
     #if (add_break) {
     #    p = p + scale_y_break(c(100, 1000), scales="free")
     #}
@@ -202,6 +204,7 @@ do_bar_chart <- function(data_path, out_path, threads, myparam) {
     p_normal = plot_bar_thresholds(res.normal.mosaic.thresholds) + scale_fill_manual(values = custom_colors)
     print(p_normal)
     dev.off()
+
     pdf(out_path[['normal_mosaic_thresholds']], width=6.6, height=3)
     p_normal = plot_bar_thresholds(res.paired.mosaic.thresholds) + scale_fill_manual(values = custom_colors)
     print(p_normal)
@@ -252,7 +255,7 @@ do_bar_chart <- function(data_path, out_path, threads, myparam) {
     res.small.normal.germline.hg38 = res.small.germline.normal %>% filter(genome == 'hg38')
     res.small.normal.germline.chm13 = res.small.germline.normal %>% filter(genome == 'chm13')
 
-    pdf(out_path[['hg38normal']], width=15, height=4.6)
+    pdf(out_path[['hg38normal']], width=11.5, height=8.6)
     res.normal.hg38 = res.normal.hg38 %>% filter(!grepl('l\\+x$|l\\+tgs$|l\\+ts$|l\\+t$', res.normal.hg38$file))
     res.normal.hg38$file = gsub("l\\+", "msv:", res.normal.hg38$file)
 
@@ -262,10 +265,11 @@ do_bar_chart <- function(data_path, out_path, threads, myparam) {
     res.normal.germline.hg38$file = gsub("l\\+", "msv:", res.normal.germline.hg38$file)
     res.small.normal.hg38$file = gsub("l\\+", "msv:", res.small.normal.hg38$file)
 
-    p_big_germline = plot_bar(res.normal.germline.hg38, is_germline=T, size=12)
-    p_big = plot_bar(res.normal.hg38, facet_wrap=F, size=12)
-    p_small = plot_bar(res.small.normal.hg38, facet_wrap=F, size=12)
-    print((p_big_germline + p_big + p_small) + scale_fill_manual(values = custom_colors)) # +plot_layout(guides = "collect")
+    p_normal = plot_bar_thresholds(res.normal.mosaic.thresholds %>% filter(genome=='hg38'), size=11) + scale_fill_manual(values = custom_colors)
+    p_big_germline = plot_bar(res.normal.germline.hg38, is_germline=T, facet_wrap=T, size=11)
+    p_big = plot_bar(res.normal.hg38 %>% filter(file!='cuteSV'), facet_wrap=T, size=11)
+    p_small = plot_bar(res.small.normal.hg38, facet_wrap=T, size=11)
+    print((p_big_germline + p_big) / (p_small + p_normal) + scale_fill_manual(values = custom_colors) + plot_layout(heights=c(1, 1), widths = c(1, 1))) # +plot_layout(guides = "collect")
     dev.off()
 
     pdf(out_path[['hg38normal_germline']], width=9.6, height=3.2)

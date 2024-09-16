@@ -13,7 +13,7 @@ custom_colors <- c(
   "msv:gs" = rgb(187, 142, 33, maxColorValue = 255),
   "minisvl+g" = rgb(249, 134, 130, maxColorValue = 255),
   "msv:g" = rgb(249, 134, 130, maxColorValue = 255),
-  "msv:tg" = rgb(187, 142, 33, maxColorValue = 255),
+  "msv:tg" = rgb(249, 134, 130, maxColorValue = 255),
   "nanomonsv" = rgb(147, 203, 118, maxColorValue = 255),
   "savana" = rgb(22, 183, 139, maxColorValue = 255),
   "severus" = rgb(16, 174, 228, maxColorValue = 255),
@@ -116,6 +116,9 @@ do_bar_chart <- function(data_path, out_path, threads, myparam) {
     # R code
     metrics = parse_list_metrics_files(data_path[['ont']])
     metrics_hifi = parse_list_metrics_files(data_path[['hifi']])
+    metrics_hifi$cell_line = paste0(metrics$cell_line, ' HiFi')
+    metrics$cell_line = paste0(metrics$cell_line, ' ONT')
+
     write_tsv(metrics, out_path[['table1']])
     write_tsv(metrics_hifi, out_path[['table1_hifi']])
 

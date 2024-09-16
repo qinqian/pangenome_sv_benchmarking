@@ -16,7 +16,7 @@ custom_colors <- c(
   "svision" = rgb(248, 89, 206, maxColorValue = 255)
 )
 
-get_theme <- function(size=7, angle=0) {
+get_theme <- function(size=12, angle=0) {
     defined_theme = theme_clean(base_size=size) + theme(legend.title=element_text(size=size), strip.text=element_text(size=size), legend.text=element_text(size=size), axis.title.x=element_text(size=size), axis.title.y=element_text(size=size), axis.text.y=element_text(size=size), axis.text.x=element_text(size=size, angle=angle, hjust = 1, vjust=1.05)) #, legend.position="bottom", legend.box = "horizontal") 
     defined_theme
 }
@@ -110,7 +110,7 @@ do_bar_chart <- function(input, out_path, threads, myparam) {
     print(head(metrics))
     write_tsv(metrics, out_path[['tumor_only_table']])
     grid <- generate_grid()
-    pdf(out_path[['hg38plot']], width=5.5, height=5.6)
+    pdf(out_path[['hg38plot']], width=9.5, height=14.5)
     mixed_hg38_p = plot_prec_recall(grid, metrics) + ggtitle("non-COLO829 HiFi tumor-normal 1:4 mixed reads")
     print(mixed_hg38_p)
     dev.off()

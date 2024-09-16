@@ -8,14 +8,17 @@ custom_colors <- c(
   "msv:tg" = rgb(249, 134, 130, maxColorValue = 255),
   "minisvl+tg" = rgb(249, 134, 130, maxColorValue = 255),
   "minisvl+tgs" = rgb(187, 142, 33, maxColorValue = 255),
+  "msv:tgsnonormal" = rgb(22, 183, 139, maxColorValue = 255),
   "msv:tgs" = rgb(187, 142, 33, maxColorValue = 255),
   "minisvl+gs" = rgb(187, 142, 33, maxColorValue = 255),
   "minisvl+g" = rgb(249, 134, 130, maxColorValue = 255),
   "nanomonsv" = rgb(147, 203, 118, maxColorValue = 255),
   "savana" = rgb(22, 183, 139, maxColorValue = 255),
-  "severus" = rgb(16, 174, 228, maxColorValue = 255),
+  "severus_mosaic" = rgb(16, 174, 228, maxColorValue = 255),
+  "severus_somatic" = "orange",
   "severus_lowaf" = rgb(16, 174, 228, maxColorValue = 255),
   "sniffles" = rgb(154, 130, 251, maxColorValue = 255),
+  "sniffles_somatic" = rgb(248, 89, 206, maxColorValue = 255),
   "snf_mosaic" = rgb(154, 130, 251, maxColorValue = 255),
   "svision" = rgb(248, 89, 206, maxColorValue = 255)
 )
@@ -92,20 +95,31 @@ load_metrics <- function(data_path) {
     metrics$cell_line = gsub("H2009", "NCI2009",  metrics$cell_line)
     metrics$cell_line = gsub("H1437", "NCI1437",  metrics$cell_line)
 
-    metrics$tool = ifelse(grepl('grch38l', metrics$file), 
+
+    metrics$tool = 
+	    ifelse(grepl("somatic_generation", metrics$file),
+		   "sniffles_somatic",
+	    ifelse(grepl('grch38l', metrics$file), 
 			  str_extract(metrics$file, "(gafcall|minisv_pair|minisv_mosaic|nanomonsv|savana|severus_lowaf|sniffles_mosaic|sniffles|svision|cutesv)", group=1),
-                          str_extract(metrics$file, "(severus_lowaf|sniffles_mosaic|sniffles|svision|cutesv)", group=1))
+                          str_extract(metrics$file, "(severus_lowaf|sniffles_mosaic|sniffles|svision|cutesv|severus_all|severus_somatic)", group=1)))
 #    metrics$tool = ifelse(grepl("grch38g|grch38l|hg38l|chm13l|chm13g", metrics$file),  # minisv
 #			  gsub("_pair", "", gsub("gafcall", "minisv", str_extract(metrics$tool, "(gafcall|minisv|minisv_pair|minisv_mosaic)", group=1))),
 #			  gsub("_pair", "", gsub("gafcall", "minisv", str_extract(metrics$tool, "(nanomonsv|savana|severus|severus_lowaf|sniffles_mosaic|sniffles|svision)", group=1))))
 #
     metrics$tool = gsub('gafcall', 'minisv', metrics$tool)
     metrics$tool = gsub('sniffles_mosaic', 'snf_mosaic', metrics$tool)
+    metrics$tool = gsub('severus_all', 'severus_mosaic', metrics$tool)
     print(table(metrics$tool))
+    print(metrics$file)
 
-    metrics$param = str_extract(metrics$file, "(l\\+g|l_l\\+t\\+g|l_l\\+t\\+g\\+s|l_l\\+x|g_g\\+x|l_l\\+g|l_l\\+t|l\\+tgs|l\\+gs|l\\+ts|l\\+tg)(_mosaic)", group=1)
+    # output/minisv_mosaic_asm/NCI2009_hifi1/grch38l_l+t+g+s_mixed_nonormal.msv.gz
+    metrics$param = str_extract(metrics$file, "(l\\+g|l_l\\+t\\+g|l_l\\+t\\+g\\+s|l_l\\+x|g_g\\+x|l_l\\+g|l_l\\+t|l\\+tgs|l\\+gs|l\\+ts|l\\+tg)_mixed", group=1)
+    print(metrics$param)
     metrics$param[is.na(metrics$param)] = ""
-    metrics$tool = paste0(metrics$tool, metrics$param)
+
+    metrics$normal = str_extract(metrics$file, "(nonormal)", group=1)
+    metrics$normal[is.na(metrics$normal)] = ""
+    metrics$tool = paste0(metrics$tool, metrics$param, metrics$normal)
 
     metrics$tool = gsub('minisv_mosaicl_l\\+t\\+g\\+s', 'msv:tgs', metrics$tool)
     metrics$tool = gsub('minisv_mosaicl_l\\+t\\+g', 'msv:tg', metrics$tool)

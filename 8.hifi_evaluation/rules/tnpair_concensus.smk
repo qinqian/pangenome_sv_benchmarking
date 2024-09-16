@@ -14,6 +14,9 @@ rule all:
         "output/tnpair/batch34/noncolo829_hifi_clean.pdf",
         "output/tnpair/batch34/noncolo829_clean_joint.pdf",
         "Figure5_mixedhg38_noncolo829_hifi_clean.pdf",
+        "Figure5_mixedhg38_noncolo829_hifi_clean_10percent.pdf",
+        "Figure5_mixedhg38_noncolo829_hifi_clean_somatic_withBL.pdf",
+        "Figure5_mixedhg38_noncolo829_hifi_clean_10percent_withBL_somatic.pdf",
         "output/local/tnpair/batch34/Figure4_noncolo829_clean_joint.pdf"
 
 minisv_eval_tnpair_concensus_files_ont = expand(expand("output/minisv_eval_tnpair_concensus_from1a/{{folder}}_{cell_line}_{platform}_{{assembly}}_count{{cutoff}}_eval_tg.tsv", zip, cell_line=config['samples']['tumor_normal_pair']['batch3']['cell_line3'], platform=config['samples']['tumor_normal_pair']['batch3']['platform3']), assembly=['chm13', 'grch38'], cutoff=[3,4,5,10], folder=config['samples']['tumor_normal_pair']['batch3']['label']) + expand(expand("output/minisv_eval_tnpair_concensus_from1a/{{folder}}_{cell_line}_{platform}_{{assembly}}_count{{cutoff}}_eval_tg.tsv", zip, cell_line=config['samples']['tumor_normal_pair']['batch4']['cell_line4'], platform=config['samples']['tumor_normal_pair']['batch4']['platform4']), assembly=['chm13', 'grch38'], cutoff=[3,4,5,10], folder=config['samples']['tumor_normal_pair']['batch4']['label'])
@@ -31,6 +34,50 @@ rule noncolo829_hifi_mixed_mode_evaluation:
         mixed_table_100kb="noncolo829_mixed_clean_100kb.tsv",
     script:
         "scripts/tn_pair_precision_recall_noncolo829.R"
+
+
+# Figure 4cd: mixed non-colo829 evaluation with BL
+rule noncolo829_hifi_mixed_mode_evaluation_withBL:
+    input:
+        mixed_noncolo829_hifi = expand(os.path.join("../10.mixed_assembly/output/minisv_mosaic_somatic_asm", '{cell_line}_hifi1_grch38_count{count}_eval.tsv'), cell_line=['HCC1395', 'HCC1937', 'HCC1954', 'NCI1437', 'NCI2009'], count=[2,3,4,5,10]),
+        mixed_noncolo829_hifi_100kb = expand(os.path.join("../10.mixed_assembly/output/minisv_mosaic_somatic_asm", '{cell_line}_hifi1_grch38_count{count}_eval_100kb.tsv'), cell_line=['HCC1395', 'HCC1937', 'HCC1954', 'NCI1437', 'NCI2009'], count=[2,3,4,5,10]),
+    conda: "plot"
+    output:
+        mixed_table="noncolo829_mixed_clean_withBL.tsv",
+        mixedhg38plot="Figure5_mixedhg38_noncolo829_hifi_clean_somatic_withBL.pdf",
+        mixed_table_100kb="noncolo829_mixed_clean_100kb_withBL.tsv",
+    script:
+        # scripts/tn_pair_precision_recall_noncolo829_mixed_withBL.R
+        "scripts/tn_pair_precision_recall_noncolo829_mixed_withBL.R"
+
+
+# Figure 4cd: mixed non-colo829 evaluation 10 percent
+rule noncolo829_hifi_mixed_mode_evaluation_10percent:
+    input:
+        mixed_noncolo829_hifi = expand(os.path.join("../10.mixed_assembly_10percent/output/minisv_mosaic_asm", '{cell_line}_hifi1_grch38_count{count}_eval.tsv'), cell_line=['HCC1395', 'HCC1937', 'HCC1954', 'NCI1437', 'NCI2009'], count=[2,3,4,5,10]),
+        mixed_noncolo829_hifi_100kb = expand(os.path.join("../10.mixed_assembly_10percent/output/minisv_mosaic_asm", '{cell_line}_hifi1_grch38_count{count}_eval_100kb.tsv'), cell_line=['HCC1395', 'HCC1937', 'HCC1954', 'NCI1437', 'NCI2009'], count=[2,3,4,5,10]),
+    conda: "plot"
+    output:
+        mixed_table="noncolo829_mixed_clean_10percent.tsv",
+        mixedhg38plot="Figure5_mixedhg38_noncolo829_hifi_clean_10percent.pdf",
+        mixed_table_100kb="noncolo829_mixed_clean_100kb_10percent.tsv",
+    script:
+        "scripts/tn_pair_precision_recall_noncolo829.R"
+
+
+# Figure 4cd: mixed non-colo829 evaluation 10 percent with paired normal
+rule noncolo829_hifi_mixed_mode_evaluation_10percent_withBL:
+    input:
+        mixed_noncolo829_hifi = expand(os.path.join("../10.mixed_assembly_10percent/output/minisv_mosaic_somatic_asm/", '{cell_line}_hifi1_grch38_count{count}_eval.tsv'), cell_line=['HCC1395', 'HCC1937', 'HCC1954', 'NCI1437', 'NCI2009'], count=[2,3,4,5,10]),
+        mixed_noncolo829_hifi_100kb = expand(os.path.join("../10.mixed_assembly_10percent/output/minisv_mosaic_somatic_asm/", '{cell_line}_hifi1_grch38_count{count}_eval_100kb.tsv'), cell_line=['HCC1395', 'HCC1937', 'HCC1954', 'NCI1437', 'NCI2009'], count=[2,3,4,5,10]),
+    conda: "plot"
+    output:
+        mixed_table="noncolo829_mixed_clean_10percent_withBL.tsv",
+        mixedhg38plot="Figure5_mixedhg38_noncolo829_hifi_clean_10percent_withBL_somatic.pdf",
+        mixed_table_100kb="noncolo829_mixed_clean_100kb_10percent_withBL.tsv",
+    script:
+        "scripts/tn_pair_precision_recall_noncolo829_mixed_withBL.R"
+
 
 # Figure 4ab: tnpair non-colo829 evaluation
 rule otherline_evaluation:
@@ -50,6 +97,8 @@ rule otherline_evaluation:
         joint_plot = "output/tnpair/batch34/noncolo829_clean_joint.pdf",
     script:
         "scripts/tn_pair_precision_recall_concensus.R"
+
+
 
 
 

@@ -373,7 +373,7 @@ use rule * from tnpair_plot_concensus_workflow as r_tnpair_plot_concensus_workfl
 # Now it changes to be Supplementary Figure 
 rule noncolo829_hifi_tumor_only_evaluation:
     input:
-        tumor_only_hifi = expand("../1a.alignment_sv_tools/output/minisv_eval_singleT/single_{cell_line}_hifi1_{assembly}_count{cutoff}_eval_len100kb.tsv", cell_line=['HCC1395', 'HCC1937', 'HCC1954', 'NCI1437', 'NCI2009'], cutoff=[2,3,4,5,10], assembly=['chm13', 'grch38']),
+        tumor_only_hifi = expand("../1a.alignment_sv_tools/output/minisv_eval_singleT/single_{cell_line}_hifi1_{assembly}_count{cutoff}_eval_len100kb.tsv", cell_line=['HCC1395', 'HCC1937', 'HCC1954', 'NCI1437', 'NCI2009'], cutoff=[2,3,4,5], assembly=['chm13', 'grch38'])
     conda: "plot"
     output:
         tumor_only_table="noncolo829_tumor_only_clean.tsv",

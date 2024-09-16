@@ -150,10 +150,9 @@ do_bar_chart <- function(input, out_path, threads, myparam) {
     write_tsv(metrics.ont, out_path[['tumor_only_table_ont']])
 
     grid <- generate_grid()
-    pdf(out_path[['hg38plot']], width=7.5, height=11.6)
-    mixed_hg38_p = plot_prec_recall(grid, metrics %>% filter(genome=='hg38')) + ggtitle("non-COLO829 HiFi\ntumor-only >100kb SV evaluation")
-    mixed_hg38_p.ont = plot_prec_recall(grid, metrics.ont %>% filter(genome=='hg38')) + ggtitle("non-COLO829 ONT\ntumor-only >100kb SV evaluation")
-
+    pdf(out_path[['hg38plot']], width=9.5, height=14.5)
+    mixed_hg38_p = plot_prec_recall(grid, metrics %>% filter(genome=='hg38' & count < 10)) + ggtitle("non-COLO829 HiFi\ntumor-only >100kb SV evaluation")
+    mixed_hg38_p.ont = plot_prec_recall(grid, metrics.ont %>% filter(genome=='hg38' & count < 10)) + ggtitle("non-COLO829 ONT\ntumor-only >100kb SV evaluation")
     print(mixed_hg38_p + mixed_hg38_p.ont + plot_layout(guides = "collect"))
     dev.off()
 }

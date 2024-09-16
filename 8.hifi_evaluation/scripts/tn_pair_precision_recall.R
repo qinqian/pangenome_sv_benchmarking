@@ -16,6 +16,7 @@ custom_colors <- c(
   "nanomonsv" = rgb(147, 203, 118, maxColorValue = 255),
   "savana" = rgb(22, 183, 139, maxColorValue = 255),
   "severus" = rgb(16, 174, 228, maxColorValue = 255),
+  "severus_lowaf" = rgb(16, 174, 228, maxColorValue = 255),
   "sniffles" = rgb(154, 130, 251, maxColorValue = 255),
   "svision" = rgb(248, 89, 206, maxColorValue = 255)
 )
@@ -46,7 +47,9 @@ load_metrics <- function(data_path) {
     metrics = do.call(rbind, df_list)
     metrics$genome = ifelse(grepl("chm13", metrics$tool), "chm13", "hg38")
     metrics$file = metrics$tool
-    metrics$tool = gsub("_pair", "", gsub("gafcall", "minisv", str_extract(metrics$tool, "(gafcall|minisv_pair|minisv_mosaic|nanomonsv|savana|severus|sniffles_mosaic|sniffles|svision)", group=1)))
+    metrics$tool = ifelse(grepl("grch38g|grch38l|hg38l|chm13l|chm13g", metrics$file),  # minisv
+			  gsub("_pair", "", gsub("gafcall", "minisv", str_extract(metrics$tool, "(gafcall|minisv|minisv_pair|minisv_mosaic|nanomonsv|savana|severus_lowaf|sniffles_mosaic|sniffles|svision)", group=1))),
+			  gsub("_pair", "", gsub("gafcall", "minisv", str_extract(metrics$tool, "(nanomonsv|savana|severus|severus_lowaf|sniffles_mosaic|sniffles|svision)", group=1))))
    
     # previous gafcall output path name
     # different from current minisv 
@@ -104,7 +107,7 @@ do_bar_chart <- function(input, out_path, threads, myparam) {
     write_tsv(metrics.ont, out_path[['ont_table']])
 
     metrics.mixed = load_metrics(data_path_mixed)
-    metrics_hg38.mixed  = metrics.mixed %>% filter(genome == 'hg38' & count >= 2)
+    metrics_hg38.mixed  = metrics.mixed %>% filter(genome == 'hg38' & count >= 2 & count <= 5)
     #metrics_chm13.mixed = metrics.mixed %>% filter(genome == "chm13" & count >= 4)
     write_tsv(metrics.mixed, out_path[['mixed_table']])
 
@@ -113,7 +116,7 @@ do_bar_chart <- function(input, out_path, threads, myparam) {
     if (length(unlist(data_path_mixed_100kb)) > 0) {
         plot_100kb = T
         metrics.mixed_100kb = load_metrics(data_path_mixed_100kb)
-        metrics.hg38_mixed_100kb = metrics.mixed_100kb %>% filter(genome == 'hg38' & count >= 2)
+        metrics.hg38_mixed_100kb = metrics.mixed_100kb %>% filter(genome == 'hg38' & count >= 2 & count <= 5)
         write_tsv(metrics.hg38_mixed_100kb, out_path[['mixed_table_100kb']])
     }
 
