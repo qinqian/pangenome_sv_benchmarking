@@ -95,10 +95,7 @@ load_metrics <- function(data_path) {
     metrics$tool = ifelse(grepl('grch38l', metrics$file), 
 			  str_extract(metrics$file, "(gafcall|minisv_pair|minisv_mosaic|nanomonsv|savana|severus_lowaf|sniffles_mosaic|sniffles|svision|cutesv)", group=1),
                           str_extract(metrics$file, "(severus_lowaf|sniffles_mosaic|sniffles|svision|cutesv)", group=1))
-#    metrics$tool = ifelse(grepl("grch38g|grch38l|hg38l|chm13l|chm13g", metrics$file),  # minisv
-#			  gsub("_pair", "", gsub("gafcall", "minisv", str_extract(metrics$tool, "(gafcall|minisv|minisv_pair|minisv_mosaic)", group=1))),
-#			  gsub("_pair", "", gsub("gafcall", "minisv", str_extract(metrics$tool, "(nanomonsv|savana|severus|severus_lowaf|sniffles_mosaic|sniffles|svision)", group=1))))
-#
+
     metrics$tool = gsub('gafcall', 'minisv', metrics$tool)
     metrics$tool = gsub('sniffles_mosaic', 'snf_mosaic', metrics$tool)
     print(table(metrics$tool))

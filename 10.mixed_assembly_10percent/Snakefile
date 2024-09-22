@@ -247,6 +247,7 @@ for cutoff in [2,3,4,5,10]:
             severus_somatic = input_seveurs_somatic,
             truth = input_truth
         output:
+            severus_filtered = f"output/minisv_mosaic_somatic_asm/{{cell_line}}_severus_af0.1_mixdown10_somatic_generation{cutoff}.vcf",
             sniffles_somatic = f"output/minisv_mosaic_somatic_asm/{{cell_line}}_sniffles_mixdown10_somatic_generation{cutoff}.vcf",
             eval = f"output/minisv_mosaic_somatic_asm/{{cell_line}}_grch38_count{cutoff}_eval.tsv"
         conda: 'bcftools'
@@ -255,10 +256,12 @@ for cutoff in [2,3,4,5,10]:
         shell: 
             """
             minisv.js snfpair -n 2 -t 1 {input.sniffles_somatic} > {output.sniffles_somatic}
+            bcftools filter -Oz -i 'FMT/VAF[0] <= 0.1' {input.severus} > {output.severus_filtered}
+
             if [ {wildcards.cell_line} == 'COLO829_hifi1' ]; then
-                /hlilab/alvin/miniconda3/envs/gafcall/bin/k8 /hlilab/alvin/miniconda3/envs/gafcall/bin/minisv.js eval -c {params.c} -b ~/data/pangenome_sv_benchmarking/minisv/data/hs38.reg.bed {input.truth} {input.minisv_ltgs} {input.minisv_ltg} {input.minisv_ltgs_nonormal} {input.sniffles_mosaic} {input.severus} {input.severus_somatic} {output.sniffles_somatic} > {output.eval}
+                /hlilab/alvin/miniconda3/envs/gafcall/bin/k8 /hlilab/alvin/miniconda3/envs/gafcall/bin/minisv.js eval -c {params.c} -b ~/data/pangenome_sv_benchmarking/minisv/data/hs38.reg.bed {input.truth} {input.minisv_ltgs} {input.minisv_ltg} {input.minisv_ltgs_nonormal} {input.sniffles_mosaic} {output.severus_filtered} {input.severus_somatic} {output.sniffles_somatic} > {output.eval}
             else
-                for input in {input.sniffles_mosaic} {input.minisv_ltgs} {input.minisv_ltg} {input.minisv_ltgs_nonormal} {input.severus} {input.severus_somatic} {output.sniffles_somatic}; do
+                for input in {input.sniffles_mosaic} {input.minisv_ltgs} {input.minisv_ltg} {input.minisv_ltgs_nonormal} {output.severus_filtered} {input.severus_somatic} {output.sniffles_somatic}; do
                     /hlilab/alvin/miniconda3/envs/gafcall/bin/k8 /hlilab/alvin/miniconda3/envs/gafcall/bin/minisv.js eval -M -c {params.c} -b ~/data/pangenome_sv_benchmarking/minisv/data/hs38.reg.bed $input {input.truth} | head -2 >> {output.eval}
                 done
             fi
@@ -271,7 +274,7 @@ for cutoff in [2,3,4,5,10]:
         input:
             sniffles_somatic = f"output/minisv_mosaic_somatic_asm/{{cell_line}}_sniffles_mixdown10_somatic_generation{cutoff}.vcf",
             sniffles_mosaic = "../1a.alignment_sv_tools/output/sniffles_mosaic/{cell_line}/grch38_mixdown_mosaic.vcf.gz",
-            severus = input_severus,
+            severus = f"output/minisv_mosaic_somatic_asm/{{cell_line}}_severus_af0.1_mixdown10_somatic_generation{cutoff}.vcf",
             minisv_ltgs = "output/minisv_mosaic_asm/{cell_line}/grch38l_l+t+g+s_mixed_somatic.msv.gz",
             minisv_ltgs_nonormal = "output/minisv_mosaic_asm/{cell_line}/grch38l_l+t+g+s_mixed_nonormal.msv.gz",
             minisv_ltg = "output/minisv_mosaic_asm/{cell_line}/grch38l_l+t+g_mixed_somatic.msv.gz",

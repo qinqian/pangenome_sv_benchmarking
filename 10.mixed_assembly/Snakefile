@@ -222,8 +222,7 @@ def input_severus(wildcards):
 
 def input_seveurs_somatic(wildcards):
     cellline, platform = wildcards.cell_line.split('_')
-    ##../1a.alignment_sv_tools/output/severus_hifi1_mixedsomatic/HCC1395_grch38_mixdown10_cutoff2_phased_mixed_withBL/somatic_SVs/severus_somatic.vcf
-    return f"../1a.alignment_sv_tools/output/severus_{platform}_mixedsomatic/{cellline}_grch38_mixdown10_cutoff2_phased_mixed_withBL/somatic_SVs/severus_somatic.vcf"
+    return f"../1a.alignment_sv_tools/output/severus_{platform}_mixedsomatic/{cellline}_grch38_mixdown25_cutoff2_phased_mixed_withBL/somatic_SVs/severus_somatic.vcf"
    
 
 for cutoff in [2,3,4,5,10]:

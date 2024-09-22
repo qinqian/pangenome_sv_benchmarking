@@ -405,7 +405,7 @@ rule noncolo829_hifi_tumor_only_evaluation_somatic_SV:
 
 rule all: 
     input:
-        minisv_eval_tnpair_files_hifi, # evaluate out of ../1a.alignment_sv_tools/
+        minisv_eval_tnpair_files_hifi,
         minisv_eval_tnpair_concensus_files_hifi,
         minisv_eval_tnpair_concensus_files_ont, minisv_eval_tnpair_concensus_files_ont_tgs,
         minisv_eval_singlemode_files_hifi, minisv_eval_singlemode_files_hifi_100kb,

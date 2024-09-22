@@ -28,7 +28,6 @@ get_theme <- function(size=12, angle=0) {
     defined_theme
 }
 
-
 load_metrics <- function(data_path) {
     df_list = list()
     #### this applies to using Severus only as truthset
@@ -75,6 +74,7 @@ load_metrics <- function(data_path) {
         count = str_extract(path, "count(\\d+)", group=1)
         res$count = count
         res$eval_file = path
+	print(res)
         res = res %>% mutate(f1=2*sensitivity*precision/(sensitivity+precision))
         df_list[[path]] = res
     }
@@ -97,11 +97,11 @@ load_metrics <- function(data_path) {
 
 
     metrics$tool = 
-	    ifelse(grepl("somatic_generation", metrics$file),
+	    ifelse(grepl("somatic_generation", metrics$file) & (!grepl("severus", metrics$file)),
 		   "sniffles_somatic",
 	    ifelse(grepl('grch38l', metrics$file), 
 			  str_extract(metrics$file, "(gafcall|minisv_pair|minisv_mosaic|nanomonsv|savana|severus_lowaf|sniffles_mosaic|sniffles|svision|cutesv)", group=1),
-                          str_extract(metrics$file, "(severus_lowaf|sniffles_mosaic|sniffles|svision|cutesv|severus_all|severus_somatic)", group=1)))
+                          str_extract(metrics$file, "(severus_lowaf|sniffles_mosaic|sniffles|svision|cutesv|severus_all|severus_somatic|severus_af)", group=1)))
 #    metrics$tool = ifelse(grepl("grch38g|grch38l|hg38l|chm13l|chm13g", metrics$file),  # minisv
 #			  gsub("_pair", "", gsub("gafcall", "minisv", str_extract(metrics$tool, "(gafcall|minisv|minisv_pair|minisv_mosaic)", group=1))),
 #			  gsub("_pair", "", gsub("gafcall", "minisv", str_extract(metrics$tool, "(nanomonsv|savana|severus|severus_lowaf|sniffles_mosaic|sniffles|svision)", group=1))))
@@ -109,6 +109,7 @@ load_metrics <- function(data_path) {
     metrics$tool = gsub('gafcall', 'minisv', metrics$tool)
     metrics$tool = gsub('sniffles_mosaic', 'snf_mosaic', metrics$tool)
     metrics$tool = gsub('severus_all', 'severus_mosaic', metrics$tool)
+    metrics$tool = gsub('severus_af', 'severus_mosaic', metrics$tool)
     print(table(metrics$tool))
     print(metrics$file)
 
@@ -124,6 +125,8 @@ load_metrics <- function(data_path) {
     metrics$tool = gsub('minisv_mosaicl_l\\+t\\+g\\+s', 'msv:tgs', metrics$tool)
     metrics$tool = gsub('minisv_mosaicl_l\\+t\\+g', 'msv:tg', metrics$tool)
     metrics$tool = ifelse(metrics$genome == 'chm13' & (grepl("l\\+gs", metrics$tool)), gsub("l\\+gs", "l\\+tgs", metrics$tool), metrics$tool)
+
+    metrics = metrics %>% filter(tool!='msv:tg')
     print(table(metrics$tool))
     metrics
 
@@ -142,16 +145,6 @@ generate_grid <- function() {
 }
 
 
-#plot_prec_recall <- function(grid, metrics) {
-#    p = ggplot() +
-#        geom_contour(data=grid, aes(x = Precision, y = Recall, z = F1), linetype="dashed", linewidth=0.45, color='gray', bins = 10) + 
-#        geom_point(data=metrics, aes(x=sensitivity, y=specificity, colour = factor(tool), size=count), alpha=0.5) + scale_size(range = c(1, 4)) + xlim(0, 1) + ylim(0, 1) + ylab('Precision') + xlab("Recall") +  
-#        geom_path(data=metrics[order(metrics$count),], aes(x=sensitivity, y=specificity, colour = factor(tool))) + 
-#        #geom_line(data=metrics, aes(x=sensitivity, y=specificity, colour = factor(tool))) + 
-#        get_theme()
-#    p
-#}
-
 plot_f1 <- function(metrics) {
     metrics = metrics %>% group_by(tool, genome) %>% slice_max(order_by=f1,n=1, with_ties=F)
     ggplot(metrics, aes(y=f1, x=reorder(tool, f1), fill=tool)) + geom_bar(stat='identity') + facet_grid(~genome, scales='free')+theme_clean() + ylab('F1 score')
@@ -161,10 +154,9 @@ plot_f1 <- function(metrics) {
 plot_prec_recall <- function(grid, metrics) {
     p = ggplot() +
         geom_contour(data=grid, aes(x = precision, y = sensitivity, z = F1), linetype="dashed", linewidth=0.45, color='gray', bins = 10) + 
-        geom_point(data=metrics, aes(x=sensitivity, y=precision, colour = factor(tool), size=count), alpha=0.5) + xlim(0, 1) + ylim(0, 1) + ylab('Precision') + xlab("Recall") +  scale_size_continuous(name = "Count", breaks = c(2, 3, 4, 5, 10), range = c(1, 4)) +
+        geom_point(data=metrics, aes(x=sensitivity, y=precision, colour = factor(tool), size=count), alpha=0.6) + xlim(0, 1) + ylim(0, 1) + ylab('Precision') + xlab("Recall") +  scale_size_continuous(name = "Count", breaks = c(2, 3, 4, 5), range = c(1, 4)) +
         geom_path(data=metrics[order(metrics$count),], aes(x=sensitivity, y=precision, colour = factor(tool))) + 
         facet_wrap(~cell_line, scales = "free", ncol=1, nrow=5) + get_theme()
-        #facet_grid(cell_line~genome, scales = "free") + get_theme()
     p
 }
 
