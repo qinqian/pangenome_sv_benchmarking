@@ -14,6 +14,8 @@ rule all:
         "output/tnpair/batch34/noncolo829_hifi_clean.pdf",
         "output/tnpair/batch34/noncolo829_clean_joint.pdf",
         "Figure3d_mixedhg38_colo829_hifi_clean_10percent_withBL_somatic.pdf",
+        "Figure3d_puretumorhg38_colo829_hifi_clean_10percent_withBL_somatic.pdf",
+        "Figure3dsupp_puretumorhg38_noncolo829_hifi_clean_10percent_withBL_somatic.pdf",
         "Figure5_mixedhg38_noncolo829_hifi_clean.pdf",
         "Figure5_mixedhg38_noncolo829_hifi_clean_10percent.pdf",
         "Figure5_mixedhg38_noncolo829_hifi_clean_somatic_withBL.pdf",
@@ -92,6 +94,33 @@ rule noncolo829_hifi_mixed_mode_evaluation_10percent_withBL:
         mixed_table_100kb="colo829_mixed_clean_100kb_10percent_withBL.tsv",
     script:
         "scripts/tn_pair_precision_recall_mixed.R"
+
+# Figure 3d: version 2 pure tumor with BL
+rule colo829_hifi_puretumor_mode_evaluation_10percent_withBL:
+    input:
+        mixed_colo829_hifi = expand(os.path.join("../10.mixed_assembly_10percent/output/minisv_puretumor_somatic_asm/", '{cell_line}_hifi1_grch38_count{count}_eval.tsv'), cell_line=['COLO829'], count=[2,3,4,5,10]),
+        mixed_colo829_hifi_100kb = expand(os.path.join("../10.mixed_assembly_10percent/output/minisv_puretumor_somatic_asm/", '{cell_line}_hifi1_grch38_count{count}_eval_100kb.tsv'), cell_line=['COLO829'], count=[2,3,4,5,10]),
+    conda: "plot"
+    output:
+        mixed_table="colo829_puretumor_clean_10percent_withBL.tsv",
+        mixedhg38plot="Figure3d_puretumorhg38_colo829_hifi_clean_10percent_withBL_somatic.pdf",
+        mixed_table_100kb="colo829_puretumor_clean_100kb_10percent_withBL.tsv",
+    script:
+        "scripts/tn_pair_precision_recall_asm_tumornormalfilter.R"
+
+
+# Figure 3dsupp: other cell lines pure tumor with BL
+rule noncolo829_hifi_puretumor_mode_evaluation_10percent_withBL:
+    input:
+        mixed_noncolo829_hifi = expand(os.path.join("../10.mixed_assembly_10percent/output/minisv_puretumor_somatic_asm/", '{cell_line}_hifi1_grch38_count{count}_eval.tsv'), cell_line=['HCC1395', 'HCC1937', 'HCC1954', 'NCI1437', 'NCI2009'], count=[2,3,4,5,10]),
+        mixed_noncolo829_hifi_100kb = expand(os.path.join("../10.mixed_assembly_10percent/output/minisv_puretumor_somatic_asm/", '{cell_line}_hifi1_grch38_count{count}_eval_100kb.tsv'), cell_line=['HCC1395', 'HCC1937', 'HCC1954', 'NCI1437', 'NCI2009'], count=[2,3,4,5,10]),
+    conda: "plot"
+    output:
+        mixed_table="noncolo829_puretumor_clean_10percent_withBL.tsv",
+        mixedhg38plot="Figure3dsupp_puretumorhg38_noncolo829_hifi_clean_10percent_withBL_somatic.pdf",
+        mixed_table_100kb="noncolo829_puretumor_clean_100kb_10percent_withBL.tsv",
+    script:
+        "scripts/tn_pair_precision_recall_noncolo829_tumornormal_asmfilter.R"
 
 
 # Figure 4ab: tnpair non-colo829 evaluation

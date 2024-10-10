@@ -57,7 +57,7 @@ rule sniffles2_snf:
         tmpdir="local_tmp/"
     shell:
         """
-	sniffles --reference ../1a.alignment_sv_tools/{wildcards.assembly}.fa --tandem-repeats ../1a.alignment_sv_tools/{wildcards.assembly}_vntrs.bed --input {input.cram} --snf {output.snf} --threads {threads} {params.mosaic}
+	sniffles --reference ../1a.alignment_sv_tools/{wildcards.assembly}.fa --tandem-repeats ../1a.alignment_sv_tools/{wildcards.assembly}_vntrs.bed --input {input.cram} --snf {output.snf} --threads {threads} {params.mosaic} --output-rnames
         """
 
 
@@ -78,6 +78,7 @@ rule sniffles2_tumor_normal_pair:
         sniffles --reference ../1a.alignment_sv_tools/{wildcards.assembly}.fa --tandem-repeats ../1a.alignment_sv_tools/{wildcards.assembly}_vntrs.bed --input {input.snf} --output-rnames --vcf {output.vcf}
         """
 
+
 rule sniffles2_snf_mosaic:
     threads: 12
     conda: "sniffles2"
@@ -95,7 +96,7 @@ rule sniffles2_snf_mosaic:
     shell:
         """
 
-	sniffles --reference ../1a.alignment_sv_tools/{wildcards.assembly}.fa --tandem-repeats ../1a.alignment_sv_tools/{wildcards.assembly}_vntrs.bed --input {input.cram} --snf {output.snf} --threads {threads} {params.mosaic}
+	sniffles --reference ../1a.alignment_sv_tools/{wildcards.assembly}.fa --tandem-repeats ../1a.alignment_sv_tools/{wildcards.assembly}_vntrs.bed --input {input.cram} --snf {output.snf} --threads {threads} {params.mosaic} --output-rnames
         """
 
 rule sniffles2_tumor_normal_pair_mosaic:
@@ -190,6 +191,7 @@ rule sniffles2_mosaic_downsample10_call:
         sniffles --threads {threads} --reference ../1a.alignment_sv_tools/{wildcards.assembly}.fa --tandem-repeats ../1a.alignment_sv_tools/{wildcards.assembly}_vntrs.bed -i {input.cram} -v {output.vcf} --output-rnames --sample-id {wildcards.cell_line}_{wildcards.platform} {params.mosaic}
         """
 
+
 rule sniffles2_snf_downsample10:
     threads: 12
     conda: "sniffles2"
@@ -204,7 +206,7 @@ rule sniffles2_snf_downsample10:
         tmpdir="local_tmp/"
     shell:
         """
-	sniffles --reference ../1a.alignment_sv_tools/{wildcards.assembly}.fa --tandem-repeats ../1a.alignment_sv_tools/{wildcards.assembly}_vntrs.bed --input {input.cram} --snf {output.snf} --threads {threads}
+	sniffles --reference ../1a.alignment_sv_tools/{wildcards.assembly}.fa --tandem-repeats ../1a.alignment_sv_tools/{wildcards.assembly}_vntrs.bed --input {input.cram} --snf {output.snf} --threads {threads} --output-rnames
         """
 
 

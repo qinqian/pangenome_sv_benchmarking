@@ -6,20 +6,20 @@ library(patchwork)
 
 custom_colors <- c(
   "msv:tg" = rgb(249, 134, 130, maxColorValue = 255),
-  "minisvl+tg" = rgb(249, 134, 130, maxColorValue = 255),
-  "minisvl+tgs" = rgb(187, 142, 33, maxColorValue = 255),
+  "msv_tg_somatic" = rgb(249, 134, 130, maxColorValue = 255),
+  "msv_tgs_somatic_filterasm" = rgb(187, 142, 33, maxColorValue = 255),
   "msv:tgsnonormal" = rgb(22, 183, 139, maxColorValue = 255),
   "msv:tgs" = rgb(187, 142, 33, maxColorValue = 255),
   "minisvl+gs" = rgb(187, 142, 33, maxColorValue = 255),
   "minisvl+g" = rgb(249, 134, 130, maxColorValue = 255),
   "nanomonsv" = rgb(147, 203, 118, maxColorValue = 255),
   "savana" = rgb(22, 183, 139, maxColorValue = 255),
-  "severus_mosaic" = rgb(16, 174, 228, maxColorValue = 255),
+  "severus_somatic_filterasm" = rgb(16, 174, 228, maxColorValue = 255),
   "severus_somatic" = "orange",
   "severus_lowaf" = rgb(16, 174, 228, maxColorValue = 255),
   "sniffles" = rgb(154, 130, 251, maxColorValue = 255),
   "sniffles_somatic" = rgb(248, 89, 206, maxColorValue = 255),
-  "snf_mosaic" = rgb(154, 130, 251, maxColorValue = 255),
+  "snf_somatic_filterasm" = rgb(154, 130, 251, maxColorValue = 255),
   "svision" = rgb(248, 89, 206, maxColorValue = 255),
   "severus_mosaic_filterasm" = "black",
   "severus_mosaic_rawasm" = "gray"
@@ -52,25 +52,16 @@ load_metrics <- function(data_path) {
     metrics$genome = ifelse(grepl("chm13", metrics$tool), "chm13", "hg38")
     metrics$file = metrics$tool
     metrics$tool = 
-	    ifelse(grepl("somatic_generation", metrics$file) & (!grepl("severus", metrics$file)),
+	    ifelse(grepl("snf_", metrics$file),
 		   "sniffles_somatic",
-	    ifelse(grepl('grch38l', metrics$file), 
-			  str_extract(metrics$file, "(gafcall|minisv_pair|minisv_mosaic|nanomonsv|savana|severus_lowaf|sniffles_mosaic|sniffles|svision|cutesv)", group=1),
-                          str_extract(metrics$file, "(severus_lowaf|sniffles_mosaic|sniffles|svision|cutesv|severus_all|severus_somatic|severus_af)", group=1)))
+                   ifelse(grepl("tg", metrics$file),
+		          "msv_tg_somatic",
+	                  str_extract(metrics$file, "(severus_somatic)", group=1))
+            )
 
-    metrics$tool[grepl('rawasm', metrics$file)] = 'severus_mosaic_rawasm'
-    metrics$tool[grepl('filterasm', metrics$file)] = 'severus_mosaic_filterasm'
-
-#    metrics$tool = ifelse(grepl("grch38g|grch38l|hg38l|chm13l|chm13g", metrics$file),  # minisv
-#			  gsub("_pair", "", gsub("gafcall", "minisv", str_extract(metrics$tool, "(gafcall|minisv|minisv_pair|minisv_mosaic)", group=1))),
-#			  gsub("_pair", "", gsub("gafcall", "minisv", str_extract(metrics$tool, "(nanomonsv|savana|severus|severus_lowaf|sniffles_mosaic|sniffles|svision)", group=1))))
-#
-    metrics$tool = gsub('gafcall', 'minisv', metrics$tool)
-    metrics$tool = gsub('sniffles_mosaic', 'snf_mosaic', metrics$tool)
-    metrics$tool = gsub('severus_all', 'severus_mosaic', metrics$tool)
-    metrics$tool = gsub('severus_af', 'severus_mosaic', metrics$tool)
-
-    print(table(metrics$tool))
+    metrics$tool[grepl('severus_', metrics$file) & grepl('filterasm', metrics$file)] = 'severus_somatic_filterasm'
+    metrics$tool[grepl('snf_', metrics$file) & grepl('filterasm', metrics$file)] = 'snf_somatic_filterasm'
+    metrics$tool[grepl('msv_', metrics$file) & grepl('filterasm', metrics$file)] = 'msv_tgs_somatic_filterasm'
 
     # previous gafcall output path name
     # different from current minisv 
@@ -105,7 +96,7 @@ generate_grid <- function() {
 plot_prec_recall <- function(grid, metrics) {
     p = ggplot() +
         geom_contour(data=grid, aes(x = Recall, y = Precision, z = F1), linetype="dashed", linewidth=0.45, color='gray', bins = 10) + 
-        geom_point(data=metrics, aes(x=sensitivity, y=specificity, colour = factor(tool), size=count), alpha=0.5) + ylab('Precision') + xlab("Recall") + scale_size_continuous(name = "Count", breaks = c(2, 3, 4, 5), range = c(1, 5)) + 
+        geom_point(data=metrics, aes(x=sensitivity, y=specificity, colour = factor(tool), size=count), alpha=0.5) + ylab('Precision') + xlab("Recall") + scale_size_continuous(name = "Count", breaks = c(3, 4, 5, 10), range = c(1, 5)) + 
         geom_path(data=metrics[order(metrics$count),], aes(x=sensitivity, y=specificity, colour = factor(tool))) + 
         get_theme()
     p
@@ -124,14 +115,14 @@ do_bar_chart <- function(input, out_path, threads, myparam) {
     print(data_path_mixed_100kb)
 
     metrics.mixed = load_metrics(data_path_mixed)
-    metrics_hg38.mixed  = metrics.mixed %>% filter(genome == 'hg38' & count >= 2 & count <= 5)
+    metrics_hg38.mixed  = metrics.mixed %>% filter(genome == 'hg38' & count >= 3 & count <= 10)
     write_tsv(metrics.mixed, out_path[['mixed_table']])
 
     plot_100kb = F
     if (length(unlist(data_path_mixed_100kb)) > 0) {
         plot_100kb = T
         metrics.mixed_100kb = load_metrics(data_path_mixed_100kb)
-        metrics.hg38_mixed_100kb = metrics.mixed_100kb %>% filter(genome == 'hg38' & count >= 2 & count <= 5)
+        metrics.hg38_mixed_100kb = metrics.mixed_100kb %>% filter(genome == 'hg38' & count >= 3 & count <= 10)
         write_tsv(metrics.hg38_mixed_100kb, out_path[['mixed_table_100kb']])
     }
 
@@ -146,14 +137,14 @@ do_bar_chart <- function(input, out_path, threads, myparam) {
 
     grid <- generate_grid()
     pdf(out_path[['mixedhg38plot']], width=5.5, height=5.6)
-    mixed_hg38_p = plot_prec_recall(grid, metrics_hg38.mixed) + ggtitle("COLO829 HiFi tumor-normal\nmixed reads all SVs")+scale_colour_manual(values = custom_colors)
+    mixed_hg38_p = plot_prec_recall(grid, metrics_hg38.mixed) + ggtitle("COLO829 HiFi tumor-normal\nall SVs")+scale_colour_manual(values = custom_colors)
     print(mixed_hg38_p)
     dev.off()
 
     # Plot contours of constant F1 score
     if (plot_100kb) {
         pdf(out_path[['mixedhg38plot']], width=9.5, height=4)
-        mixed_hg38_p_100kb = plot_prec_recall(grid, metrics.hg38_mixed_100kb)+scale_colour_manual(values = custom_colors) + ggtitle("COLO829 HiFi tumor-normal\nmixed reads >100kb SVs")
+        mixed_hg38_p_100kb = plot_prec_recall(grid, metrics.hg38_mixed_100kb)+scale_colour_manual(values = custom_colors) + ggtitle("COLO829 HiFi tumor-normal\n>100kb SVs")
         print((mixed_hg38_p + mixed_hg38_p_100kb) + plot_layout(guides = "collect"))
     }
     dev.off()

@@ -9,6 +9,8 @@ custom_colors <- c(
   "minisvl+tg" = rgb(249, 134, 130, maxColorValue = 255),
   "minisvl+tgs" = rgb(187, 142, 33, maxColorValue = 255),
   "msv:tgsnonormal" = rgb(22, 183, 139, maxColorValue = 255),
+  "msv_tg_somatic" = rgb(249, 134, 130, maxColorValue = 255),
+  "msv_tgs_somatic_filterasm" = rgb(187, 142, 33, maxColorValue = 255),
   "msv:tgs" = rgb(187, 142, 33, maxColorValue = 255),
   "minisvl+gs" = rgb(187, 142, 33, maxColorValue = 255),
   "minisvl+g" = rgb(249, 134, 130, maxColorValue = 255),
@@ -20,6 +22,14 @@ custom_colors <- c(
   "sniffles" = rgb(154, 130, 251, maxColorValue = 255),
   "sniffles_somatic" = rgb(248, 89, 206, maxColorValue = 255),
   "snf_mosaic" = rgb(154, 130, 251, maxColorValue = 255),
+  "svision" = rgb(248, 89, 206, maxColorValue = 255),
+  "severus_mosaic_filterasm" = "black",
+  "severus_somatic_filterasm" = rgb(16, 174, 228, maxColorValue = 255),
+  "severus_somatic" = "orange",
+  "severus_lowaf" = rgb(16, 174, 228, maxColorValue = 255),
+  "sniffles" = rgb(154, 130, 251, maxColorValue = 255),
+  "sniffles_somatic" = rgb(248, 89, 206, maxColorValue = 255),
+  "snf_somatic_filterasm" = rgb(154, 130, 251, maxColorValue = 255),
   "svision" = rgb(248, 89, 206, maxColorValue = 255),
   "severus_mosaic_filterasm" = "black",
   "severus_mosaic_rawasm" = "gray"
@@ -84,7 +94,7 @@ load_metrics <- function(data_path) {
     metrics$count = as.numeric(metrics$count)
  
     # start from 3 - 5, excluding 10 
-    metrics = metrics %>% filter(count >= 2 & count < 10)
+    metrics = metrics %>% filter(count >= 2 & count <= 10)
 
     metrics$genome = ifelse(grepl("chm13", metrics$eval_file), "chm13", "hg38")
     metrics$cell_line = str_extract(metrics$eval_file, "(COLO829|HCC1937|H1437|HCC1395|H2009|HCC1954|NCI1437|NCI2009)", group=1)
@@ -97,42 +107,56 @@ load_metrics <- function(data_path) {
     metrics$cell_line = gsub("H2009", "NCI2009",  metrics$cell_line)
     metrics$cell_line = gsub("H1437", "NCI1437",  metrics$cell_line)
 
-
+    ##metrics$genome = ifelse(grepl("chm13", metrics$tool), "chm13", "hg38")
+    ##metrics$file = metrics$tool
     metrics$tool = 
-	    ifelse(grepl("somatic_generation", metrics$file) & (!grepl("severus", metrics$file)),
+	    ifelse(grepl("snf_", metrics$file),
 		   "sniffles_somatic",
-	    ifelse(grepl('grch38l', metrics$file), 
-			  str_extract(metrics$file, "(gafcall|minisv_pair|minisv_mosaic|nanomonsv|savana|severus_lowaf|sniffles_mosaic|sniffles|svision|cutesv)", group=1),
-                          str_extract(metrics$file, "(severus_lowaf|sniffles_mosaic|sniffles|svision|cutesv|severus_all|severus_somatic|severus_af)", group=1)))
+                   ifelse(grepl("tg", metrics$file),
+		          "msv_tg_somatic",
+	                  str_extract(metrics$file, "(severus_somatic)", group=1))
+            )
+
+    metrics$tool[grepl('severus_', metrics$file) & grepl('filterasm', metrics$file)] = 'severus_somatic_filterasm'
+    metrics$tool[grepl('snf_', metrics$file) & grepl('filterasm', metrics$file)] = 'snf_somatic_filterasm'
+    metrics$tool[grepl('msv_', metrics$file) & grepl('filterasm', metrics$file)] = 'msv_tgs_somatic_filterasm'
+
+#    metrics$tool = 
+#	    ifelse(grepl("somatic_generation", metrics$file) & (!grepl("severus", metrics$file)),
+#		   "sniffles_somatic",
+#	    ifelse(grepl('grch38l', metrics$file), 
+#			  str_extract(metrics$file, "(gafcall|minisv_pair|minisv_mosaic|nanomonsv|savana|severus_lowaf|sniffles_mosaic|sniffles|svision|cutesv)", group=1),
+#                          str_extract(metrics$file, "(severus_lowaf|sniffles_mosaic|sniffles|svision|cutesv|severus_all|severus_somatic|severus_af)", group=1)))
+
 #    metrics$tool = ifelse(grepl("grch38g|grch38l|hg38l|chm13l|chm13g", metrics$file),  # minisv
 #			  gsub("_pair", "", gsub("gafcall", "minisv", str_extract(metrics$tool, "(gafcall|minisv|minisv_pair|minisv_mosaic)", group=1))),
 #			  gsub("_pair", "", gsub("gafcall", "minisv", str_extract(metrics$tool, "(nanomonsv|savana|severus|severus_lowaf|sniffles_mosaic|sniffles|svision)", group=1))))
 #
 
-    metrics$tool[grepl('rawasm', metrics$file)] = 'severus_mosaic_rawasm'
-    metrics$tool[grepl('filterasm', metrics$file)] = 'severus_mosaic_filterasm'
-    metrics$tool = gsub('gafcall', 'minisv', metrics$tool)
-    metrics$tool = gsub('sniffles_mosaic', 'snf_mosaic', metrics$tool)
-    metrics$tool = gsub('severus_all', 'severus_mosaic', metrics$tool)
-    metrics$tool = gsub('severus_af', 'severus_mosaic', metrics$tool)
-    print(table(metrics$tool))
-    print(metrics$file)
-
-    # output/minisv_mosaic_asm/NCI2009_hifi1/grch38l_l+t+g+s_mixed_nonormal.msv.gz
-    metrics$param = str_extract(metrics$file, "(l\\+g|l_l\\+t\\+g|l_l\\+t\\+g\\+s|l_l\\+x|g_g\\+x|l_l\\+g|l_l\\+t|l\\+tgs|l\\+gs|l\\+ts|l\\+tg)_mixed", group=1)
-    print(metrics$param)
-    metrics$param[is.na(metrics$param)] = ""
-
-    metrics$normal = str_extract(metrics$file, "(nonormal)", group=1)
-    metrics$normal[is.na(metrics$normal)] = ""
-    metrics$tool = paste0(metrics$tool, metrics$param, metrics$normal)
-
-    metrics$tool = gsub('minisv_mosaicl_l\\+t\\+g\\+s', 'msv:tgs', metrics$tool)
-    metrics$tool = gsub('minisv_mosaicl_l\\+t\\+g', 'msv:tg', metrics$tool)
-    metrics$tool = ifelse(metrics$genome == 'chm13' & (grepl("l\\+gs", metrics$tool)), gsub("l\\+gs", "l\\+tgs", metrics$tool), metrics$tool)
-
-    metrics = metrics %>% filter(tool!='msv:tg')
-    print(table(metrics$tool))
+##    metrics$tool[grepl('rawasm', metrics$file)] = 'severus_mosaic_rawasm'
+##    metrics$tool[grepl('filterasm', metrics$file)] = 'severus_mosaic_filterasm'
+##    metrics$tool = gsub('gafcall', 'minisv', metrics$tool)
+##    metrics$tool = gsub('sniffles_mosaic', 'snf_mosaic', metrics$tool)
+##    metrics$tool = gsub('severus_all', 'severus_mosaic', metrics$tool)
+##    metrics$tool = gsub('severus_af', 'severus_mosaic', metrics$tool)
+##    print(table(metrics$tool))
+##    print(metrics$file)
+##
+##    # output/minisv_mosaic_asm/NCI2009_hifi1/grch38l_l+t+g+s_mixed_nonormal.msv.gz
+##    metrics$param = str_extract(metrics$file, "(l\\+g|l_l\\+t\\+g|l_l\\+t\\+g\\+s|l_l\\+x|g_g\\+x|l_l\\+g|l_l\\+t|l\\+tgs|l\\+gs|l\\+ts|l\\+tg)_mixed", group=1)
+##    print(metrics$param)
+##    metrics$param[is.na(metrics$param)] = ""
+##
+##    metrics$normal = str_extract(metrics$file, "(nonormal)", group=1)
+##    metrics$normal[is.na(metrics$normal)] = ""
+##    metrics$tool = paste0(metrics$tool, metrics$param, metrics$normal)
+##
+##    metrics$tool = gsub('minisv_mosaicl_l\\+t\\+g\\+s', 'msv:tgs', metrics$tool)
+##    metrics$tool = gsub('minisv_mosaicl_l\\+t\\+g', 'msv:tg', metrics$tool)
+##    metrics$tool = ifelse(metrics$genome == 'chm13' & (grepl("l\\+gs", metrics$tool)), gsub("l\\+gs", "l\\+tgs", metrics$tool), metrics$tool)
+##
+##    metrics = metrics %>% filter(tool!='msv:tg')
+##    print(table(metrics$tool))
     metrics
 
 }
@@ -159,7 +183,7 @@ plot_f1 <- function(metrics) {
 plot_prec_recall <- function(grid, metrics) {
     p = ggplot() +
         geom_contour(data=grid, aes(x = precision, y = sensitivity, z = F1), linetype="dashed", linewidth=0.45, color='gray', bins = 10) + 
-        geom_point(data=metrics, aes(x=sensitivity, y=precision, colour = factor(tool), size=count), alpha=0.6) + xlim(0, 1) + ylim(0, 1) + ylab('Precision') + xlab("Recall") +  scale_size_continuous(name = "Count", breaks = c(2, 3, 4, 5), range = c(1, 4)) +
+        geom_point(data=metrics, aes(x=sensitivity, y=precision, colour = factor(tool), size=count), alpha=0.7) + xlim(0, 1) + ylim(0, 1) + ylab('Precision') + xlab("Recall") +  scale_size_continuous(name = "Count", breaks = c(2, 3, 4, 5, 10), range = c(1, 5)) +
         geom_path(data=metrics[order(metrics$count),], aes(x=sensitivity, y=precision, colour = factor(tool))) + 
         facet_wrap(~cell_line, scales = "free", ncol=1, nrow=5) + get_theme()
     p
@@ -177,8 +201,8 @@ do_bar_chart <- function(input, out_path, threads, myparam) {
     grid <- generate_grid()
 
     pdf(out_path[['mixedhg38plot']], width=9.5, height=14.5)
-    mixed_hg38_p = plot_prec_recall(grid, metrics) + ggtitle("non-COLO829 HiFi\nmixed reads all SVs") + scale_colour_manual(values = custom_colors)
-    mixed_hg38_p_100kb = plot_prec_recall(grid, metrics.100kb) + ggtitle("non-COLO829 HiFi\nmixed reads >100kb SV")+ scale_colour_manual(values = custom_colors)
+    mixed_hg38_p = plot_prec_recall(grid, metrics) + ggtitle("non-COLO829 HiFi\n all SVs") + scale_colour_manual(values = custom_colors)
+    mixed_hg38_p_100kb = plot_prec_recall(grid, metrics.100kb) + ggtitle("non-COLO829 HiFi\n >100kb SV")+ scale_colour_manual(values = custom_colors)
     print(mixed_hg38_p + mixed_hg38_p_100kb + plot_layout(guides = "collect"))
     dev.off()
 }

@@ -403,6 +403,13 @@ rule noncolo829_hifi_tumor_only_evaluation_somatic_SV:
         "scripts/tn_pair_precision_recall_noncolo829_tumoronly_local.R"
 
 
+module othercaller_count_workflow:
+    snakefile: "rules/othercaller_count_asm.smk"
+    config: config
+
+use rule * from othercaller_count_workflow as r_othercaller_count_workflow_*
+
+
 rule all: 
     input:
         minisv_eval_tnpair_files_hifi,
@@ -415,6 +422,7 @@ rule all:
         "output/gafcall_eval/normal_v2/normal_length_hifi.pdf",
         "tumor_only_hg38_noncolo829_hifi_clean.pdf",
         rules.r_tnpair_plot_concensus_workflow_all.input,
+        rules.r_othercaller_count_workflow_all.input,
 
         "hg38_colo829_hifi_clean.pdf", 
         "output/local/Figure3_hg38_colo829_hifi_clean.pdf",
