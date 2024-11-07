@@ -148,7 +148,6 @@ do_bar_chart <- function(input, out_path, threads, myparam) {
         print((mixed_hg38_p + mixed_hg38_p_100kb) + plot_layout(guides = "collect"))
     }
     dev.off()
-
     #plot_prec_recall(grid, metrics_chm13.mixed)
     #ggsave(out_path[['mixedchm13plot']], width=5.5, height=4.6)
 }

@@ -2,7 +2,10 @@ import os
 configfile: "config.yaml"
 
 
-truth = {'chm13': '../2b.tumor_only_somatic_evaluation/output/truthset.colo829.out.chm13v2.crossmap_clean.vcf', 
+###/homes6/hli/hli1/gafcall/COLO829.truth.chm13.vcf
+#truth = {'chm13': '../2b.tumor_only_somatic_evaluation/output/truthset.colo829.out.chm13v2.crossmap_clean.vcf', 
+#         'grch38': '/homes6/hli/hli1/gafcall/COLO829.truth.hs38.vcf'}
+truth = {'chm13':  '/homes6/hli/hli1/gafcall/COLO829.truth.chm13.vcf',
          'grch38': '/homes6/hli/hli1/gafcall/COLO829.truth.hs38.vcf'}
 
 
@@ -13,6 +16,10 @@ def input_truth(wildcards):
         ###return ["../1a.alignment_sv_tools/output/severus/{cell_line}/grch38/somatic_SVs/severus_somatic.vcf", "../1a.alignment_sv_tools/output/savana/{cell_line}/grch38/grch38.classified.somatic.vcf", "../1a.alignment_sv_tools/output/nanomonsv/{cell_line}/grch38_tnpair.vcf"]
         ###return ["../1a.alignment_sv_tools/output/severus/{cell_line}/grch38/somatic_SVs/severus_somatic.vcf", "../1a.alignment_sv_tools/output/savana12/{cell_line}/grch38/grch38_T_tag.classified.somatic.vcf", "../1a.alignment_sv_tools/output/nanomonsv/{cell_line}/grch38_tnpair.vcf"]
         return ["../1a.alignment_sv_tools/output/savana12/{cell_line}/grch38/grch38_T_tag.classified.somatic.vcf", "../1a.alignment_sv_tools/output/nanomonsv/{cell_line}/grch38_tnpair.vcf"]
+
+
+def input_truth2(wildcards):
+    return ["../1a.alignment_sv_tools/output/savana12/{cell_line}/grch38/grch38_T_tag.classified.somatic.vcf", "../1a.alignment_sv_tools/output/nanomonsv/{cell_line}/grch38_tnpair.vcf"]
 
 
 rule gfa2fa:
@@ -272,11 +279,55 @@ def input_puretumor_snf_somatic(wildcards):
 
 def get_gafcall_asm_sv(wildcards):
     cellline, platform = wildcards.cell_line.split('_')
+    # /hlilab/hli/gafcall/pair_v2/COLO829T.self.Q0.gsv.gz
     return f"/hlilab/hli/gafcall/pair_v2/{cellline}T.self.Q0.gsv.gz"
 
 def input_msv_tumor_normalpair(wildcards):
     cellline, platform = wildcards.cell_line.split('_')
-    return f"/hlilab/hli/gafcall/pair_v2/msv/{cellline}T.hg38l+tg.pair-c2s0.msv",
+    return f"/hlilab/hli/gafcall/pair_v2/msv/{cellline}T.hg38l+tg.pair-c2s0.msv"
+    ##return f"/hlilab/hli/gafcall/pair_v2/msv/{cellline}T.hg38l+tg.pair-c4s2.msv",
+
+
+def input_jsv_tumor(wildcards):
+    cellline, platform = wildcards.cell_line.split('_')
+    return f"/hlilab/hli/gafcall/pair_v2/{cellline}T.hg38l+tg.jsv.gz"
+
+def input_jsv_tumor_lt(wildcards):
+    cellline, platform = wildcards.cell_line.split('_')
+    # /hlilab/hli/gafcall/pair_v2/COLO829T.hg38l+t.jsv.gz
+    return f"/hlilab/hli/gafcall/pair_v2/{cellline}T.hg38l+t.jsv.gz"
+
+def input_gsv_normal(wildcards):
+    cellline, platform = wildcards.cell_line.split('_')
+    return f"/hlilab/hli/gafcall/pair_v2/{cellline}BL.hg38l.def.gsv.gz"
+
+
+rule msv_c2s1_tumor_normal_pair:
+    input:
+        jsv_tg_tumor = input_jsv_tumor,
+        jsv_normal   = input_gsv_normal
+    output:
+        tg_somatic   = "output/msv_somatic/{cell_line}T.hg38l+tg.pair-c2s1.msv"
+    params:
+        cellline_trim = lambda w: w.cell_line.replace('_hifi1', '')
+    shell:
+        """
+        zcat {input.jsv_tg_tumor} {input.jsv_normal} | sort -k1,1 -k2,2n -S10G | minisv.js merge -c2 -s1 - | grep {params.cellline_trim}T | grep -v {params.cellline_trim}BL > {output.tg_somatic}
+        """
+
+
+rule msv_c2s1_tumor_normal_pair_lt:
+    input:
+        jsv_tg_tumor = input_jsv_tumor_lt,
+        jsv_normal   = input_gsv_normal
+    output:
+        lt_somatic   = "output/msv_somatic/{cell_line}T.hg38l+t.pair-c2s1.msv"
+    params:
+        cellline_trim = lambda w: w.cell_line.replace('_hifi1', '')
+    shell:
+        """
+        zcat {input.jsv_tg_tumor} {input.jsv_normal} | sort -k1,1 -k2,2n -S10G | minisv.js merge -c2 -s1 - | grep {params.cellline_trim}T | grep -v {params.cellline_trim}BL > {output.lt_somatic}
+        """
 
 
 for cutoff in [2,3,4,5,10]:
@@ -285,35 +336,58 @@ for cutoff in [2,3,4,5,10]:
         input:
             severus = input_puretumor_severus_somatic,
             severus_read_ids = '../1a.alignment_sv_tools/output/severus/{cell_line}/grch38_cutoff2_read_ids/read_ids.csv',
+            
+            savana = "../1a.alignment_sv_tools/output/savana12/{cell_line}/grch38/grch38_T_tag.classified.somatic.vcf",
+            savana_read_ids = "../1a.alignment_sv_tools/output/savana12/{cell_line}/grch38/grch38_T_tag.sv_breakpoints_read_support.tsv",
+
+            nanomonsv = "../1a.alignment_sv_tools/output/nanomonsv/{cell_line}/grch38_tnpair.vcf",
+            nanomonsv_read_ids = "../1a.alignment_sv_tools/output/nanomonsv/{cell_line}/T/grch38_parse.nanomonsv.supporting_read.txt",
+
             snf2 = input_puretumor_snf_somatic,
-            minisv_ltg = input_msv_tumor_normalpair,
+            ###minisv_ltg = input_msv_tumor_normalpair,
+            minisv_ltg = "output/msv_somatic/{cell_line}T.hg38l+tg.pair-c2s1.msv",
+            minisv_lt = "output/msv_somatic/{cell_line}T.hg38l+t.pair-c2s1.msv",
  
             asm_rsv = get_gafcall_asm_sv,
-            truth = input_truth
+            truth = input_truth,
+            truth2 = input_truth2
         output:
             severus_filtered_asm     = f"output/minisv_puretumor_somatic_asm/severus_{{cell_line}}_somatic_generation{cutoff}_filterasm.vcf",
-            msv_somatic_filtered_asm = f"output/minisv_puretumor_somatic_asm/msv_{{cell_line}}_somatic_generation{cutoff}_filterasm.vcf",
+            severus_consensus_id     = f"output/minisv_puretumor_somatic_asm/severus_{{cell_line}}_somatic_generation{cutoff}_consensus.ids",
+
+            msv_somatic_filtered_asm = f"output/minisv_puretumor_somatic_asm/msv_ltgs_{{cell_line}}_somatic_generation{cutoff}_filterasm.vcf",
+            msv_lts_somatic_filtered_asm = f"output/minisv_puretumor_somatic_asm/msv_lts_{{cell_line}}_somatic_generation{cutoff}_filterasm.vcf",
+
+            savana_somatic_filtered_asm = f"output/minisv_puretumor_somatic_asm/savana_{{cell_line}}_somatic_generation{cutoff}_filterasm.vcf",
+            nanomonsv_somatic_filtered_asm = f"output/minisv_puretumor_somatic_asm/nanomonsv_{{cell_line}}_somatic_generation{cutoff}_filterasm.vcf",
+
             snf_somatic              = f"output/minisv_puretumor_somatic_asm/snf_{{cell_line}}_somatic_generation{cutoff}.vcf",
             snf_somatic_filtered_asm = f"output/minisv_puretumor_somatic_asm/snf_{{cell_line}}_somatic_generation{cutoff}_filterasm.vcf",
 
             out_snf_filterstat       = f"output/minisv_puretumor_somatic_asm/snf_{{cell_line}}_somatic_generation{cutoff}_filterasm.stat",
-            out_msv_filterstat       = f"output/minisv_puretumor_somatic_asm/msv_{{cell_line}}_somatic_generation{cutoff}_filterasm.stat",
+            out_msv_filterstat       = f"output/minisv_puretumor_somatic_asm/msv_ltgs_{{cell_line}}_somatic_generation{cutoff}_filterasm.stat",
+            out_msv_lt_filterstat       = f"output/minisv_puretumor_somatic_asm/msv_lts_{{cell_line}}_somatic_generation{cutoff}_filterasm.stat",
             out_severus_filterstat   = f"output/minisv_puretumor_somatic_asm/severus_{{cell_line}}_somatic_generation{cutoff}_filterasm.stat",
+            out_savana_filterstat   = f"output/minisv_puretumor_somatic_asm/savana_{{cell_line}}_somatic_generation{cutoff}_filterasm.stat",
+            out_nanomonsv_filterstat   = f"output/minisv_puretumor_somatic_asm/nanomonsv_{{cell_line}}_somatic_generation{cutoff}_filterasm.stat",
             eval = f"output/minisv_puretumor_somatic_asm/{{cell_line}}_grch38_count{cutoff}_eval.tsv"
         conda: 'msvpy'
         params:
             c = cutoff
         shell: 
             """
-            minisv filterseverus {input.severus} {input.severus_read_ids} {input.asm_rsv} {output.out_severus_filterstat} > {output.severus_filtered_asm}
+            /hlilab/alvin/miniconda3/envs/gafcall/bin/k8 /hlilab/alvin/miniconda3/envs/gafcall/bin/minisv.js annot -a -b ~/data/pangenome_sv_benchmarking/minisv/data/hs38.reg.bed -c {params.c} -l 100 -p {input.severus} {input.truth2} | awk '$9>=2' | cut -f 8 > {output.severus_consensus_id}
             /hlilab/alvin/miniconda3/envs/gafcall/bin/k8 /hlilab/alvin/miniconda3/envs/gafcall/bin/minisv.js snfpair -n 2 -t 1 {input.snf2} > {output.snf_somatic}
-            minisv filtersnf {input.snf2} {input.asm_rsv} {output.out_snf_filterstat} > {output.snf_somatic_filtered_asm}
-            minisv filtermsv {input.minisv_ltg} {input.asm_rsv} {output.out_msv_filterstat} > {output.msv_somatic_filtered_asm}
-
+            minisv filterasm -c {params.c} -a -i {output.severus_consensus_id} -b ~/data/pangenome_sv_benchmarking/minisv/data/hs38.reg.bed {input.severus_read_ids} {input.asm_rsv} {output.out_severus_filterstat} {input.severus} > {output.severus_filtered_asm}
+            minisv filterasm -c {params.c} -a -b ~/data/pangenome_sv_benchmarking/minisv/data/hs38.reg.bed {output.snf_somatic} {input.asm_rsv} {output.out_snf_filterstat} {output.snf_somatic} > {output.snf_somatic_filtered_asm}
+            minisv filterasm -c {params.c} -a -b ~/data/pangenome_sv_benchmarking/minisv/data/hs38.reg.bed {input.minisv_ltg} {input.asm_rsv} {output.out_msv_filterstat} {input.minisv_ltg} > {output.msv_somatic_filtered_asm} 
+            minisv filterasm -c {params.c} -a -b ~/data/pangenome_sv_benchmarking/minisv/data/hs38.reg.bed {input.minisv_lt} {input.asm_rsv} {output.out_msv_lt_filterstat} {input.minisv_lt} > {output.msv_lts_somatic_filtered_asm} 
+            minisv filterasm -c {params.c} -a -b ~/data/pangenome_sv_benchmarking/minisv/data/hs38.reg.bed {input.savana_read_ids} {input.asm_rsv} {output.out_savana_filterstat} {input.savana} > {output.savana_somatic_filtered_asm} 
+            minisv filterasm -c {params.c} -a -b ~/data/pangenome_sv_benchmarking/minisv/data/hs38.reg.bed {input.nanomonsv_read_ids} {input.asm_rsv} {output.out_nanomonsv_filterstat} {input.nanomonsv} > {output.nanomonsv_somatic_filtered_asm}
             if [ {wildcards.cell_line} == 'COLO829_hifi1' ]; then
-                /hlilab/alvin/miniconda3/envs/gafcall/bin/k8 /hlilab/alvin/miniconda3/envs/gafcall/bin/minisv.js eval -c {params.c} -b ~/data/pangenome_sv_benchmarking/minisv/data/hs38.reg.bed {input.truth} {input.severus} {output.severus_filtered_asm} {output.snf_somatic_filtered_asm} {output.snf_somatic} {output.msv_somatic_filtered_asm} {input.minisv_ltg} > {output.eval}
+                /hlilab/alvin/miniconda3/envs/gafcall/bin/k8 /hlilab/alvin/miniconda3/envs/gafcall/bin/minisv.js eval -c {params.c} -b ~/data/pangenome_sv_benchmarking/minisv/data/hs38.reg.bed {input.truth} {input.severus} {output.severus_filtered_asm} {output.snf_somatic_filtered_asm} {output.snf_somatic} {output.msv_somatic_filtered_asm} {input.minisv_ltg} {input.minisv_lt} {output.msv_lts_somatic_filtered_asm} {output.nanomonsv_somatic_filtered_asm} {output.savana_somatic_filtered_asm} > {output.eval}
             else
-                for input in {input.severus} {output.severus_filtered_asm} {output.snf_somatic_filtered_asm} {output.snf_somatic} {output.msv_somatic_filtered_asm} {input.minisv_ltg}; do
+                for input in {input.severus} {output.severus_filtered_asm} {output.snf_somatic_filtered_asm} {output.snf_somatic} {output.msv_somatic_filtered_asm} {input.minisv_ltg} {output.nanomonsv_somatic_filtered_asm} {output.savana_somatic_filtered_asm} {input.minisv_lt} {output.msv_lts_somatic_filtered_asm}; do
                     /hlilab/alvin/miniconda3/envs/gafcall/bin/k8 /hlilab/alvin/miniconda3/envs/gafcall/bin/minisv.js eval -M -c {params.c} -b ~/data/pangenome_sv_benchmarking/minisv/data/hs38.reg.bed $input {input.truth} | head -2 >> {output.eval}
                 done
             fi
@@ -327,8 +401,8 @@ for cutoff in [2,3,4,5,10]:
             snf2 = input_puretumor_snf_somatic,
             asm_rsv = get_gafcall_asm_sv,
             truth = input_truth,
-            minisv_ltg = input_msv_tumor_normalpair,
-
+            ##minisv_ltg = input_msv_tumor_normalpair,
+            minisv_ltg = "output/msv_somatic/{cell_line}T.hg38l+tg.pair-c2s1.msv",
             severus_filtered_asm     = f"output/minisv_puretumor_somatic_asm/severus_{{cell_line}}_somatic_generation{cutoff}_filterasm.vcf",
             snf_somatic              = f"output/minisv_puretumor_somatic_asm/snf_{{cell_line}}_somatic_generation{cutoff}.vcf",
             snf_somatic_filtered_asm = f"output/minisv_puretumor_somatic_asm/snf_{{cell_line}}_somatic_generation{cutoff}_filterasm.vcf",
@@ -349,80 +423,80 @@ for cutoff in [2,3,4,5,10]:
             fi
             """
 
-    rule:
-        name: f"minisv_somatic_eval_mixed_count{cutoff}"
-        input:
-            #"output/minisv_mosaic/{cell_line}/grch38l_l+t+g+s_mosaic.rsv"
-            sniffles_somatic = "../1a.alignment_sv_tools/output/sniffles/{cell_line}/grch38_multi_mixdown10.vcf.gz",
-            sniffles_mosaic = "../1a.alignment_sv_tools/output/sniffles_mosaic/{cell_line}/grch38_mixdown_mosaic.vcf.gz",
-            severus = input_severus,
-            severus_read_ids = input_severus_read_ids,
-            minisv_ltgs = "output/minisv_mosaic_asm/{cell_line}/grch38l_l+t+g+s_mixed_somatic.msv.gz",
-            minisv_ltgs_nonormal = "output/minisv_mosaic_asm/{cell_line}/grch38l_l+t+g+s_mixed_nonormal.msv.gz",
-            minisv_ltg = "output/minisv_mosaic_asm/{cell_line}/grch38l_l+t+g_mixed_somatic.msv.gz",
-            severus_somatic = input_severus_somatic,
-            asm_rsv = "output/align/{cell_line}_asm.rsv.gz",
-            asm_rsv_BL = "output/alignBL/{cell_line}_asm.rsv.gz",
-            truth = input_truth
-        output:
-            severus_filtered = f"output/minisv_mosaic_somatic_asm/{{cell_line}}_severus_af0.1_mixdown10_somatic_generation{cutoff}.vcf",
-            out_severus_stat = f"output/minisv_mosaic_somatic_asm/{{cell_line}}_severus_af0.1_mixdown10_somatic_generation{cutoff}.stat",
-            severus_filtered_asm = f"output/minisv_mosaic_somatic_asm/{{cell_line}}_severus_af0.1_mixdown10_somatic_generation{cutoff}_filterasm.vcf",
-            out_severus_filterstat = f"output/minisv_mosaic_somatic_asm/{{cell_line}}_severus_af0.1_mixdown10_somatic_generation{cutoff}_filterasm.stat",
+    #rule:
+    #    name: f"minisv_somatic_eval_mixed_count{cutoff}"
+    #    input:
+    #        #"output/minisv_mosaic/{cell_line}/grch38l_l+t+g+s_mosaic.rsv"
+    #        sniffles_somatic = "../1a.alignment_sv_tools/output/sniffles/{cell_line}/grch38_multi_mixdown10.vcf.gz",
+    #        sniffles_mosaic = "../1a.alignment_sv_tools/output/sniffles_mosaic/{cell_line}/grch38_mixdown_mosaic.vcf.gz",
+    #        severus = input_severus,
+    #        severus_read_ids = input_severus_read_ids,
+    #        minisv_ltgs = "output/minisv_mosaic_asm/{cell_line}/grch38l_l+t+g+s_mixed_somatic.msv.gz",
+    #        minisv_ltgs_nonormal = "output/minisv_mosaic_asm/{cell_line}/grch38l_l+t+g+s_mixed_nonormal.msv.gz",
+    #        minisv_ltg = "output/minisv_mosaic_asm/{cell_line}/grch38l_l+t+g_mixed_somatic.msv.gz",
+    #        severus_somatic = input_severus_somatic,
+    #        asm_rsv = "output/align/{cell_line}_asm.rsv.gz",
+    #        asm_rsv_BL = "output/alignBL/{cell_line}_asm.rsv.gz",
+    #        truth = input_truth
+    #    output:
+    #        severus_filtered = f"output/minisv_mosaic_somatic_asm/{{cell_line}}_severus_af0.1_mixdown10_somatic_generation{cutoff}.vcf",
+    #        out_severus_stat = f"output/minisv_mosaic_somatic_asm/{{cell_line}}_severus_af0.1_mixdown10_somatic_generation{cutoff}.stat",
+    #        severus_filtered_asm = f"output/minisv_mosaic_somatic_asm/{{cell_line}}_severus_af0.1_mixdown10_somatic_generation{cutoff}_filterasm.vcf",
+    #        out_severus_filterstat = f"output/minisv_mosaic_somatic_asm/{{cell_line}}_severus_af0.1_mixdown10_somatic_generation{cutoff}_filterasm.stat",
 
-            severus_raw_asm = f"output/minisv_mosaic_somatic_asm/{{cell_line}}_severus_af0.1_mixdown10_somatic_generation{cutoff}_rawasm.vcf",
-            sniffles_somatic = f"output/minisv_mosaic_somatic_asm/{{cell_line}}_sniffles_mixdown10_somatic_generation{cutoff}.vcf",
-            eval = f"output/minisv_mosaic_somatic_asm/{{cell_line}}_grch38_count{cutoff}_eval.tsv"
-        conda: 'msvpy'
-        params:
-            c = cutoff
-        shell: 
-            """
-            /hlilab/alvin/miniconda3/envs/gafcall/bin/k8 /hlilab/alvin/miniconda3/envs/gafcall/bin/minisv.js snfpair -n 2 -t 1 {input.sniffles_somatic} > {output.sniffles_somatic}
-            /hlilab/alvin/miniconda3/envs/bcftools/bin/bcftools filter -Ov -i 'FMT/VAF[0] <= 0.1' {input.severus} > {output.severus_filtered}
+    #        severus_raw_asm = f"output/minisv_mosaic_somatic_asm/{{cell_line}}_severus_af0.1_mixdown10_somatic_generation{cutoff}_rawasm.vcf",
+    #        sniffles_somatic = f"output/minisv_mosaic_somatic_asm/{{cell_line}}_sniffles_mixdown10_somatic_generation{cutoff}.vcf",
+    #        eval = f"output/minisv_mosaic_somatic_asm/{{cell_line}}_grch38_count{cutoff}_eval.tsv"
+    #    conda: 'msvpy'
+    #    params:
+    #        c = cutoff
+    #    shell: 
+    #        """
+    #        /hlilab/alvin/miniconda3/envs/gafcall/bin/k8 /hlilab/alvin/miniconda3/envs/gafcall/bin/minisv.js snfpair -n 2 -t 1 {input.sniffles_somatic} > {output.sniffles_somatic}
+    #        /hlilab/alvin/miniconda3/envs/bcftools/bin/bcftools filter -Ov -i 'FMT/VAF[0] <= 0.1' {input.severus} > {output.severus_filtered}
 
-            minisv filterseverus {output.severus_filtered} {input.severus_read_ids} {input.asm_rsv_BL} {output.out_severus_filterstat} > {output.severus_filtered_asm}
-            minisv filterseverus {input.severus} {input.severus_read_ids} {input.asm_rsv_BL} {output.out_severus_stat} > {output.severus_raw_asm}
+    #        minisv filterseverus {output.severus_filtered} {input.severus_read_ids} {input.asm_rsv_BL} {output.out_severus_filterstat} > {output.severus_filtered_asm}
+    #        minisv filterseverus {input.severus} {input.severus_read_ids} {input.asm_rsv_BL} {output.out_severus_stat} > {output.severus_raw_asm}
 
-            if [ {wildcards.cell_line} == 'COLO829_hifi1' ]; then
-                /hlilab/alvin/miniconda3/envs/gafcall/bin/k8 /hlilab/alvin/miniconda3/envs/gafcall/bin/minisv.js eval -c {params.c} -b ~/data/pangenome_sv_benchmarking/minisv/data/hs38.reg.bed {input.truth} {input.minisv_ltgs} {input.minisv_ltg} {input.minisv_ltgs_nonormal} {input.sniffles_mosaic} {output.severus_filtered} {output.severus_filtered_asm} {output.severus_raw_asm} {input.severus_somatic} {output.sniffles_somatic} > {output.eval}
-            else
-                for input in {input.sniffles_mosaic} {input.minisv_ltgs} {input.minisv_ltg} {input.minisv_ltgs_nonormal} {output.severus_filtered} {output.severus_filtered_asm} {output.severus_raw_asm} {input.severus_somatic} {output.sniffles_somatic}; do
-                    /hlilab/alvin/miniconda3/envs/gafcall/bin/k8 /hlilab/alvin/miniconda3/envs/gafcall/bin/minisv.js eval -M -c {params.c} -b ~/data/pangenome_sv_benchmarking/minisv/data/hs38.reg.bed $input {input.truth} | head -2 >> {output.eval}
-                done
-            fi
-            """
+    #        if [ {wildcards.cell_line} == 'COLO829_hifi1' ]; then
+    #            /hlilab/alvin/miniconda3/envs/gafcall/bin/k8 /hlilab/alvin/miniconda3/envs/gafcall/bin/minisv.js eval -c {params.c} -b ~/data/pangenome_sv_benchmarking/minisv/data/hs38.reg.bed {input.truth} {input.minisv_ltgs} {input.minisv_ltg} {input.minisv_ltgs_nonormal} {input.sniffles_mosaic} {output.severus_filtered} {output.severus_filtered_asm} {output.severus_raw_asm} {input.severus_somatic} {output.sniffles_somatic} > {output.eval}
+    #        else
+    #            for input in {input.sniffles_mosaic} {input.minisv_ltgs} {input.minisv_ltg} {input.minisv_ltgs_nonormal} {output.severus_filtered} {output.severus_filtered_asm} {output.severus_raw_asm} {input.severus_somatic} {output.sniffles_somatic}; do
+    #                /hlilab/alvin/miniconda3/envs/gafcall/bin/k8 /hlilab/alvin/miniconda3/envs/gafcall/bin/minisv.js eval -M -c {params.c} -b ~/data/pangenome_sv_benchmarking/minisv/data/hs38.reg.bed $input {input.truth} | head -2 >> {output.eval}
+    #            done
+    #        fi
+    #        """
 
-    rule:
-        name: f"minisv_somatic_eval_mixed_count{cutoff}_100kb"
-        input:
-            sniffles_somatic = f"output/minisv_mosaic_somatic_asm/{{cell_line}}_sniffles_mixdown10_somatic_generation{cutoff}.vcf",
-            sniffles_mosaic = "../1a.alignment_sv_tools/output/sniffles_mosaic/{cell_line}/grch38_mixdown_mosaic.vcf.gz",
-            severus = f"output/minisv_mosaic_somatic_asm/{{cell_line}}_severus_af0.1_mixdown10_somatic_generation{cutoff}.vcf",
-            severus_filtered_asm = f"output/minisv_mosaic_somatic_asm/{{cell_line}}_severus_af0.1_mixdown10_somatic_generation{cutoff}_filterasm.vcf",
-            severus_raw_asm = f"output/minisv_mosaic_somatic_asm/{{cell_line}}_severus_af0.1_mixdown10_somatic_generation{cutoff}_rawasm.vcf",
-            minisv_ltgs = "output/minisv_mosaic_asm/{cell_line}/grch38l_l+t+g+s_mixed_somatic.msv.gz",
-            minisv_ltgs_nonormal = "output/minisv_mosaic_asm/{cell_line}/grch38l_l+t+g+s_mixed_nonormal.msv.gz",
-            minisv_ltg = "output/minisv_mosaic_asm/{cell_line}/grch38l_l+t+g_mixed_somatic.msv.gz",
-            truth = input_truth,
-            severus_somatic = input_severus_somatic 
-        output:
-            eval = f"output/minisv_mosaic_somatic_asm/{{cell_line}}_grch38_count{cutoff}_eval_100kb.tsv"
-        conda: 'bcftools'
-        params:
-            c = cutoff
-        shell: 
-            """
-            if [ {wildcards.cell_line} == 'COLO829_hifi1' ]; then
-                /hlilab/alvin/miniconda3/envs/gafcall/bin/k8 /hlilab/alvin/miniconda3/envs/gafcall/bin/minisv.js eval -l 100000 -c {params.c} -b ~/data/pangenome_sv_benchmarking/minisv/data/hs38.reg.bed {input.truth} {input.minisv_ltgs} {input.minisv_ltg} {input.minisv_ltgs_nonormal} {input.sniffles_mosaic} {input.severus} {input.severus_filtered_asm} {input.severus_raw_asm} {input.severus_somatic} {input.sniffles_somatic} > {output.eval}
-            else
-                for input in {input.sniffles_mosaic} {input.minisv_ltgs} {input.severus} {input.severus_filtered_asm} {input.severus_raw_asm} {input.minisv_ltg} {input.minisv_ltgs_nonormal} {input.severus_somatic} {input.sniffles_somatic}; do
-                    /hlilab/alvin/miniconda3/envs/gafcall/bin/k8 /hlilab/alvin/miniconda3/envs/gafcall/bin/minisv.js eval -l 100000 -M -c {params.c} -b ~/data/pangenome_sv_benchmarking/minisv/data/hs38.reg.bed $input {input.truth} | head -2 >> {output.eval}
-                done
-            fi
+    #rule:
+    #    name: f"minisv_somatic_eval_mixed_count{cutoff}_100kb"
+    #    input:
+    #        sniffles_somatic = f"output/minisv_mosaic_somatic_asm/{{cell_line}}_sniffles_mixdown10_somatic_generation{cutoff}.vcf",
+    #        sniffles_mosaic = "../1a.alignment_sv_tools/output/sniffles_mosaic/{cell_line}/grch38_mixdown_mosaic.vcf.gz",
+    #        severus = f"output/minisv_mosaic_somatic_asm/{{cell_line}}_severus_af0.1_mixdown10_somatic_generation{cutoff}.vcf",
+    #        severus_filtered_asm = f"output/minisv_mosaic_somatic_asm/{{cell_line}}_severus_af0.1_mixdown10_somatic_generation{cutoff}_filterasm.vcf",
+    #        severus_raw_asm = f"output/minisv_mosaic_somatic_asm/{{cell_line}}_severus_af0.1_mixdown10_somatic_generation{cutoff}_rawasm.vcf",
+    #        minisv_ltgs = "output/minisv_mosaic_asm/{cell_line}/grch38l_l+t+g+s_mixed_somatic.msv.gz",
+    #        minisv_ltgs_nonormal = "output/minisv_mosaic_asm/{cell_line}/grch38l_l+t+g+s_mixed_nonormal.msv.gz",
+    #        minisv_ltg = "output/minisv_mosaic_asm/{cell_line}/grch38l_l+t+g_mixed_somatic.msv.gz",
+    #        truth = input_truth,
+    #        severus_somatic = input_severus_somatic 
+    #    output:
+    #        eval = f"output/minisv_mosaic_somatic_asm/{{cell_line}}_grch38_count{cutoff}_eval_100kb.tsv"
+    #    conda: 'bcftools'
+    #    params:
+    #        c = cutoff
+    #    shell: 
+    #        """
+    #        if [ {wildcards.cell_line} == 'COLO829_hifi1' ]; then
+    #            /hlilab/alvin/miniconda3/envs/gafcall/bin/k8 /hlilab/alvin/miniconda3/envs/gafcall/bin/minisv.js eval -l 100000 -c {params.c} -b ~/data/pangenome_sv_benchmarking/minisv/data/hs38.reg.bed {input.truth} {input.minisv_ltgs} {input.minisv_ltg} {input.minisv_ltgs_nonormal} {input.sniffles_mosaic} {input.severus} {input.severus_filtered_asm} {input.severus_raw_asm} {input.severus_somatic} {input.sniffles_somatic} > {output.eval}
+    #        else
+    #            for input in {input.sniffles_mosaic} {input.minisv_ltgs} {input.severus} {input.severus_filtered_asm} {input.severus_raw_asm} {input.minisv_ltg} {input.minisv_ltgs_nonormal} {input.severus_somatic} {input.sniffles_somatic}; do
+    #                /hlilab/alvin/miniconda3/envs/gafcall/bin/k8 /hlilab/alvin/miniconda3/envs/gafcall/bin/minisv.js eval -l 100000 -M -c {params.c} -b ~/data/pangenome_sv_benchmarking/minisv/data/hs38.reg.bed $input {input.truth} | head -2 >> {output.eval}
+    #            done
+    #        fi
 
 
-            """
+    #        """
 
 
     rule:
@@ -494,8 +568,8 @@ rule all:
         expand("output/minisv_puretumor_somatic_asm/{cell_line}_grch38_count{cutoff}_eval.tsv", cell_line = config['samples'], cutoff = [2,3,4,5,10]),
         expand("output/minisv_puretumor_somatic_asm/{cell_line}_grch38_count{cutoff}_eval_100kb.tsv", cell_line = config['samples'], cutoff = [2,3,4,5,10]),
 
-        expand("output/minisv_mosaic_somatic_asm/{cell_line}_grch38_count{cutoff}_eval.tsv", cell_line = config['samples'], cutoff = [2,3,4,5,10]),
-        expand("output/minisv_mosaic_somatic_asm/{cell_line}_grch38_count{cutoff}_eval_100kb.tsv", cell_line = config['samples'], cutoff = [2,3,4,5,10]),
+        #expand("output/minisv_mosaic_somatic_asm/{cell_line}_grch38_count{cutoff}_eval.tsv", cell_line = config['samples'], cutoff = [2,3,4,5,10]),
+        #expand("output/minisv_mosaic_somatic_asm/{cell_line}_grch38_count{cutoff}_eval_100kb.tsv", cell_line = config['samples'], cutoff = [2,3,4,5,10]),
 
         expand("output/minisv_mosaic_asm/{cell_line}/grch38l_l+t+g_mixed_somatic.msv.gz", cell_line = config['samples']),
         expand("output/align/{cell_line}_{assembly}.paf.gz", cell_line = config['samples'], assembly=['grch38', 'chm13']),
