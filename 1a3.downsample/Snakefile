@@ -1,0 +1,182 @@
+import os
+import glob
+
+
+celllines = ['50', '75']
+assembly = ['grch38', 'chm13']
+
+
+def input_bamt(wildcards):
+    return glob.glob(f"/hlilab/21data/CCS/{wildcards.cell_line}/{wildcards.cell_line}/m84039_230312_025934_s1.hifi_reads.bc2026.bam")
+
+def input_bambl(wildcards):
+    return glob.glob(f"/hlilab/21data/CCS/{wildcards.cell_line}/{wildcards.cell_line}BL/m84039_230327_230708_s1.hifi_reads.bc2007.bam")
+
+all_fastq = expand("/hlilab/meganle/revisions/simulated_purity/simulated_{pair}_{cell_line}.fq", cell_line=celllines, pair=["tumor", "normal"])
+
+
+wildcard_constraints:
+    cell_line = "[A-Za-z0-9]+",
+    pair = "normal|tumor",
+    assembly = "chm13|grch38",
+    platform = "ont1"
+
+module aligner_workflow:
+    snakefile: "rules/minimap2.smk"
+    config: config
+
+use rule * from aligner_workflow as minimap2_workflow_*
+
+include: "rules/sniffles2.smk"
+#include: "rules/savana.smk"
+
+include: "rules/clair3.smk"
+
+#
+module severus_workflow:
+    snakefile: "rules/severus.smk"
+    config: config
+
+use rule * from severus_workflow as severus_workflow_*
+
+include: "rules/savana1.2.smk"
+
+include: "rules/nanomonsv.smk"
+
+clair3_outdir  = expand("output/clair3/{cell_line}/{pair}/{assembly}/", cell_line=celllines, pair=["tumor", "normal"], assembly=assembly)
+
+#sniffles_files  = expand(expand("output/sniffles/{cell_line}_{platform}/{{pair}}/{{assembly}}.vcf.gz", zip, cell_line=config['samples']['tumor'], platform=config['samples']['platform']), pair=["T", "BL"], assembly=config['assembly'])
+#sniffles_tbi_files  = expand(expand("output/sniffles/{cell_line}_{platform}/{{pair}}/{{assembly}}.vcf.gz.tbi", zip, cell_line=config['samples']['tumor'], platform=config['samples']['platform']), pair=["T", "BL"], assembly=config['assembly'])
+#sniffles_mosaic_files  = expand(expand("output/sniffles_mosaic/{cell_line}_{platform}/{{pair}}/{{assembly}}.vcf.gz", zip, cell_line=config['samples']['tumor'], platform=config['samples']['platform']), pair=["T", "BL"], assembly=config['assembly'])
+#sniffles_mosaic_tbi_files  = expand(expand("output/sniffles_mosaic/{cell_line}_{platform}/{{pair}}/{{assembly}}.vcf.gz.tbi", zip, cell_line=config['samples']['tumor'], platform=config['samples']['platform']), pair=["T", "BL"], assembly=config['assembly'])
+#
+#sniffles_multi_files  = expand(expand("output/sniffles/{cell_line}_{platform}/{{pair}}/{{assembly}}.snf", zip, cell_line=config['samples']['tumor'], platform=config['samples']['platform']), pair=["T", "BL"], assembly=config['assembly'])
+#"output/sniffles/{cell_line}_{platform}/{assembly}_multi.vcf.gz"
+sniffles_multi_vcf_files  = expand(expand("output/sniffles/{cell_line}/{{assembly}}_multi.vcf.gz", cell_line=celllines), assembly=assembly)
+#
+#sniffles_mix  = expand(expand("output/sniffles_mosaic/{cell_line}_{platform}/{{assembly}}_mixdown_mosaic.vcf.gz", zip, cell_line=config['samples']['tumor'], platform=config['samples']['platform']), assembly=config['assembly'])
+#sniffles_mix_tbi  = expand(expand("output/sniffles_mosaic/{cell_line}_{platform}/{{assembly}}_mixdown_mosaic.vcf.gz.tbi", zip, cell_line=config['samples']['tumor'], platform=config['samples']['platform']), assembly=config['assembly'])
+#
+#sniffles_mo_multi_files  = expand(expand("output/sniffles_mosaic/{cell_line}_{platform}/{{pair}}/{{assembly}}.snf", zip, cell_line=config['samples']['tumor'], platform=config['samples']['platform']), pair=["T", "BL"], assembly=config['assembly'])
+#sniffles_mo_multi_vcf_files  = expand(expand("output/sniffles_mosaic/{cell_line}_{platform}/{{assembly}}_multi.vcf.gz", zip, cell_line=config['samples']['tumor'], platform=config['samples']['platform']), assembly=config['assembly'])
+#
+
+nanomonsv_files  = expand("output/nanomonsv/{cell_line}/{assembly}_tnpair.txt", cell_line=celllines, assembly=assembly)
+
+#savana_outdir  = expand(expand("output/savana/{cell_line}_{platform}/{{assembly}}", zip, cell_line=config['samples']['tumor'], platform=config['samples']['platform']), assembly=config['assembly'])
+
+savana12_outdir  = expand(expand("output/savana12/{cell_line}/{{assembly}}", cell_line=celllines), assembly=assembly)
+savana12_vcf  = expand(expand("output/savana12/{cell_line}/{{assembly}}/{{assembly}}_tumor_tag.classified.somatic.vcf", cell_line=celllines), assembly=assembly)
+
+#
+#severus_outdir  = expand(expand("output/severus/{cell_line}_{platform}/{{assembly}}", zip, cell_line=config['samples']['tumor'], platform=config['samples']['platform']), assembly=config['assembly'])
+#severus_outdir_repeat2  = expand(expand("output/severus/{cell_line}_{platform}/{{assembly}}_repeat2", zip, cell_line=config['samples']['tumor'], platform=config['samples']['platform']), assembly=config['assembly'])
+#severus_single_outdir  = expand(expand("output/severus_{platform}/{cell_line}_{{pair}}_{{assembly}}", zip, cell_line=config['samples']['tumor'], platform=config['samples']['platform']), pair=["T", "BL"], assembly=config['assembly'])
+#
+#include: "rules/gafcall.smk"
+#include: "rules/gafcall_tnpair.smk"
+#include: "rules/gafcall_mixed.smk"
+#include: "rules/svision.smk"
+#include: "rules/seqtk.smk"
+#
+#extract_linear_files  = expand(expand("output/align/{cell_line}_{{pair}}_{platform}_{{assembly}}l.def.gsv.gz", zip, cell_line=config['samples']['tumor'], platform=config['samples']['platform']), pair=["T", "BL"], assembly=config['assembly'])
+#extract_graph_files  = expand(expand("output/align/{cell_line}_{{pair}}_{platform}_{{assembly}}g.def.gsv.gz", zip, cell_line=config['samples']['tumor'], platform=config['samples']['platform']), pair=["T", "BL"], assembly=config['assembly'])
+#
+#svision_outdir  = expand(expand("output/svision/{cell_line}_{platform}/{{assembly}}", zip, cell_line=config['samples']['tumor'], platform=config['samples']['platform']), assembly=config['assembly'])
+#svision_vcfs  = expand(expand("output/svision/{cell_line}_{platform}/{{assembly}}/{cell_line}.svision_pro_v1.8.s5.vcf", zip, cell_line=config['samples']['tumor'], platform=config['samples']['platform']), assembly=config['assembly'])
+#
+#paf_mixed  = expand(expand("output/align/{cell_line}_{platform}/{{assembly}}_mixdown.paf.gz", zip, cell_line=config['samples']['tumor'], platform=config['samples']['platform']), assembly=config['assembly'])
+#gaf_mixed  = expand(expand("output/align/{cell_line}_{platform}/{{assembly}}g_mixdown.paf.gz", zip, cell_line=config['samples']['tumor'], platform=config['samples']['platform']), assembly=config['assembly'])
+#
+## TN pair minisv
+#minisv_pair = expand(expand("output/minisv_pair/{cell_line}_{platform}_pair_hg38l_l+t+g+s_{{cnt}}.msv.gz", zip, cell_line=config['samples']['tumor'], platform=config['samples']['platform']), cnt=['c2s0', 'c3s0', 'c4s0', 'c5s0'])
+#minisv_pair_t2t = expand(expand("output/minisv_pair/{cell_line}_{platform}_pair_chm13l_l+t+g+s_{{cnt}}.msv.gz", zip, cell_line=config['samples']['tumor'], platform=config['samples']['platform']), cnt=['c2s0', 'c3s0', 'c4s0', 'c5s0'])
+#minisv_pair_t2t_tg = expand(expand("output/minisv_pair/{cell_line}_{platform}_pair_chm13l_l+t+g_{{cnt}}.msv.gz", zip, cell_line=config['samples']['tumor'], platform=config['samples']['platform']), cnt=['c2s0'])
+#
+#minisv_pair_t = expand(expand("output/minisv_pair/{cell_line}_{platform}_pair_hg38l_l+t_{{cnt}}.msv.gz", zip, cell_line=config['samples']['tumor'], platform=config['samples']['platform']), cnt=['c2s0', 'c3s0', 'c4s0', 'c5s0'])
+#minisv_pair_g = expand(expand("output/minisv_pair/{cell_line}_{platform}_pair_hg38l_l+g_{{cnt}}.msv.gz", zip, cell_line=config['samples']['tumor'], platform=config['samples']['platform']), cnt=['c2s0', 'c3s0', 'c4s0', 'c5s0'])
+#minisv_pair_tg = expand(expand("output/minisv_pair/{cell_line}_{platform}_pair_hg38l_l+tg_{{cnt}}.msv.gz", zip, cell_line=config['samples']['tumor'], platform=config['samples']['platform']), cnt=['c2s0', 'c3s0', 'c4s0', 'c5s0'])
+#minisv_pair_gx = expand(expand("output/minisv_pair/{cell_line}_{platform}_pair_{{assembly}}g_g+x_{{cnt}}.msv.gz", zip, cell_line=config['samples']['tumor'], platform=config['samples']['platform']), cnt=['c2s0', 'c3s0', 'c4s0', 'c5s0'], assembly=['chm13', 'grch38'])
+#minisv_pair_lx = expand(expand("output/minisv_pair/{cell_line}_{platform}_pair_{{assembly}}l_l+x_{{cnt}}.msv.gz", zip, cell_line=config['samples']['tumor'], platform=config['samples']['platform']), cnt=['c2s0', 'c3s0', 'c4s0', 'c5s0'], assembly=['chm13', 'grch38'])
+#
+#
+#minisv_mixed_mosaic_g = expand(expand("output/minisv_mosaic/{cell_line}_{platform}/{{assembly}}g_g+x_mosaic.msv.gz", zip, cell_line=config['samples']['tumor'], platform=config['samples']['platform']), assembly=['chm13', 'grch38'])
+#minisv_mixed_mosaic_l = expand(expand("output/minisv_mosaic/{cell_line}_{platform}/{{assembly}}l_l+x_mosaic.msv.gz", zip, cell_line=config['samples']['tumor'], platform=config['samples']['platform']), assembly=['chm13', 'grch38'])
+#minisv_mixed_mosaic_lg = expand(expand("output/minisv_mosaic/{cell_line}_{platform}/{{assembly}}l_l+g_mosaic.msv.gz", zip, cell_line=config['samples']['tumor'], platform=config['samples']['platform']), assembly=['chm13', 'grch38'])
+#minisv_mixed_mosaic_lt = expand("output/minisv_mosaic/{cell_line}_{platform}/grch38l_l+g_mosaic.msv.gz", zip, cell_line=config['samples']['tumor'], platform=config['samples']['platform'])
+#minisv_mixed_mosaic_ltg = expand("output/minisv_mosaic/{cell_line}_{platform}/grch38l_l+t+g_mosaic.msv.gz", zip, cell_line=config['samples']['tumor'], platform=config['samples']['platform'])
+#
+#
+#minisv_self_extract = expand(expand("output/minisv/{cell_line}_{{pair}}_{platform}_self.rsv.gz", zip, cell_line=config['samples']['tumor'], platform=config['samples']['platform']), pair=["T", "BL"])
+#
+#minisv_linear_def_extract = expand(expand("output/minisv/{cell_line}_{{pair}}_{platform}_{{assembly}}l.def.rsv.gz", zip, cell_line=config['samples']['tumor'], platform=config['samples']['platform']), pair=["T", "BL"], assembly=['chm13', 'grch38'])
+#
+#minisv_graph_def_extract = expand(expand("output/minisv/{cell_line}_{{pair}}_{platform}_{{assembly}}g.def.rsv.gz", zip, cell_line=config['samples']['tumor'], platform=config['samples']['platform']), pair=["T", "BL"], assembly=['chm13', 'grch38'])
+#
+#minisv_single_call = expand(expand("output/minisv/{cell_line}_{{pair}}_{platform}_{{assembly}}l_l+x_merge_{{cnt}}.msv.gz", zip, cell_line=config['samples']['tumor'], platform=config['samples']['platform']), pair=["T", "BL"], assembly=['chm13', 'grch38'], cnt=['c2s0', 'c3s0', 'c4s0', 'c5s0'])
+#
+#minisv_single_graph_call = expand(expand("output/minisv/{cell_line}_{{pair}}_{platform}_{{assembly}}l_l+g_merge_{{cnt}}.msv.gz", zip, cell_line=config['samples']['tumor'], platform=config['samples']['platform']), pair=["T", "BL"], assembly=['chm13', 'grch38'], cnt=['c2s0', 'c3s0', 'c4s0', 'c5s0'])
+#
+#minisv_single_s_call = expand(expand("output/minisv/{cell_line}_{{pair}}_{platform}_{{assembly}}l_l+s_merge_{{cnt}}.msv.gz", zip, cell_line=config['samples']['tumor'], platform=config['samples']['platform']), pair=["T", "BL"], assembly=['chm13', 'grch38'], cnt=['c2s0', 'c3s0', 'c4s0', 'c5s0'])
+#
+#minisv_single_lg_call = expand(expand("output/minisv/{cell_line}_{{pair}}_{platform}_{{assembly}}l_l+g_merge_{{cnt}}.msv.gz", zip, cell_line=config['samples']['tumor'], platform=config['samples']['platform']), pair=["T", "BL"], assembly=['chm13', 'grch38'], cnt=['c2s0', 'c3s0', 'c4s0', 'c5s0'])
+#
+#minisv_single_ts_call = expand(expand("output/minisv/{cell_line}_{{pair}}_{platform}_grch38l_t+s_merge_{{cnt}}.msv.gz", zip, cell_line=config['samples']['tumor'], platform=config['samples']['platform']), pair=["T", "BL"], assembly=['chm13', 'grch38'], cnt=['c2s0', 'c3s0', 'c4s0', 'c5s0'])
+#
+#minisv_single_tg_call = expand(expand("output/minisv/{cell_line}_{{pair}}_{platform}_grch38l_t+g_merge_{{cnt}}.msv.gz", zip, cell_line=config['samples']['tumor'], platform=config['samples']['platform']), pair=["T", "BL"], assembly=['chm13', 'grch38'], cnt=['c2s0', 'c3s0', 'c4s0', 'c5s0'])
+#
+#minisv_single_tgs_call = expand(expand("output/minisv/{cell_line}_{{pair}}_{platform}_grch38l_t+g+s_merge_{{cnt}}.msv.gz", zip, cell_line=config['samples']['tumor'], platform=config['samples']['platform']), pair=["T", "BL"], assembly=['chm13', 'grch38'], cnt=['c2s0', 'c3s0', 'c4s0', 'c5s0'])
+#
+#tn_eval_length = expand("output/minisv_view/tn_{cell_line}_{platform}_eval_len.tsv", zip, cell_line=config['samples']['tumor'], platform=config['samples']['platform'])
+#single_eval_length = expand("output/minisv_view/single_{cell_line}_{platform}_eval_len.tsv", zip, cell_line=config['samples']['tumor'], platform=config['samples']['platform'])
+#mixed_eval_length = expand("output/minisv_view/mixed_{cell_line}_{platform}_merge_eval_len.tsv", zip, cell_line=config['samples']['tumor'], platform=config['samples']['platform'])
+#
+#include: "rules/minisv_eval_all_tools.smk"
+#
+#
+#svision_outdir_somatic = expand(expand("output/svision/{cell_line}_{platform}/somatic/{cell_line}_{{assembly}}_tn.svision_pro_v1.8.s5.somatic_s1.vcf", zip, cell_line=config['samples']['tumor'], platform=config['samples']['platform']), assembly=config['assembly'])
+#
+#svision_single_vcfs  = expand(expand("output/svision_single/{cell_line}_{platform}_{{pair}}/{{assembly}}/{cell_line}.svision_pro_v1.8.s5.vcf", zip, cell_line=config['samples']['tumor'], platform=config['samples']['platform']), assembly=config['assembly'], pair=['T', 'BL'])
+#
+## minisv eval files
+#minisv_eval_files = expand(expand("output/minisv_eval_tnpair/{cell_line}_{platform}_{{assembly}}_eval_count{{count}}.tsv", zip, cell_line=config['samples']['tumor'], platform=config['samples']['platform']), assembly=['chm13', 'grch38'], count=[2,3,4,5,10])
+#minisv_eval_files_M = expand(expand(expand("output/minisv_eval_tnpair_concensus/{cell_line}_{platform}_{{assembly}}_eval_count{{count}}.tsv", zip, cell_line=config['samples']['tumor'], platform=config['samples']['platform']), assembly=['chm13', 'grch38'], count=[2,3,4,5,10]))
+#
+#single_eval_performance = expand(expand("output/minisv_eval_single{{pair}}/single_{cell_line}_{platform}_{{assembly}}_eval_count{{count}}.tsv", zip, cell_line=config['samples']['tumor'], platform=config['samples']['platform']), pair=['T', 'BL'], assembly=['chm13', 'grch38'], count=[2,3,4,5,10])
+#minisv_eval_mixed_files = expand(expand("output/minisv_eval_tnpair/{cell_line}_{platform}_{{assembly}}_eval_mixed.tsv", zip, cell_line=config['samples']['tumor'], platform=config['samples']['platform']), assembly=['chm13', 'grch38'])
+#tn_eval_length = expand(expand("output/alltools_view/tn_{cell_line}_{platform}_{{assembly}}_eval_len.tsv", zip, cell_line=config['samples']['tumor'], platform=config['samples']['platform']), assembly=['chm13', 'grch38'])
+#pair_eval_single_length = expand(expand("output/minisv_view_single{{pair}}/single_{cell_line}_{platform}_{{assembly}}_eval_len.tsv", zip, cell_line=config['samples']['tumor'], platform=config['samples']['platform']), pair=['T', 'BL'], assembly=['chm13', 'grch38'])
+
+
+rule all:
+    input:
+        rules.minimap2_workflow_all.input,
+        rules.severus_workflow_all.input,
+        clair3_outdir, 
+        savana12_outdir, savana12_vcf, 
+        sniffles_multi_vcf_files,
+        #sniffles_files, sniffles_tbi_files,
+        #sniffles_mosaic_files, sniffles_mosaic_tbi_files,
+        #sniffles_multi_files, 
+        #sniffles_mo_multi_files, sniffles_mo_multi_vcf_files,
+        #sniffles_mix, sniffles_mix_tbi,
+        #savana_outdir,  
+        #severus_outdir, 
+        #severus_single_outdir,
+        #severus_outdir_repeat2,
+        nanomonsv_files,
+        #extract_linear_files, extract_graph_files,
+        #svision_outdir, svision_vcfs, svision_outdir_somatic, svision_single_vcfs,
+        #minisv_pair, minisv_pair_t2t, minisv_pair_t2t_tg,
+        #minisv_self_extract,
+        #minisv_linear_def_extract, minisv_graph_def_extract, 
+        #minisv_single_call, minisv_single_graph_call, minisv_single_tg_call, minisv_single_tgs_call, minisv_single_lg_call,
+        #minisv_single_ts_call, minisv_single_s_call,
+        #paf_mixed, gaf_mixed, 
+        #minisv_mixed_mosaic_l, minisv_mixed_mosaic_g, minisv_mixed_mosaic_lg, minisv_mixed_mosaic_lt, minisv_mixed_mosaic_ltg,
+        #tn_eval_length, 
+        #single_eval_length, mixed_eval_length,  pair_eval_single_length,
+        #minisv_eval_files, minisv_eval_mixed_files, tn_eval_length,  minisv_eval_files_M,  minisv_pair_t, minisv_pair_g, minisv_pair_tg, minisv_pair_gx, minisv_pair_lx,
+        #single_eval_performance,
+        #"output/minisv_view_single/single_sample_allsvtools_svlength.tsv"
+    default_target: True 

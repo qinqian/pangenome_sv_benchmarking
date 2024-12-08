@@ -409,6 +409,16 @@ module othercaller_count_workflow:
 
 use rule * from othercaller_count_workflow as r_othercaller_count_workflow_*
 
+module consensus_eval_mosaic_workflow:
+    snakefile: "rules/mosaic_singlesample_asm_eval.smk"
+    config: config
+use rule * from consensus_eval_mosaic_workflow as r_consensus_eval_mosaic_workflow_*
+
+module colo829_barchart_tnpair_workflow:
+    snakefile: "rules/tnpair_colo829_asm_eval.smk"
+    config: config
+
+use rule * from colo829_barchart_tnpair_workflow as r_colo829_barchart_tnpair_workflow_*
 
 rule all: 
     input:
@@ -423,6 +433,8 @@ rule all:
         "tumor_only_hg38_noncolo829_hifi_clean.pdf",
         rules.r_tnpair_plot_concensus_workflow_all.input,
         rules.r_othercaller_count_workflow_all.input,
+        rules.r_consensus_eval_mosaic_workflow_all.input,
+        rules.r_colo829_barchart_tnpair_workflow_all.input,
 
         "hg38_colo829_hifi_clean.pdf", 
         "output/local/Figure3_hg38_colo829_hifi_clean.pdf",
@@ -430,6 +442,7 @@ rule all:
 
         "output/gafcall_eval/normal_v2/hg38_paired_length_hifi.pdf",
         "output/gafcall_eval/normal_v2/chm13_paired_length_hifi.pdf",
+        "output/gafcall_eval/normal_v2/paired_length_hifi.pdf",
         "output/gafcall_eval/normal_v2/Figure2_hg38_normal_length_hifi.pdf",
         "output/gafcall_eval/normal_v2/germline_normal_length_hifi.pdf", "output/gafcall_eval/normal_v2/Figure2_germline_hg38_normal_length_hifi.pdf", "output/gafcall_eval/normal_v2/mosaic_thresholds_hg38_normal_length_hifi.pdf", "output/gafcall_eval/normal_v2/normal_thresholds_hg38_normal_length_hifi.pdf",
         "output/gafcall_eval/normal_v2/severus_all_merged_eval.len.tsv",

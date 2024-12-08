@@ -233,13 +233,15 @@ do_bar_chart <- function(data_path, out_path, threads, myparam) {
     res.small.hg38 = res.small %>% filter(genome == 'hg38')
     res.small.chm13 = res.small %>% filter(genome == 'chm13')
 
-    pdf(out_path[['hg38paired']], width=8.6, height=3)
+    pdf(out_path[['hg38paired']], width=16, height=4)
+    res.hg38 = res.hg38 %>% filter(!grepl('l\\+x', count_file))
     p_big = plot_bar(res.hg38)
     p_small = plot_bar(res.small.hg38)
     print(p_big + p_small+ scale_fill_manual(values = custom_colors))
     dev.off()
 
-    pdf(out_path[['chm13paired']], width=8.6, height=3)
+    pdf(out_path[['chm13paired']], width=16, height=4)
+    res.chm13 = res.chm13 %>% filter(!grepl('l\\+x', count_file))
     p_big = plot_bar(res.chm13)
     p_small = plot_bar(res.small.chm13)
     print(p_big + p_small+ scale_fill_manual(values = custom_colors))

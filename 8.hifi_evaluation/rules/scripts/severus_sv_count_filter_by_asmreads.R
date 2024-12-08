@@ -5,8 +5,8 @@ library(tidyverse)
 library(patchwork)
 
 custom_colors <- c(
-  "asm_filter" = rgb(46, 108, 128, maxColorValue = 255),
-  "asm_support" = rgb(233, 127, 90, maxColorValue = 255)
+  "asm_support" = rgb(46, 108, 128, maxColorValue = 255),
+  "asm_filter" = rgb(233, 127, 90, maxColorValue = 255)
 )
 
 get_theme <- function(size=12, angle=0) {

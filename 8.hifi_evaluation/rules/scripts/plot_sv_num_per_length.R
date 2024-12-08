@@ -31,7 +31,6 @@ do_bar_chart <- function(data_path, out_path, threads, myparam) {
 
     ggplot(res, aes(x=reorder(comb, value), y=value, fill=name)) + geom_bar(position='stack', stat='identity') + facet_wrap(~genome+tool, ncol=6, scales='free_x')+theme_classic() + theme(axis.text.x=element_text(angle=90, hjust=1, vjust=0.5)) + ylab(expression("#SV ">="5 Supporting reads")) + xlab("") #+ ylim(0, 50)
     ggsave(out_path[['pdf']], width=9.5, height=6)
-
     write_tsv(res, out_path[['tsv']])
 }
 
