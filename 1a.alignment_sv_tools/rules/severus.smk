@@ -84,7 +84,6 @@ rule severus_tumor_normal_pair:
         """
 
 
-
 rule severus_single_mix:
     input:
         crams = "output/align/{cell_line}_{platform}/{assembly}_mixdown.cram",

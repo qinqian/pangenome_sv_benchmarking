@@ -4,14 +4,20 @@ library(stringr)
 library(tidyverse)
 library(patchwork)
 
+
 custom_colors <- c(
-  "asm_support" = rgb(46, 108, 128, maxColorValue = 255),
-  "asm_filter" = rgb(233, 127, 90, maxColorValue = 255)
+  "filtered by asm" = rgb(46, 108, 128, maxColorValue = 255),
+  "kept by asm" = rgb(233, 127, 90, maxColorValue = 255)
+)
+
+custom_colors2 <- c(
+  "filtered by asm" = "black",
+  "kept by asm" = "gray"
 )
 
 
 get_theme <- function(size=12, angle=0) {
-    defined_theme = theme_clean(base_size=size) + theme(legend.title=element_text(size=size), strip.text=element_text(size=size), legend.text=element_text(size=size), axis.title.x=element_text(size=size), axis.title.y=element_text(size=size), axis.text.y=element_text(size=size), axis.text.x=element_text(size=size, angle=angle, hjust = 1, vjust=1.05)) #, legend.position="bottom", legend.box = "horizontal") 
+    defined_theme = theme_clean(base_size=size) + theme(legend.title=element_blank(), strip.text=element_text(size=size), legend.text=element_text(size=size), axis.title.x=element_text(size=size), axis.title.y=element_text(size=size), axis.text.y=element_text(size=size), axis.text.x=element_text(size=size, angle=angle, hjust = 1, vjust=1.05), legend.position="bottom", legend.box = "horizontal")
     defined_theme
 }
 
@@ -100,12 +106,13 @@ do_bar_chart <- function(input, out_path, threads, myparam) {
     metrics_summarize = bind_rows(metrics_summarize)
     print(table(metrics_summarize$tool))
     write_tsv(metrics_summarize, out_path[['stat_sv_num']])
-    metrics_summarize = metrics_summarize %>% filter(cutoff > 2 & cutoff < 6)
-    metrics_summarize = metrics_summarize %>% filter(tool != "msv_lts")
+    metrics_summarize = metrics_summarize %>% filter(cutoff >= 3 & cutoff <= 7)
+    ##metrics_summarize = metrics_summarize %>% filter(tool != "msv_lts")
 
     metrics_summarize = metrics_summarize %>% mutate(
         tools = case_when(
             tool=="msv_ltgs" ~ "minisv_ltg",
+            tool=="msv_lts" ~ "minisv_lt",
             tool=="snf" ~ "sniffles2", 
             .default = tool
         )
@@ -133,22 +140,38 @@ do_bar_chart <- function(input, out_path, threads, myparam) {
     metrics_summarize = bind_rows(metrics_summarize)
     write_tsv(metrics_summarize, out_path[['stat_sv_num']])
 
-    metrics_summarize = metrics_summarize %>% filter(tool != "msv_lts")
-    metrics_summarize = metrics_summarize %>% filter(cutoff > 2 & cutoff < 6)
+    #metrics_summarize = metrics_summarize %>% filter(tool != "msv_lts")
+    metrics_summarize = metrics_summarize %>% filter(cutoff >= 3 & cutoff <= 7)
 
     metrics_summarize = metrics_summarize %>% mutate(
         tools = case_when(
             tool=="msv_ltgs" ~ "minisv_ltg",
             tool=="snf" ~ "sniffles2", 
+            tool=="msv_lts" ~ "minisv_lt",
             .default = tool
         )
     )
 
-    pdf(out_path[['bar_pdf2']], width=9, height=9)
+    metrics_summarize = metrics_summarize %>% mutate(
+          process=case_when(
+              process == "asm_support" ~ "kept by asm",
+              process == "asm_filter" ~ "filtered by asm",
+              .default = process,
+          )
+    )
+
+    pdf(out_path[['bar_pdf2']], width=12, height=8)
     p = ggplot(data=metrics_summarize, aes(x=tools, y=count, fill=factor(process))) + geom_bar(position="stack", stat="identity") + xlab("Self-assembly overlapped read cutoff") + ylab("SV numbers") + facet_grid(cell_line~cutoff, scales = "free") + get_theme(angle=30) + scale_fill_manual(values = custom_colors)
+    print(p)
+    dev.off()
+
+    pdf(out_path[['bar_pdf2_bw']], width=12, height=8)
+    p = ggplot(data=metrics_summarize, aes(x=tools, y=count, fill=factor(process))) + geom_bar(position="stack", stat="identity") + xlab("Self-assembly overlapped read cutoff") + ylab("SV numbers") + facet_grid(cell_line~cutoff, scales = "free") + get_theme(angle=30) + scale_fill_manual(values = custom_colors2)
     print(p)
     dev.off()
 }
 
+
 do_bar_chart(snakemake@input, snakemake@output, snakemake@threads, snakemake@params)
+
 

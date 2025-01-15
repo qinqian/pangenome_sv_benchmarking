@@ -85,7 +85,7 @@ do_bar_chart <- function(data_path, out_path, threads, myparam) {
     print(head(metrics))
     metrics = metrics[,-1] %>% pivot_wider(names_from=c("group"), values_from='SV_num')
 
-    metrics = metrics %>% mutate(asm_filter=abs(caller-asm_keep))
+    metrics = metrics %>% mutate(asm_filter=caller-asm_keep)
     write_tsv(metrics, out_path[['stat']])
 
     metrics = metrics %>% select(count,cell_line,metrics,tool,asm_keep,asm_filter) %>% pivot_longer(cols=c("asm_filter", "asm_keep"), names_to="group", values_to="SV_num")

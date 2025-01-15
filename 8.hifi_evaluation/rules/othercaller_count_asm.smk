@@ -87,7 +87,6 @@ rule sv_num_with_asmcount_filter:
     input:
         severus_stat = expand("../10.mixed_assembly_10percent/output/minisv_puretumor_somatic_asm/severus_{cell_line}_hifi1_somatic_generation2_filterasm.stat", cell_line=['COLO829', 'NCI2009','HCC1395', 'HCC1937', 'HCC1954', 'NCI1437']),
         msv_stat     = expand("../10.mixed_assembly_10percent/output/minisv_puretumor_somatic_asm/msv_ltgs_{cell_line}_hifi1_somatic_generation2_filterasm.stat",     cell_line=['COLO829', 'NCI2009','HCC1395', 'HCC1937', 'HCC1954', 'NCI1437']),
-        ## ../10.mixed_assembly_10percent/output/minisv_puretumor_somatic_asm/msv_lts_NCI2009_hifi1_somatic_generation2_filterasm.stat
         msv_lts_stat = expand("../10.mixed_assembly_10percent/output/minisv_puretumor_somatic_asm/msv_lts_{cell_line}_hifi1_somatic_generation2_filterasm.stat",     cell_line=['COLO829', 'NCI2009','HCC1395', 'HCC1937', 'HCC1954', 'NCI1437']),
         snf_stat     = expand("../10.mixed_assembly_10percent/output/minisv_puretumor_somatic_asm/snf_{cell_line}_hifi1_somatic_generation2_filterasm.stat",     cell_line=['COLO829', 'NCI2009','HCC1395', 'HCC1937', 'HCC1954', 'NCI1437']),
         nano_stat = expand("../10.mixed_assembly_10percent/output/minisv_puretumor_somatic_asm/nanomonsv_{cell_line}_hifi1_somatic_generation2_filterasm.stat", cell_line=['COLO829', 'NCI2009','HCC1395', 'HCC1937', 'HCC1954', 'NCI1437']),
@@ -96,7 +95,8 @@ rule sv_num_with_asmcount_filter:
         stat = "sv_num_with_asmcount_filter.tsv",
         stat_sv_num = "sv_num_with_asmcount_filter_summarize.tsv",
         bar_pdf  = "sv_num_with_asmcount_filter_bar.pdf",
-        bar_pdf2  = "sv_num_with_asmcount_filter_bar2.pdf"
+        bar_pdf2  = "sv_num_with_asmcount_filter_bar2.pdf",
+        bar_pdf2_bw  = "sv_num_with_asmcount_filter_bar2_bw.pdf"
     conda: "plot"
     script:
         ###"scripts/sv_count_filter_by_asmreads.R"

@@ -420,6 +420,12 @@ module colo829_barchart_tnpair_workflow:
 
 use rule * from colo829_barchart_tnpair_workflow as r_colo829_barchart_tnpair_workflow_*
 
+module rename_figs_workflow:
+    snakefile: "rules/rename_figs.smk"
+    config: config
+
+use rule * from rename_figs_workflow as rename_figs_workflow_*
+
 rule all: 
     input:
         minisv_eval_tnpair_files_hifi,
@@ -435,6 +441,7 @@ rule all:
         rules.r_othercaller_count_workflow_all.input,
         rules.r_consensus_eval_mosaic_workflow_all.input,
         rules.r_colo829_barchart_tnpair_workflow_all.input,
+        rules.rename_figs_workflow_all.input,
 
         "hg38_colo829_hifi_clean.pdf", 
         "output/local/Figure3_hg38_colo829_hifi_clean.pdf",

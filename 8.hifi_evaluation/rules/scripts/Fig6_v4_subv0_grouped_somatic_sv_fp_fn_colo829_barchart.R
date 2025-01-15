@@ -18,19 +18,16 @@ custom_colors2 <- c(
 )
 
 get_theme <- function(size=12, angle=0) {
-    #defined_theme = theme_clean(base_size=size) + theme(legend.title=element_text(size=size), strip.text=element_text(size=size), legend.text=element_text(size=size), axis.title.x=element_text(size=size), axis.title.y=element_text(size=size), axis.text.y=element_text(size=size), axis.text.x=element_text(size=size, angle=angle, hjust = 1, vjust=1.05)) #, legend.position="bottom", legend.box = "horizontal") 
     defined_theme = theme_clean(base_size=size) + theme(legend.title=element_text(size=size), strip.text=element_text(size=size), legend.text=element_text(size=size), axis.title.x=element_text(size=size), axis.title.y=element_text(size=size), axis.text.y=element_text(size=size), axis.text.x=element_text(size=size, angle=angle, hjust = 1, vjust=1.05), legend.position="none")
     defined_theme
 }
 
 
-
 upset_simple = function(df, cl, xlog10=F, ylog10=F, axis_off=F, label="", theme=F) {
   n = ncol(df) - 3
   #df = df[order(-df$count, -df$count2, apply(df[,1:n], 1, sum)), ] %>% mutate(count2=ifelse(count2<0, 0, count2))
-
-  # total count sort
   df = df %>% mutate(count2=ifelse(count2<0, 0, count2)) %>% arrange(desc(count+count2))
+
   print('---------')
   total_asm = sum(df$count)
 
@@ -42,8 +39,7 @@ upset_simple = function(df, cl, xlog10=F, ylog10=F, axis_off=F, label="", theme=
   perf_metrics = perf_metrics %>% mutate(tp=y, fn=total_asm-y) %>% mutate(tool=case_when(
       x==1 ~ "severus",
       x==2 ~ "minisv",
-      x==3 ~ "savana",
-      x==4 ~ "nanomonsv",
+      x==3 ~ "sniffles2",
   ))
 
   sums = data.frame(
@@ -58,8 +54,8 @@ upset_simple = function(df, cl, xlog10=F, ylog10=F, axis_off=F, label="", theme=
     class='asm_filter'
   )
 
-
   sums = rbind(sums, sums2)
+
   sums = sums %>% mutate(
         class=case_when(
             class == "asm_keep" ~ "kept by asm",
@@ -81,7 +77,7 @@ upset_simple = function(df, cl, xlog10=F, ylog10=F, axis_off=F, label="", theme=
   } else {
     xlabel = "The number of SV calls"
   }
-
+  
   if (axis_off) {
       axis_x = element_blank()
       labels = rep("", n)
@@ -95,7 +91,7 @@ upset_simple = function(df, cl, xlog10=F, ylog10=F, axis_off=F, label="", theme=
   } else {
      legend="none"
   }
-  
+
   p1 = ggplot(sums, aes(x=x, y=y, fill=factor(class))) + 
     geom_bar(stat="identity", width=0.3) +
     scale_x_continuous(breaks=1:n, labels=labels, limits=c(0.5, n+0.5), position = "bottom") + 
@@ -108,7 +104,7 @@ upset_simple = function(df, cl, xlog10=F, ylog10=F, axis_off=F, label="", theme=
       panel.grid.major.y=element_blank(),
       panel.grid.minor.y=element_blank(),
       plot.margin = unit(c(0, 0, 0, 0), "null"),
-      legend.position="none"
+      legend.position="none",
     ) +
     scale_fill_manual(values = custom_colors2) + 
     ylab(ylabel) +
@@ -127,6 +123,7 @@ upset_simple = function(df, cl, xlog10=F, ylog10=F, axis_off=F, label="", theme=
         )
   )
   print(processed_df)
+  
 
   p2 = ggplot(processed_df) + 
     geom_bar(aes(x=x, y=value, fill=factor(name)), stat="identity", width=0.5, position='stack') +
@@ -138,13 +135,16 @@ upset_simple = function(df, cl, xlog10=F, ylog10=F, axis_off=F, label="", theme=
       axis.ticks.x = element_blank(),
       axis.title.x = element_blank(),
       plot.title = element_text(size=20, face='bold'),
+      #panel.grid.major=element_blank(),
+      #panel.grid.minor=element_blank(),
       plot.margin = unit(c(0, 0, 0, 0), "null"),
-      legend.text = element_text(size=20),
+      legend.text=element_text(size=20),
       legend.position=legend, 
       legend.title=element_blank(),
       plot.tag = element_text(
                   size = rel(2),
-                  hjust = 0.5, vjust = 0.5)) +
+                  hjust = 0.5, vjust = 0.5)
+    ) +
     labs(title=NULL, x=NULL, y=NULL, tag=NULL) +
     ylab(xlabel) +
     scale_fill_manual(values = custom_colors2) + 
@@ -186,9 +186,6 @@ upset_simple = function(df, cl, xlog10=F, ylog10=F, axis_off=F, label="", theme=
   list(perf_metrics, plot)
 }
 
-count_metrics = function(df) {
-  print(df)
-}
 
 make_mat_data = function(df) {
   n = ncol(df)-3
@@ -277,28 +274,29 @@ do_bar_chart <- function(data_path, out_path, threads, myparam) {
         union_count = read.table(data_path[['union_count']][index], colClasses = 'character', sep='\t')
         asm_union_count = read.table(data_path[['asm_union_count']][index], colClasses = 'character', sep='\t')
 	metrics = as_tibble(union_count) %>% left_join(as_tibble(asm_union_count), by='V1')
-	df_list[[index]] = metrics %>% mutate(cell_line = gsub("origunion_", "", gsub('_hifi1_somatic_generation[235]_eval.tsv', '', basename(data_path[['union_count']][index]))))
+        ##_hifi1_somatic_generation2_eval.tsv
+	df_list[[index]] = metrics %>% mutate(cell_line = gsub("_hifi1_somatic_generation[235]_eval.tsv", "", gsub("origunion_", "", gsub('_hifi1_somatic_generation[235]_eval.tsv', '', basename(data_path[['union_count']][index])))))
     }
 
     metrics = bind_rows(df_list)
     colnames(metrics)[1:3] = c('comb', 'caller',  'asm_keep')
-
     print(metrics)
- 
-    metrics = data.frame(do.call(rbind, lapply(strsplit(metrics$comb, ""), as.numeric)), metrics$caller, metrics$asm_keep, metrics$cell_line)
-    colnames(metrics) = c("severus", "minisv", "savana", "nanomonsv", "count", "asm_keep", "cell_line")
 
-    metrics = data.frame(metrics[, c(1,2,3,4,5,6,7)])
+    metrics = data.frame(do.call(rbind, lapply(strsplit(metrics$comb, ""), as.numeric)), metrics$caller, metrics$asm_keep, metrics$cell_line)
+    colnames(metrics) = c("severus", "minisv", "sniffles2", "count", "asm_keep", "cell_line")
+    metrics = data.frame(metrics[, c(1,2,3,4,5,6)])
     metrics = metrics %>% 
        mutate(count=as.numeric(count)) %>% 
        mutate(asm_keep=as.numeric(asm_keep)) %>%
-       #arrange(desc(count)) %>% 
+       ##arrange(desc(count)) %>% 
        mutate(asm_filter=count-asm_keep) %>% 
        mutate(count=asm_keep) %>% 
        select(-asm_keep) %>% 
        rename(count2=asm_filter) 
 
     write_tsv(metrics, out_path[['stat']])
+
+    print(metrics)
 
     pdf(out_path[['bar_pdf']], width=20, height=9)
     plot_list <- list() 
@@ -323,6 +321,7 @@ do_bar_chart <- function(data_path, out_path, threads, myparam) {
         }
     }
     print(wrap_plots(plot_list), ncol=2, guides='collect')
+
     #p1 = ggplot(data=metrics)+
     #  geom_bar_pattern(
     #      aes(
@@ -344,7 +343,6 @@ do_bar_chart <- function(data_path, out_path, threads, myparam) {
     #  get_theme(angle=0, size=9) +
     #  ggtitle("COLO829 tumor-normal paired somatic SV") + ylab("FP SV calls number")
     dev.off()
-
     pdf(out_path[['bar_pdf_bw']], width=20, height=9)
     plot_list <- list() 
     labels = toupper(letters)

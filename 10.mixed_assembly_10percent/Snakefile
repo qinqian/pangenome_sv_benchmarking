@@ -448,7 +448,7 @@ for cutoff in [2,3,4,5,6,7,8,10]:
                 
             fi
 
-            /hlilab/alvin/miniconda3/envs/gafcall/bin/k8 /hlilab/alvin/miniconda3/envs/gafcall/bin/minisv.js union -c {params.c} -b ~/data/pangenome_sv_benchmarking/minisv/data/hs38.reg.bed {input.severus} {input.minisv_ltg} {input.truth} > {output.union_count}
+            /hlilab/alvin/miniconda3/envs/gafcall/bin/k8 /hlilab/alvin/miniconda3/envs/gafcall/bin/minisv.js union -c {params.c} -b ~/data/pangenome_sv_benchmarking/minisv/data/hs38.reg.bed {input.severus} {input.minisv_ltg} {input.truth2} > {output.union_count}
             /hlilab/alvin/miniconda3/envs/gafcall/bin/k8 /hlilab/alvin/miniconda3/envs/gafcall/bin/minisv.js union -c {params.c} -b ~/data/pangenome_sv_benchmarking/minisv/data/hs38.reg.bed {output.severus_filtered_asm} {output.msv_somatic_filtered_asm} {output.savana_somatic_filtered_asm} {output.nanomonsv_somatic_filtered_asm} > {output.asm_union_count}
             """
 
@@ -553,10 +553,7 @@ for cutoff in [2,3,4,5,6,7,8,10]:
     #                /hlilab/alvin/miniconda3/envs/gafcall/bin/k8 /hlilab/alvin/miniconda3/envs/gafcall/bin/minisv.js eval -l 100000 -M -c {params.c} -b ~/data/pangenome_sv_benchmarking/minisv/data/hs38.reg.bed $input {input.truth} | head -2 >> {output.eval}
     #            done
     #        fi
-
-
     #        """
-
 
     rule:
         name: f"minisv_eval_mixed_count{cutoff}"
@@ -585,8 +582,10 @@ for cutoff in [2,3,4,5,6,7,8,10]:
             snf_filtered_asm_readname    = f"output/minisv_mosaic_asm/{{cell_line}}_grch38_snf_lowaf25_{cutoff}_readname_asm.vcf",
             msv_filtered_asm_readname = f"output/minisv_mosaic_asm/{{cell_line}}_grch38_msv_{cutoff}_readname_asm.vcf",
             out_msv_filterstat = f"output/minisv_mosaic_asm/{{cell_line}}_grch38_msv_{cutoff}_readname_asm.stat",
-            eval = f"output/minisv_mosaic_asm/{{cell_line}}_grch38_count{cutoff}_eval.tsv"
+            eval = f"output/minisv_mosaic_asm/{{cell_line}}_grch38_count{cutoff}_eval.tsv",
             #cell_line_fn = f"output/minisv_mosaic_asm/{{cell_line}}_grch38_count{cutoff}_fn_print.tsv"
+            union_count = f"output/minisv_mosaic_asm/origunion_{{cell_line}}_somatic_generation{cutoff}_eval.tsv",
+            asm_union_count = f"output/minisv_mosaic_asm/asmunion_{{cell_line}}_somatic_generation{cutoff}_eval.tsv"
         conda: 'msvpy'
         params:
             c = cutoff
@@ -613,8 +612,12 @@ for cutoff in [2,3,4,5,6,7,8,10]:
                     /hlilab/alvin/miniconda3/envs/gafcall/bin/k8 /hlilab/alvin/miniconda3/envs/gafcall/bin/minisv.js eval -M -c {params.c} -b ~/data/pangenome_sv_benchmarking/minisv/data/hs38.reg.bed $input {input.truth} | head -2 >> {output.eval}
                 done
             fi
+
+            /hlilab/alvin/miniconda3/envs/gafcall/bin/k8 /hlilab/alvin/miniconda3/envs/gafcall/bin/minisv.js union -c {params.c} -b ~/data/pangenome_sv_benchmarking/minisv/data/hs38.reg.bed {output.severus_filtered} {input.minisv_ltg} {input.sniffles_mosaic} > {output.union_count}
+
+            /hlilab/alvin/miniconda3/envs/gafcall/bin/k8 /hlilab/alvin/miniconda3/envs/gafcall/bin/minisv.js union -c {params.c} -b ~/data/pangenome_sv_benchmarking/minisv/data/hs38.reg.bed {output.severus_filtered_asm} {input.minisv_ltgs} {output.snf_filtered_asm} > {output.asm_union_count}
+
             """
-            ##/hlilab/alvin/miniconda3/envs/gafcall/bin/k8 /hlilab/alvin/miniconda3/envs/gafcall/bin/minisv.js annot -f -a -b ~/data/pangenome_sv_benchmarking/minisv/data/hs38.reg.bed -c {params.c} -l 100 $input {input.truth2} >> {output.cell_line_fn}
 
     rule:
         name: f"minisv_eval_mixed_count{cutoff}_l100k"

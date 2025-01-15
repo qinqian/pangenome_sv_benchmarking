@@ -12,10 +12,15 @@ custom_colors <- c(
   "TP" = rgb(233, 127, 90, maxColorValue = 255)
 )
 
+custom_colors2 <- c(
+  "FP" = "gray",
+  "TP" = "gray"
+)
+
 
 get_theme <- function(size=12, angle=0) {
     #defined_theme = theme_clean(base_size=size) + theme(legend.title=element_text(size=size), strip.text=element_text(size=size), legend.text=element_text(size=size), axis.title.x=element_text(size=size), axis.title.y=element_text(size=size), axis.text.y=element_text(size=size), axis.text.x=element_text(size=size, angle=angle, hjust = 1, vjust=1.05), legend.box.spacing = unit(0, "mm"))
-    defined_theme = theme_classic(base_size=size) + theme(legend.title=element_text(size=size), legend.text=element_text(size=size), axis.title.x=element_text(size=size), axis.title.y=element_text(size=size), axis.text.y=element_text(size=size), axis.text.x=element_text(size=size, angle=angle, hjust = 1, vjust=1.05), legend.box.spacing = unit(0, "mm"), strip.text = element_blank())
+    defined_theme = theme_minimal(base_size=size) + theme(legend.title=element_blank(), legend.text=element_text(size=size), axis.title.x=element_text(size=size), axis.title.y=element_text(size=size), axis.text.y=element_text(size=size), axis.text.x=element_text(size=size, angle=angle, hjust = 1, vjust=1.05), legend.box.spacing = unit(0, "mm"), strip.text = element_blank(), legend.position="bottom")
     defined_theme
 }
 
@@ -124,7 +129,7 @@ do_bar_chart <- function(data_path, out_path, threads, myparam) {
     metrics = parse_evaluation(data_path['stat'])
     write_tsv(metrics, out_path[['stat']])
     
-    pdf(out_path[['bar_pdf2']], width=7.5, height=3.5)
+    pdf(out_path[['bar_pdf3_1']], width=3.3, height=3.2)
     p1 = ggplot(data=metrics %>% filter(metrics=='FP'), 
           aes(x=tools, y=SV_num,
               fill=factor(metrics),
@@ -142,8 +147,15 @@ do_bar_chart <- function(data_path, out_path, threads, myparam) {
       geom_text(aes(y=SV_num, label=SV_num), size=3,
                 position = 'stack') +
       get_theme(angle=45, size=12) +
-      ggtitle("COLO829 Mosaic SV evaluation (all)") + ylab("FP number at\nread count cutoff 2")+ xlab("different tools")
+      ggtitle("") + ylab("The number of FP SVs")+ xlab("") + 
+      guides(fill = "none", 
+             pattern = guide_legend(override.aes = list(
+               pattern = c("stripe", "none"),
+               fill = c(`kept by asm` = rgb(233, 127, 90, maxColorValue = 255), `filtered by asm` = rgb(233, 127, 90, maxColorValue = 255)))))
+    print(p1)
+    dev.off()
 
+    pdf(out_path[['bar_pdf3_2']], width=3.3, height=3.2)
     p2 = ggplot(data=metrics %>% filter(metrics=='TP'), 
           aes(x=tools, y=SV_num,
               fill=factor(metrics),
@@ -161,12 +173,74 @@ do_bar_chart <- function(data_path, out_path, threads, myparam) {
       geom_text(aes(y=SV_num, label=SV_num), size=3,
                 position = 'stack') +
       get_theme(angle=45, size=12) +
-      geom_hline(yintercept = 58, color='red') +
-      ggtitle("COLO829 Mosaic SV evaluation (all)") + ylab("TP number at\nread count cutoff 2")+ xlab("different tools")
+      geom_hline(yintercept = 58, color='black') +
+      ggtitle("") + ylab("The number of TP SVs") + xlab("") + 
+      guides(fill = "none", 
+             pattern = guide_legend(override.aes = list(
+               pattern = c("stripe", "none"),
+               fill = c(`kept by asm` = rgb(233, 127, 90, maxColorValue = 255), `filtered by asm` = rgb(233, 127, 90, maxColorValue = 255)))))
+    print(p2)
+    dev.off()
 
-    print((p1+p2))
+
+    pdf(out_path[['bar_pdf3_1_bw']], width=3.3, height=3.2)
+    p1 = ggplot(data=metrics %>% filter(metrics=='FP'), 
+          aes(x=tools, y=SV_num,
+              fill=factor(metrics),
+              pattern=factor(group))) + 
+      geom_bar_pattern(
+          stat = "identity", position="stack",
+          colour          = 'black',
+          pattern_fill = "black",
+          pattern_angle = 45,
+          pattern_density = 0.03,
+          pattern_key_scale_factor = 0.6,
+          pattern_spacing = 0.05) + 
+      scale_fill_manual(values = custom_colors2) + 
+      scale_pattern_manual(values = c(asm_keep = "none", `asm_filter` = "stripe")) +
+      geom_text(aes(y=SV_num, label=SV_num), size=3,
+                position = 'stack') +
+      get_theme(angle=45, size=12) +
+      ggtitle("") + ylab("The number of FP SVs")+ xlab("") + 
+      guides(fill = "none", 
+             pattern = guide_legend(override.aes = list(
+               pattern = c("stripe", "none"),
+               fill = c(`kept by asm` = 'gray', `filtered by asm` = 'gray'))))
+    print(p1)
+    dev.off()
+
+    pdf(out_path[['bar_pdf3_2_bw']], width=3.3, height=3.2)
+    p2 = ggplot(data=metrics %>% filter(metrics=='TP'), 
+          aes(x=tools, y=SV_num,
+              fill=factor(metrics),
+              pattern=factor(group))) + 
+      geom_bar_pattern(
+          stat = "identity", position="stack",
+          colour          = 'black',
+          pattern_fill = "black",
+          pattern_angle = 45,
+          pattern_density = 0.03,
+          pattern_key_scale_factor = 0.6,
+          pattern_spacing = 0.05) + 
+      scale_fill_manual(values = custom_colors2) + 
+      scale_pattern_manual(values = c(asm_keep = "none", `asm_filter` = "stripe")) +
+      geom_text(aes(y=SV_num, label=SV_num), size=3,
+                position = 'stack') +
+      get_theme(angle=45, size=12) +
+      geom_hline(yintercept = 58, color='black') +
+      ggtitle("") + ylab("The number of TP SVs") + xlab("") + 
+      guides(fill = "none", 
+             pattern = guide_legend(override.aes = list(
+               pattern = c("stripe", "none"),
+               fill = c(`kept by asm` = 'gray', `filtered by asm` = 'gray'))))
+    print(p2)
+    dev.off()
+
+    pdf(out_path[['bar_pdf_all_bw']], width=5.3, height=3.2)
+    print(p1+p2)
     dev.off()
 }
+
 
 do_bar_chart(snakemake@input, snakemake@output, snakemake@threads, snakemake@params)
 
