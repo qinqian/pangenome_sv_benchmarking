@@ -5,7 +5,7 @@ rule all:
         stat2 = "mosaic/colo829_mosaic_sv_consensus_eval.tsv",
         bar_pdf2 = "mosaic/colo829_mosaic_sv_consensus_eval_cutoff2.pdf",
         bar_pdf3 = "mosaic/mosaic_sv_consensus_eval_cutoff2.pdf",
-        bar_pdf4 = "mosaic2/Figure4_version2_colo829_mosaic_sv_consensus_eval_cutoff2.pdf",
+        ##bar_pdf4 = "mosaic2/Figure4_version2_colo829_mosaic_sv_consensus_eval_cutoff2.pdf",
         bar_pdf_100kb = "mosaic100kb/mosaic_sv_consensus_eval_cutoff2.pdf",
         bar_pdf_100kb_colo829 = "mosaic100kb/colo829_mosaic_sv_consensus_eval_cutoff2.pdf",
         stat5 = "mosaic2/Fig3_v4_subv0_colo829_mosaic_sv_consensus_eval.tsv",
@@ -54,16 +54,16 @@ rule colo829_mosaic_sv_evaluation:
         "scripts/mosaic_sv_fp_fn_colo829_barchart.R"
 
 
-rule colo829_mosaic_sv_evaluation_rate_withnum:
-    input:
-        stat = expand("../10.mixed_assembly_10percent/output/minisv_mosaic_asm/{cell_line}_hifi1_grch38_count{count}_eval.tsv", cell_line=['COLO829'], count=[2,3,4,5]),
-        stat_100kb = expand("../10.mixed_assembly_10percent/output/minisv_mosaic_asm/{cell_line}_hifi1_grch38_count{count}_eval_100k.tsv", cell_line=['COLO829'], count=[2,3,4,5])
-    output:
-        stat = "mosaic2/colo829_mosaic_sv_consensus_eval.tsv",
-        bar_pdf2 = "mosaic2/Figure4_version2_colo829_mosaic_sv_consensus_eval_cutoff2.pdf"
-    conda: "plot"
-    script:
-        "scripts/mosaic_sv_fp_fn_colo829_barchart_ratenum.R"
+##rule colo829_mosaic_sv_evaluation_rate_withnum:
+##    input:
+##        stat = expand("../10.mixed_assembly_10percent/output/minisv_mosaic_asm/{cell_line}_hifi1_grch38_count{count}_eval.tsv", cell_line=['COLO829'], count=[2,3,4,5]),
+##        stat_100kb = expand("../10.mixed_assembly_10percent/output/minisv_mosaic_asm/{cell_line}_hifi1_grch38_count{count}_eval_100k.tsv", cell_line=['COLO829'], count=[2,3,4,5])
+##    output:
+##        stat = "mosaic2/colo829_mosaic_sv_consensus_eval.tsv",
+##        bar_pdf2 = "mosaic2/Figure4_version2_colo829_mosaic_sv_consensus_eval_cutoff2.pdf"
+##    conda: "plot"
+##    script:
+##        "scripts/mosaic_sv_fp_fn_colo829_barchart_ratenum.R"
 
 
 rule colo829_mosaic_sv_evaluation_100k:
@@ -80,8 +80,9 @@ rule colo829_mosaic_sv_evaluation_100k:
 
 rule main_fig_colo829_mosaic_sv_evaluation:
     input:
-        stat = expand("../10.mixed_assembly_10percent/output/minisv_mosaic_asm/{cell_line}_hifi1_grch38_count{count}_eval.tsv", cell_line=['COLO829'], count=[2,3,4,5]),
+        stat = expand("../10.mixed_assembly_10percent/output/minisv_mosaic_asm/{cell_line}_hifi1_grch38_count{count}_eval.tsv", cell_line=['COLO829'], count=[2]),
     output:
+        ## -c 2 -g 5
         stat = "mosaic2/Fig3_v4_subv0_colo829_mosaic_sv_consensus_eval.tsv",
         bar_pdf3_1 = "mosaic2/Fig3_v4_subv1_1.pdf",
         bar_pdf3_2 = "mosaic2/Fig3_v4_subv1_2.pdf",
@@ -97,8 +98,8 @@ rule main_fig_colo829_mosaic_sv_evaluation:
 rule othercellline_tnpair_upset:
     input:
         #../10.mixed_assembly_10percent/output/minisv_mosaic_asm/origunion_NCI1437_hifi1_somatic_generation2_eval.tsv
-        union_count = expand("../10.mixed_assembly_10percent/output/minisv_mosaic_asm/origunion_{cell_line}_hifi1_somatic_generation{cutoff}_eval.tsv", cell_line=['COLO829', 'HCC1395', 'HCC1937', 'HCC1954', 'NCI1437', 'NCI2009'], cutoff=[5]),
-        asm_union_count = expand("../10.mixed_assembly_10percent/output/minisv_mosaic_asm/asmunion_{cell_line}_hifi1_somatic_generation{cutoff}_eval.tsv", cell_line=['COLO829', 'HCC1395', 'HCC1937', 'HCC1954', 'NCI1437', 'NCI2009'], cutoff=[5])
+        union_count = expand("../10.mixed_assembly_10percent/output/minisv_mosaic_asm/origunion_{cell_line}_hifi1_somatic_generation{cutoff}_eval.tsv", cell_line=['COLO829', 'HCC1395', 'HCC1937', 'HCC1954', 'NCI1437', 'NCI2009'], cutoff=[2]), # 2, 5
+        asm_union_count = expand("../10.mixed_assembly_10percent/output/minisv_mosaic_asm/asmunion_{cell_line}_hifi1_somatic_generation{cutoff}_eval.tsv", cell_line=['COLO829', 'HCC1395', 'HCC1937', 'HCC1954', 'NCI1437', 'NCI2009'], cutoff=[2])
     output:
         stat = "tnpair/Fig6_v4_subv0.tsv",
         metrics = "tnpair/Fig6_v4_subv0_metrics.tsv",

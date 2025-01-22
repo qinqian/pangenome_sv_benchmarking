@@ -34,7 +34,10 @@ parse_evaluation <- function(data_path) {
 
         # interesting
         # in total 15 cols, will change as we append more tools
-	res = as.data.frame(res)[, c(-1, -15)]
+        print(dim(res))
+        print(head(res[, c(1, 2:5, 16)]))
+	res = as.data.frame(res)[, c(-1, -16)]
+        print(head(res))
 
         # sensitivity
         sensitivity = res %>% select(X2) %>% pull()
@@ -61,6 +64,8 @@ parse_evaluation <- function(data_path) {
 
     metrics = as_tibble(do.call(rbind, df_list))
     metrics$count = as.numeric(metrics$count)
+    print(head(metrics))
+    print(table(metrics$tools))
 
     metrics = metrics %>% mutate(tool = ifelse(
       grepl("severus_lowaf25", tools),
@@ -70,21 +75,23 @@ parse_evaluation <- function(data_path) {
 	     ifelse(grepl("grch38l_l\\+t_mosaic", tools),
              "msv_lt",
 	     ifelse(grepl("grch38l_l\\+t\\+g\\+s_mosaic", tools),
-             "msv_ltgs",
+             "msv_ltgs_1",
 	     ifelse(grepl("grch38l_l\\+t\\+g_mosaic", tools),
              "msv_ltg",
 	     ifelse(grepl("grch38l_l\\+t\\+s_mosaic", tools),
              "msv_lts",
              ifelse(
-             grepl("_msv_", tools),
+             grepl("_msv_\\d_readname", tools),
              "msv_ltgs_asmonlyname",
+             ifelse(grepl("grch38_msv_", tools),
+             "msv_ltgs_2",
 	     NA
              )
 	     ))
 	     )
 	     )
       )
-    ))
+    )))
 
     metrics = metrics %>% mutate(group=ifelse(grepl("_asm\\.vcf", tools), "asm_keep", "caller"))
     metrics = metrics %>% mutate(group2=ifelse(grepl("readname_asm", tools), "_onlyname", ""))
@@ -96,12 +103,14 @@ parse_evaluation <- function(data_path) {
 
     metrics = metrics %>% filter(tool != "msv_lt")
     metrics = metrics %>% filter(tool != "msv_lts")
+    metrics = metrics %>% filter(tool != "msv_ltgs_1")
 
     metrics = metrics %>% mutate(
         tools=case_when(
+            ##tool=="msv_ltg_1" ~ "minisv",
+            tool=="msv_ltgs_2" ~ "minisv",
             tool=="msv_ltg" ~ "minisv",
-            tool=="msv_ltgs" ~ "minisv",
-            tool=="msv_ltgs_asmonlyname" ~ "minisv",
+            ##tool=="msv_ltgs_asmonlyname" ~ "minisv",
             tool=="snf" ~ "sniffles2", 
             .default = tool
         )
@@ -109,8 +118,8 @@ parse_evaluation <- function(data_path) {
     metrics = metrics %>% mutate(
         group=case_when(
             tool=="msv_ltg" ~ "caller",
-            tool=="msv_ltgs" ~ "asm_keep",
-            tool=="msv_ltgs_asmonlyname" ~ "caller+asm_onlyname",
+            tool=="msv_ltgs_2" ~ "asm_keep",
+            #tool=="msv_ltgs_asmonlyname" ~ "caller+asm_onlyname",
             .default = group
         )
     )
