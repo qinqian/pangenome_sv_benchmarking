@@ -423,7 +423,9 @@ for cutoff in [2,3,4,5,6,7,8,10]:
 
             union_count = f"output/minisv_puretumor_somatic_asm/origunion_{{cell_line}}_somatic_generation{cutoff}_eval.tsv",
             asm_union_count = f"output/minisv_puretumor_somatic_asm/asmunion_{{cell_line}}_somatic_generation{cutoff}_eval.tsv",
+            asm_union_countpy = f"output/minisv_puretumor_somatic_asm/asmunion_{{cell_line}}_somatic_generation{cutoff}_evalpy.tsv",
             asm_union_count_insilico = f"output/minisv_puretumor_somatic_asm/asmunion_{{cell_line}}_somatic_generation{cutoff}_insilico_truth.msv",
+            asm_union_count_insilico_py = f"output/minisv_puretumor_somatic_asm/asmunion_{{cell_line}}_somatic_generation{cutoff}_insilico_truth_python.msv",
             eval = f"output/minisv_puretumor_somatic_asm/{{cell_line}}_grch38_count{cutoff}_eval.tsv",
             asm_union_count_insilico_collapsed = f"output/minisv_puretumor_somatic_asm/asmunion_{{cell_line}}_somatic_generation{cutoff}_insilico_truth_collapsed.msv"
         conda: 'msvpy'
@@ -432,6 +434,7 @@ for cutoff in [2,3,4,5,6,7,8,10]:
         shell: 
             """
             /hlilab/alvin/miniconda3/envs/gafcall/bin/k8 /hlilab/alvin/miniconda3/envs/gafcall/bin/minisv.js annot -a -b ~/data/pangenome_sv_benchmarking/minisv/data/hs38.reg.bed -c {params.c} -l 100 -p {input.severus} {input.truth2} | awk '$9>=1' | cut -f 8 > {output.severus_consensus_id}
+
 
             /hlilab/alvin/miniconda3/envs/gafcall/bin/k8 /hlilab/alvin/miniconda3/envs/gafcall/bin/minisv.js snfpair -n 2 -t 1 {input.snf2} > {output.snf_somatic}
             minisv filterasm -c {params.c} -a -i {output.severus_consensus_id} -b ~/data/pangenome_sv_benchmarking/minisv/data/hs38.reg.bed {input.severus_read_ids} {input.asm_rsv} {output.out_severus_filterstat} {input.severus} > {output.severus_filtered_asm}
@@ -451,9 +454,16 @@ for cutoff in [2,3,4,5,6,7,8,10]:
             fi
 
             /hlilab/alvin/miniconda3/envs/gafcall/bin/k8 /hlilab/alvin/miniconda3/envs/gafcall/bin/minisv.js union -c {params.c} -b ~/data/pangenome_sv_benchmarking/minisv/data/hs38.reg.bed {input.severus} {input.minisv_ltg} {input.truth2} > {output.union_count}
+
             /hlilab/alvin/miniconda3/envs/gafcall/bin/k8 /hlilab/alvin/miniconda3/envs/gafcall/bin/minisv.js union -c {params.c} -b ~/data/pangenome_sv_benchmarking/minisv/data/hs38.reg.bed {output.severus_filtered_asm} {output.msv_somatic_filtered_asm} {output.savana_somatic_filtered_asm} {output.nanomonsv_somatic_filtered_asm} > {output.asm_union_count}
+
             /hlilab/alvin/miniconda3/envs/gafcall/bin/k8 /hlilab/alvin/miniconda3/envs/gafcall/bin/minisv.js union -p -c {params.c} -b ~/data/pangenome_sv_benchmarking/minisv/data/hs38.reg.bed {output.severus_filtered_asm} {output.msv_somatic_filtered_asm} {output.savana_somatic_filtered_asm} {output.nanomonsv_somatic_filtered_asm} > {output.asm_union_count_insilico}
             minisv ensembleunion {output.asm_union_count_insilico} > {output.asm_union_count_insilico_collapsed}
+
+            minisv union -p -c {params.c} -b ~/data/pangenome_sv_benchmarking/minisv/data/hs38.reg.bed {output.severus_filtered_asm} {output.msv_somatic_filtered_asm} {output.savana_somatic_filtered_asm} {output.nanomonsv_somatic_filtered_asm} > {output.asm_union_count_insilico_py}
+
+            minisv union -c {params.c} -b ~/data/pangenome_sv_benchmarking/minisv/data/hs38.reg.bed {output.severus_filtered_asm} {output.msv_somatic_filtered_asm} {output.savana_somatic_filtered_asm} {output.nanomonsv_somatic_filtered_asm} > {output.asm_union_countpy}
+
             """
 
     rule:

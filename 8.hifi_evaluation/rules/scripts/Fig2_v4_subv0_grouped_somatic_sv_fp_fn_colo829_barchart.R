@@ -154,7 +154,7 @@ do_bar_chart <- function(data_path, out_path, threads, myparam) {
 	  pattern_density = 0.03,
 	  pattern_key_scale_factor = 0.6,
           pattern_spacing = 0.05) + 
-      scale_fill_manual(values = custom_colors2) + 
+      scale_fill_manual(values = custom_colors2) + ylim(0, 150) + 
       scale_pattern_manual(values = c(`kept by asm` = "none", `filtered by asm` = "stripe")) +
       xlab("") +
       get_theme(angle=0, size=9) +
@@ -187,7 +187,7 @@ do_bar_chart <- function(data_path, out_path, threads, myparam) {
       xlab("") +
       get_theme(angle=0, size=9) +
       facet_wrap(~tool, ncol=5) + 
-      ggtitle("") + ylab("The number of FP SVs") + 
+      ggtitle("") + ylab("The number of TP SVs") + ylim(0, 60) + 
       get_theme(angle=0, size=9) + geom_hline(yintercept=58, color='black')+
       guides(fill = "none", 
              pattern = guide_legend(override.aes = list(
@@ -210,7 +210,7 @@ do_bar_chart <- function(data_path, out_path, threads, myparam) {
 	  pattern_angle = 45,
 	  pattern_density = 0.03,
 	  pattern_key_scale_factor = 0.6,
-          pattern_spacing = 0.05) + 
+          pattern_spacing = 0.05) + ylim(0, 60) +
       scale_fill_manual(values = custom_colors) + 
       scale_pattern_manual(values = c(`kept by asm` = "none", `filtered by asm` = "stripe")) +
       xlab("") +
@@ -238,7 +238,7 @@ do_bar_chart <- function(data_path, out_path, threads, myparam) {
 	  pattern_angle = 45,
 	  pattern_density = 0.03,
 	  pattern_key_scale_factor = 0.6,
-          pattern_spacing = 0.05) + 
+          pattern_spacing = 0.05) + ylim(0, 150) +
       scale_fill_manual(values = custom_colors2) + 
       scale_pattern_manual(values = c(`kept by asm` = "none", `filtered by asm` = "stripe")) +
       xlab("") +
@@ -294,7 +294,7 @@ do_bar_chart <- function(data_path, out_path, threads, myparam) {
 	  pattern_angle = 45,
 	  pattern_density = 0.03,
 	  pattern_key_scale_factor = 0.6,
-          pattern_spacing = 0.05) + 
+          pattern_spacing = 0.05) +  ylim(0, 60) + 
       scale_fill_manual(values = custom_colors2) + 
       scale_pattern_manual(values = c(`kept by asm` = "none", `filtered by asm` = "stripe")) +
       xlab("") +
