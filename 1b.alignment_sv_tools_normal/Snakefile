@@ -5,7 +5,6 @@ import pandas as pd
 from snakemake.utils import validate
 
 configfile: "config.yaml"
-
 clair3_outdir  = expand("output/clair3/{cell_line}/{assembly}/", cell_line=config['samples']['normal'], assembly=config['assembly'])
 sniffles_files  = expand("output/sniffles/{cell_line}/{assembly}.vcf.gz", cell_line=config['samples']['normal'], assembly=config['assembly'])
 sniffles_tbi_files  = expand("output/sniffles/{cell_line}/{assembly}.vcf.gz.tbi", cell_line=config['samples']['normal'], assembly=config['assembly'])
@@ -13,10 +12,9 @@ sniffles_mo_files  = expand("output/sniffles_mosaic/{cell_line}/{assembly}.vcf.g
 sniffles_mo_tbi_files  = expand("output/sniffles_mosaic/{cell_line}/{assembly}.vcf.gz.tbi", cell_line=config['samples']['normal'], assembly=config['assembly'])
 cutesv_files  = expand("output/cutesv/{cell_line}/{assembly}.vcf.gz", cell_line=config['samples']['normal'], assembly=config['assembly'])
 cutesv_files_cutoff2  = expand("output/cutesv/{cell_line}_cutoff2/{assembly}.vcf.gz", cell_line=config['samples']['normal'], assembly=config['assembly'])
-
 svision_files  = expand("output/svision/{cell_line}/{assembly}/{cell_line}.svision_pro_v1.8.s5.vcf", cell_line=config['samples']['normal'], assembly=config['assembly'])
-
 hp_tag_files = expand("output/extract_hp/{cell_line}_{assembly}.tsv.gz", cell_line=config['samples']['normal'], assembly=config['assembly'])
+sawfish_files = expand("output/sawfish/{cell_line}/{assembly}/jointcall", cell_line=config['samples']['normal'], assembly=config['assembly'])
 
 
 wildcard_constraints:
@@ -38,10 +36,10 @@ module severus_workflow:
     config: config
 
 use rule * from severus_workflow as severus_workflow_*
-
 include: "rules/cutesv.smk"
 include: "rules/cutesv_cutoffs.smk"
 include: "rules/svision.smk"
+include: "rules/sawfish.smk"
 
 rule all:
     input:
@@ -49,5 +47,5 @@ rule all:
         rules.severus_workflow_all.input,
         sniffles_files, sniffles_tbi_files,
         cutesv_files, sniffles_mo_files, sniffles_mo_tbi_files, svision_files, hp_tag_files,
-        cutesv_files_cutoff2
+        cutesv_files_cutoff2, sawfish_files
     default_target: True 
