@@ -197,6 +197,20 @@ rule minigraph:
         ~/data/pangenome_sv_benchmarking/1a.alignment_sv_tools/minigraph/minigraph -cxlr -t {threads} {input.assembly} {input.fastq} | gzip - > {output.paf}
         """
 
+rule minigraph_version2_g:
+    input:
+        assembly = "/hlilab/hli/minigraph/HPRC-r2/CHM13-464.gfa.gz", 
+        fastq = "../1a.alignment_sv_tools/output/align/{cell_line}/chm13_mixdown10.fastq.gz"
+    output:
+        paf = "output/align_new_g/{cell_line}_chm13g.paf.gz"
+    threads: 28
+    resources:
+        mem_mb=64000
+    shell:
+        """
+        ~/data/pangenome_sv_benchmarking/1a.alignment_sv_tools/minigraph/minigraph -cxlr -t {threads} {input.assembly} {input.fastq} | gzip - > {output.paf}
+        """
+
 
 rule minisv_mosaic_mixed_lt_e:
     threads: 1
@@ -224,6 +238,22 @@ rule minisv_mosaic_mixed_ltg_e:
         paf = expand("output/align/{{cell_line}}_{assembly}.paf.gz", assembly=['chm13', 'grch38'])
     output:
         rsv = "output/minisv_mosaic/{cell_line}/grch38l_l+tg_mosaic.rsv"
+    shell:
+        """
+        # always use chm13 graph genome as graph filter
+        minisv.js e -n TUMOR -b ../10.mixed_assembly/grch38.cen-mask.bed {input.paf[1]} {input.paf[0]} {input.gaf} | bash > {output.rsv}
+        """
+
+rule minisv_mosaic_mixed_ltg_e_version2:
+    threads: 1
+    resources:
+        mem_mb=100000,
+        run_time="8h"
+    input:
+        gaf = "output/align_new_g/{cell_line}_chm13g.paf.gz",
+        paf = expand("output/align/{{cell_line}}_{assembly}.paf.gz", assembly=['chm13', 'grch38'])
+    output:
+        rsv = "output/minisv_mosaic_new_g/{cell_line}/grch38l_l+tg_mosaic.rsv"
     shell:
         """
         # always use chm13 graph genome as graph filter
@@ -267,6 +297,23 @@ rule minisv_mosaic_mixed_ltgs_e:
         minisv.js e -n TUMOR -0b ../10.mixed_assembly/grch38.cen-mask.bed {input.paf[1]} {input.paf[0]} {input.gaf} {input.asm} | bash > {output.rsv}
         """
 
+rule minisv_mosaic_mixed_ltgs_e_version2:
+    threads: 1
+    resources:
+        mem_mb=100000,
+        run_time="8h"
+    input:
+        asm = "output/align/{cell_line}_asm.paf.gz",
+        gaf = "output/align_new_g/{cell_line}_chm13g.paf.gz",
+        paf = expand("output/align/{{cell_line}}_{assembly}.paf.gz", assembly=['chm13', 'grch38'])
+    output:
+        rsv = "output/minisv_mosaic_new_g/{cell_line}/grch38l_l+t+g_mosaic.rsv"
+    shell:
+        """
+        # always use chm13 graph genome as graph filter
+        minisv.js e -n TUMOR -0b ../10.mixed_assembly/grch38.cen-mask.bed {input.paf[1]} {input.paf[0]} {input.gaf} {input.asm} | bash > {output.rsv}
+        """
+
 
 rule minisv_call:
     input:
@@ -283,6 +330,12 @@ use rule minisv_call as minisv_call_ltg with:
         rsv = "output/minisv_mosaic/{cell_line}/grch38l_l+tg_mosaic.rsv"
     output:
         msv = "output/minisv_mosaic_asm/{cell_line}/grch38l_l+t+g_mosaic.msv.gz"
+
+use rule minisv_call as minisv_call_ltg_version2 with:
+    input:
+        rsv = "output/minisv_mosaic_new_g/{cell_line}/grch38l_l+tg_mosaic.rsv"
+    output:
+        msv = "output/minisv_mosaic_asm_new_g/{cell_line}/grch38l_l+t+g_mosaic.msv.gz"
 
 use rule minisv_call as minisv_call_lt with:
     input:
@@ -578,6 +631,8 @@ for cutoff in [2,3,4,5,6,7,8,10]:
             minisv_ltgs = "output/minisv_mosaic_asm/{cell_line}/grch38l_l+t+g+s_mosaic.msv.gz",
             minisv_ltg = "output/minisv_mosaic_asm/{cell_line}/grch38l_l+t+g_mosaic.msv.gz",
 
+            minisv_ltg_version2 = "output/minisv_mosaic_asm_new_g/{cell_line}/grch38l_l+t+g_mosaic.msv.gz",
+
             minisv_lt = "output/minisv_mosaic_asm/{cell_line}/grch38l_l+t_mosaic.msv.gz",
             minisv_lts = "output/minisv_mosaic_asm/{cell_line}/grch38l_l+t+s_mosaic.msv.gz",
             asm_rsv = "output/align/{cell_line}_asm.rsv.gz",
@@ -595,9 +650,17 @@ for cutoff in [2,3,4,5,6,7,8,10]:
             severus_filtered_asm_readname = f"output/minisv_mosaic_asm/{{cell_line}}_grch38_severus_lowaf25_{cutoff}_readname_asm.vcf",
             snf_filtered_asm_readname    = f"output/minisv_mosaic_asm/{{cell_line}}_grch38_snf_lowaf25_{cutoff}_readname_asm.vcf",
             msv_filtered_asm = f"output/minisv_mosaic_asm/{{cell_line}}_grch38_msv_{cutoff}_asm.vcf",
-            out_msv_filterstat = f"output/minisv_mosaic_asm/{{cell_line}}_grch38_msv_{cutoff}_asm.stat",
             msv_filtered_asm_readname = f"output/minisv_mosaic_asm/{{cell_line}}_grch38_msv_{cutoff}_readname_asm.vcf",
+
+            msv_filtered_asm_readname_version2 = f"output/minisv_mosaic_asm_new_g/{{cell_line}}_grch38_msv_{cutoff}_readname_asm.vcf",
+            msv_filtered_asm_version2 = f"output/minisv_mosaic_asm_new_g/{{cell_line}}_grch38_msv_{cutoff}_asm.vcf",
+
+            out_msv_filterstat = f"output/minisv_mosaic_asm/{{cell_line}}_grch38_msv_{cutoff}_asm.stat",
             out_msv_filterstat_readname = f"output/minisv_mosaic_asm/{{cell_line}}_grch38_msv_{cutoff}_readname_asm.stat",
+
+            out_msv_filterstat_version2 = f"output/minisv_mosaic_asm_new_g/{{cell_line}}_grch38_msv_{cutoff}_asm.stat",
+            out_msv_filterstat_readname_version2 = f"output/minisv_mosaic_asm_new_g/{{cell_line}}_grch38_msv_{cutoff}_readname_asm.stat",
+
             eval = f"output/minisv_mosaic_asm/{{cell_line}}_grch38_count{cutoff}_eval.tsv",
             #cell_line_fn = f"output/minisv_mosaic_asm/{{cell_line}}_grch38_count{cutoff}_fn_print.tsv"
             union_count = f"output/minisv_mosaic_asm/origunion_{{cell_line}}_somatic_generation{cutoff}_eval.tsv",
@@ -618,12 +681,15 @@ for cutoff in [2,3,4,5,6,7,8,10]:
             minisv filterasm -c {params.c} -a -b ~/data/pangenome_sv_benchmarking/minisv/data/hs38.reg.bed {input.minisv_ltg} {input.asm_rsv} {output.out_msv_filterstat} {input.minisv_ltg} > {output.msv_filtered_asm} 
             minisv filterasm -r -c {params.c} -a -b ~/data/pangenome_sv_benchmarking/minisv/data/hs38.reg.bed {input.minisv_ltg} {input.asm_rsv} {output.out_msv_filterstat_readname} {input.minisv_ltg} > {output.msv_filtered_asm_readname} 
 
+            minisv filterasm -c {params.c} -a -b ~/data/pangenome_sv_benchmarking/minisv/data/hs38.reg.bed {input.minisv_ltg_version2} {input.asm_rsv} {output.out_msv_filterstat_version2} {input.minisv_ltg_version2} > {output.msv_filtered_asm_version2} 
+            minisv filterasm -r -c {params.c} -a -b ~/data/pangenome_sv_benchmarking/minisv/data/hs38.reg.bed {input.minisv_ltg_version2} {input.asm_rsv} {output.out_msv_filterstat_readname_version2} {input.minisv_ltg_version2} > {output.msv_filtered_asm_readname_version2} 
+
             bcftools filter -Oz -i 'FMT/VAF[0] <= 0.25' {input.severus} > {output.severus_filtered}
             bcftools filter -i 'FMT/VAF[0] <= 0.25' {output.severus_asm} > {output.severus_filtered_asm}
             bcftools filter -i 'FMT/VAF[0] <= 0.25' {output.severus_asm_readname} > {output.severus_filtered_asm_readname} 
 
             if [ {wildcards.cell_line} == 'COLO829_hifi1' ]; then
-                /hlilab/alvin/miniconda3/envs/gafcall/bin/k8 /hlilab/alvin/miniconda3/envs/gafcall/bin/minisv.js eval -c {params.c} -b ~/data/pangenome_sv_benchmarking/minisv/data/hs38.reg.bed {input.truth} {input.minisv_ltg} {input.minisv_ltgs} {output.msv_filtered_asm} {input.sniffles_mosaic} {output.severus_filtered} {output.severus_filtered_asm} {input.minisv_lt} {input.minisv_lts} {output.snf_filtered_asm} {output.snf_filtered_asm_readname} {output.severus_asm_readname} {output.severus_filtered_asm_readname} {output.msv_filtered_asm_readname} > {output.eval}
+                /hlilab/alvin/miniconda3/envs/gafcall/bin/k8 /hlilab/alvin/miniconda3/envs/gafcall/bin/minisv.js eval -c {params.c} -b ~/data/pangenome_sv_benchmarking/minisv/data/hs38.reg.bed {input.truth} {input.minisv_ltg} {input.minisv_ltgs} {input.minisv_ltg_version2} {output.msv_filtered_asm} {input.sniffles_mosaic} {output.severus_filtered} {output.severus_filtered_asm} {input.minisv_lt} {input.minisv_lts} {output.snf_filtered_asm} {output.snf_filtered_asm_readname} {output.severus_asm_readname} {output.severus_filtered_asm_readname} {output.msv_filtered_asm_readname} {output.msv_filtered_asm_version2} {output.msv_filtered_asm_readname_version2} > {output.eval}
             else
                 for input in {input.sniffles_mosaic} {input.minisv_ltgs} {input.minisv_ltg} {output.msv_filtered_asm} {output.severus_filtered} {output.severus_filtered_asm} {input.minisv_lt} {input.minisv_lts} {output.snf_filtered_asm} {output.severus_asm_readname} {output.severus_filtered_asm_readname} {output.snf_filtered_asm_readname} {output.msv_filtered_asm_readname}; do
                     /hlilab/alvin/miniconda3/envs/gafcall/bin/k8 /hlilab/alvin/miniconda3/envs/gafcall/bin/minisv.js eval -M -c {params.c} -b ~/data/pangenome_sv_benchmarking/minisv/data/hs38.reg.bed $input {input.truth} | head -2 >> {output.eval}
@@ -679,6 +745,11 @@ for cutoff in [2,3,4,5,6,7,8,10]:
 rule all:
     input:
         expand("output/mixed10_assembly/{cell_line}.asm.bp.hap{hap}.fa.gz", cell_line = config['samples'], hap=[1, 2]),
+        expand("output/align_new_g/{cell_line}_chm13g.paf.gz", cell_line = config['samples']),
+        expand("output/minisv_mosaic_new_g/{cell_line}/grch38l_l+tg_mosaic.rsv", cell_line = config['samples']),
+        expand("output/minisv_mosaic_new_g/{cell_line}/grch38l_l+t+g_mosaic.rsv", cell_line = config['samples']),
+        expand("output/minisv_mosaic_asm_new_g/{cell_line}/grch38l_l+t+g_mosaic.msv.gz", cell_line = config['samples']),
+
         expand("output/align/{cell_line}_asm.paf.gz", cell_line = config['samples']),
         expand("output/align/{cell_line}_asm.rsv.gz", cell_line = config['samples']),
         expand("output/alignBL/{cell_line}_asm.paf.gz", cell_line = config['samples']),

@@ -26,6 +26,7 @@ wildcard_constraints:
 
 
 include: "rules/minisv_eval_all_tools_from1a.smk"
+
 minisv_eval_tnpair_files_hifi = expand(expand("output/minisv_eval_tnpair_from1a/{cell_line}_{platform}_{{assembly}}_count{{cutoff}}_eval.tsv", zip, cell_line=config['hifi_samples']['tumor_normal_pair']['batch1']['cell_line1'], platform=config['hifi_samples']['tumor_normal_pair']['batch1']['platform1']), assembly=['chm13', 'grch38'], cutoff=[3,4,5,10])
 minisv_eval_tnpair_concensus_files_hifi = expand(expand("output/minisv_eval_tnpair_concensus_from1a/{cell_line}_{platform}_{{assembly}}_count{{cutoff}}_eval.tsv", zip, cell_line=config['hifi_samples']['tumor_normal_pair']['batch1']['cell_line1'], platform=config['hifi_samples']['tumor_normal_pair']['batch1']['platform1']), assembly=['chm13', 'grch38'], cutoff=[3,4,5,10])
 minisv_eval_tnpair_concensus_files_ont = expand(expand("output/minisv_eval_tnpair_concensus_from1a/{{folder}}_{cell_line}_{platform}_{{assembly}}_count{{cutoff}}_eval_tg.tsv", zip, cell_line=config['samples']['tumor_normal_pair']['batch3']['cell_line3'], platform=config['samples']['tumor_normal_pair']['batch3']['platform3']), assembly=['chm13', 'grch38'], cutoff=[3,4,5,10], folder=config['samples']['tumor_normal_pair']['batch3']['label']) + expand(expand("output/minisv_eval_tnpair_concensus_from1a/{{folder}}_{cell_line}_{platform}_{{assembly}}_count{{cutoff}}_eval_tg.tsv", zip, cell_line=config['samples']['tumor_normal_pair']['batch4']['cell_line4'], platform=config['samples']['tumor_normal_pair']['batch4']['platform4']), assembly=['chm13', 'grch38'], cutoff=[3,4,5,10], folder=config['samples']['tumor_normal_pair']['batch4']['label'])
@@ -92,6 +93,29 @@ rule gafcall_eval_length:
                 ../gafcall/js/gafcall.js view -b ../4.gafcall_evaluation/chm13.reg.bed -c {wildcards.cnt} -C -I $input >> {output.eval_length} 
             else
                 ../gafcall/js/gafcall.js view -b ../4.gafcall_evaluation/hg38.reg.bed -c {wildcards.cnt} -C -I $input >> {output.eval_length} 
+            fi
+        done
+        """
+
+
+## eval length for new graph genome 
+
+rule gafcall_eval_length_new_graph:
+    input:
+        ## /hlilab/alvin/pangenome_sv_benchmarking/1b.alignment_sv_tools_normal/output/minisv_mosaic_asm_new_g/NA18983/grch38l_l+t+g+s_mosaic.msv.gz
+        minisv = expand("normal_v2/msv/{cell_line}.{comb}.{count}.msv", count=['c2s0'], cell_line=cell_lines_sub, comb=['hg38l+tg', 'hg38l+tgs', 'hg38l+t', 'hg38l+ts']),
+        ##eval_length = expand("output/gafcall_eval/normal_v2/{{cell_line}}_{comb}_eval_len_count{cnt}.tsv", comb=['chm13l+x', 'chm13l+g', 'chm13l+gs', 'chm13l+s', 'hg38l+x', 'hg38l+t', 'hg38l+ts', 'hg38l+tg', 'hg38l+tgs'], cnt=[2,3,4,5])
+        msv_ltgs = expand("../1b.alignment_sv_tools_normal/output/minisv_mosaic_asm_new_g/{cell_line}/grch38l_l+t+g+s_mosaic.msv.gz", cell_line=cell_lines_sub),
+        msv_ltg  = expand("../1b.alignment_sv_tools_normal/output/minisv_mosaic_asm_new_g/{cell_line}/grch38l_l+t+g_mosaic.msv.gz", cell_line=cell_lines_sub)
+    output:
+        eval_length = "output/gafcall_eval_new_g/normal_v2/new_g_normal_eval_len.tsv"
+    shell:
+        """
+        for input in {input.msv_ltgs} {input.msv_ltg} {input.minisv}; do
+            if [[ $input =~ "chm13" ]]; then
+                ../gafcall/js/gafcall.js view -b ../4.gafcall_evaluation/chm13.reg.bed -c 2 -C -I $input >> {output.eval_length} 
+            else
+                ../gafcall/js/gafcall.js view -b ../4.gafcall_evaluation/hg38.reg.bed -c 2 -C -I $input >> {output.eval_length} 
             fi
         done
         """
@@ -426,6 +450,13 @@ module rename_figs_workflow:
 
 use rule * from rename_figs_workflow as rename_figs_workflow_*
 
+
+module eval_workflow:
+    snakefile: "rules/normal.smk"
+    config: config
+use rule * from eval_workflow as eval_workflow_*
+
+
 rule all: 
     input:
         minisv_eval_tnpair_files_hifi,
@@ -442,6 +473,7 @@ rule all:
         rules.r_consensus_eval_mosaic_workflow_all.input,
         rules.r_colo829_barchart_tnpair_workflow_all.input,
         rules.rename_figs_workflow_all.input,
+        rules.eval_workflow_all.input,
 
         "hg38_colo829_hifi_clean.pdf", 
         "output/local/Figure3_hg38_colo829_hifi_clean.pdf",
@@ -456,5 +488,8 @@ rule all:
         "output/gafcall_eval/normal_v2/snf_all_merged_eval.len.tsv",
         "output/gafcall_eval/normal_v2/cutesv_all_merged_eval.len.tsv",
         expand("output/minisv_phase/{cell_line}_grch38_phased_tg.msv", cell_line = cell_lines_sub),
-        expand("output/minisv_phase/{cell_line}_grch38_phased_tg_filtered.msv", cell_line = cell_lines_sub)
+        expand("output/minisv_phase/{cell_line}_grch38_phased_tg_filtered.msv", cell_line = cell_lines_sub),
+
+        # new graph genome
+        "output/gafcall_eval_new_g/normal_v2/new_g_normal_eval_len.tsv"
     default_target: True

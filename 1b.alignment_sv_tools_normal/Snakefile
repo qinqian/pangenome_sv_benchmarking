@@ -10,11 +10,18 @@ sniffles_files  = expand("output/sniffles/{cell_line}/{assembly}.vcf.gz", cell_l
 sniffles_tbi_files  = expand("output/sniffles/{cell_line}/{assembly}.vcf.gz.tbi", cell_line=config['samples']['normal'], assembly=config['assembly'])
 sniffles_mo_files  = expand("output/sniffles_mosaic/{cell_line}/{assembly}.vcf.gz", cell_line=config['samples']['normal'], assembly=config['assembly'])
 sniffles_mo_tbi_files  = expand("output/sniffles_mosaic/{cell_line}/{assembly}.vcf.gz.tbi", cell_line=config['samples']['normal'], assembly=config['assembly'])
+
+sniffles_files_wovntr  = expand("output/sniffles_wovntr/{cell_line}/{assembly}.vcf.gz", cell_line=config['samples']['normal'], assembly=config['assembly'])
+sniffles_tbi_files_wovntr  = expand("output/sniffles_wovntr/{cell_line}/{assembly}.vcf.gz.tbi", cell_line=config['samples']['normal'], assembly=config['assembly'])
+
 cutesv_files  = expand("output/cutesv/{cell_line}/{assembly}.vcf.gz", cell_line=config['samples']['normal'], assembly=config['assembly'])
 cutesv_files_cutoff2  = expand("output/cutesv/{cell_line}_cutoff2/{assembly}.vcf.gz", cell_line=config['samples']['normal'], assembly=config['assembly'])
+cutesv_files_cutoff2_newparam  = expand("output/cutesv_newparam/{cell_line}_cutoff2/{assembly}.vcf.gz", cell_line=config['samples']['normal'], assembly=config['assembly'])
+
 svision_files  = expand("output/svision/{cell_line}/{assembly}/{cell_line}.svision_pro_v1.8.s5.vcf", cell_line=config['samples']['normal'], assembly=config['assembly'])
 hp_tag_files = expand("output/extract_hp/{cell_line}_{assembly}.tsv.gz", cell_line=config['samples']['normal'], assembly=config['assembly'])
 sawfish_files = expand("output/sawfish/{cell_line}/{assembly}/jointcall", cell_line=config['samples']['normal'], assembly=config['assembly'])
+delly_files = expand("output/delly/{cell_line}/{assembly}.bcf", cell_line=config['samples']['normal'], assembly=config['assembly'])
 
 
 wildcard_constraints:
@@ -40,12 +47,15 @@ include: "rules/cutesv.smk"
 include: "rules/cutesv_cutoffs.smk"
 include: "rules/svision.smk"
 include: "rules/sawfish.smk"
+include: "rules/delly.smk"
 
 rule all:
     input:
         rules.minimap2_workflow_all.input,
         rules.severus_workflow_all.input,
-        sniffles_files, sniffles_tbi_files,
+        sniffles_files, sniffles_tbi_files, sniffles_files_wovntr, sniffles_tbi_files_wovntr, 
         cutesv_files, sniffles_mo_files, sniffles_mo_tbi_files, svision_files, hp_tag_files,
-        cutesv_files_cutoff2, sawfish_files
+        delly_files,
+        cutesv_files_cutoff2, sawfish_files, cutesv_files_cutoff2_newparam
     default_target: True 
+

@@ -3,6 +3,7 @@ idx_files  = expand("output/align/{cell_line}/{assembly}_tag.cram.crai", cell_li
 files = expand("output/align/{cell_line}/{assembly}_tag.cram", cell_line=config['samples']['normal'], assembly=config['assembly'])
 
 severus_outdir  = expand("output/severus/{cell_line}/{assembly}", cell_line=config['samples']['normal'], assembly=config['assembly'])
+severus_outdir_wovntr  = expand("output/severus_wovntr/{cell_line}/{assembly}", cell_line=config['samples']['normal'], assembly=config['assembly'])
 
 wildcard_constraints:
     cell_line = "[A-Za-z0-9]+",
@@ -11,7 +12,7 @@ wildcard_constraints:
 rule all:
     input:
         idx_files,
-        files, severus_outdir
+        files, severus_outdir, severus_outdir_wovntr
 
 rule haplotag:
     input:
@@ -59,4 +60,20 @@ rule severus_normal:
     shell:
         """
         python ../1a.alignment_sv_tools/Severus-1.0/severus.py --target-bam {input.crams} --out-dir {output.outdir} -t {threads} --phasing-vcf {input.phased_vcf}/phased_merge_output.vcf.gz --vntr-bed ../1a.alignment_sv_tools/{wildcards.assembly}_vntrs.bed
+        """
+
+rule severus_normal_wo_vntr:
+    input:
+        crams = "output/align/{cell_line}/{assembly}_tag.cram",
+        crais = "output/align/{cell_line}/{assembly}_tag.cram.crai",
+        phased_vcf = "output/clair3/{cell_line}/{assembly}"
+    output:
+        outdir = directory("output/severus_wovntr/{cell_line}/{assembly}")
+    conda: "severus"
+    threads: 24
+    resources:
+        mem_mb=64000
+    shell:
+        """
+        python ../1a.alignment_sv_tools/Severus-1.0/severus.py --target-bam {input.crams} --out-dir {output.outdir} -t {threads} --phasing-vcf {input.phased_vcf}/phased_merge_output.vcf.gz
         """
