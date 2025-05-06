@@ -1,6 +1,8 @@
 library(ggplot2)
 library(ggbreak)
 library(tidyverse)
+library(ggpattern)
+library(ggthemes)
 library(ggthemes)
 library(patchwork)
 
@@ -10,6 +12,27 @@ custom_colors <- c(
   "translocation" = rgb(85, 148, 249, maxColorValue = 255),
   "all_except_inv" = rgb(21, 183, 187, maxColorValue = 255),
   ">20k" = rgb(221, 180, 104, maxColorValue = 255)
+)
+
+custom_colors_simple <- c(
+  #">100k" = "gray",
+  #">1M" = "black",
+  #"translocation" = "white",
+  #"all_except_inv" = "gray",
+  #">20k" = "black"
+  ">100k" = "gray",
+  ">1M" = "white",
+  "translocation" = "gray",
+  "all_except_inv" = "white",
+  ">20k" = "white"
+)
+
+custom_patterns <- c(
+ ">100k" = 'circle',
+ ">1M" = 'regular_polygon',
+ "translocation" = "none",
+ "all_except_inv" = "stripe",
+ ">20k" = "wave"
 )
 
 
@@ -119,12 +142,45 @@ plot_bar <- function(x, is_germline=F, add_break=F, facet_wrap=F, size=12) {
 }
 
 
+plot_bar_pattern <- function(x, is_germline=F, add_break=F, facet_wrap=F, size=12) {
+    p=ggplot(x, aes(x=reorder(file, value), y=value, fill=Size)) + geom_bar_pattern(
+	  aes(pattern=Size, fill=Size),							     
+          stat = "identity", position="stack",
+          colour          = 'black',
+          #pattern_fill = "black",
+          #pattern_colour = 'darkgrey',
+          pattern_angle = 45,
+          pattern_density = 0.03,
+          pattern_key_scale_factor = 0.6,
+          pattern_spacing = 0.05) +
+      scale_fill_manual(values = custom_colors_simple) +
+      scale_pattern_manual(values = custom_patterns) +  facet_wrap(~cell_line, ncol=5) + ylab(expression("#germline SV")) + xlab("") + get_theme(size=size, angle=45)
+    p
+}
+
+
 plot_bar_thresholds <- function(x, size=12, add_break=F) {
     #p=ggplot(x, aes(x=count, y=value, fill=Size)) + geom_bar(position='stack', stat='identity') + facet_grid(genome~cell_line, scales='free') + ylab(expression("#mosaic SV")) + xlab("") + get_theme(size=size, angle=0)
     p=ggplot(x, aes(x=count, y=value, fill=Size)) + geom_bar(position='stack', stat='identity') + facet_wrap(~cell_line, ncol=5) + ylab(expression("#mosaic SV")) + xlab("") + get_theme(size=size, angle=0)
     #if (add_break) {
     #    p = p + scale_y_break(c(100, 1000), scales="free")
     #}
+    p
+}
+
+plot_bar_thresholds_pattern <- function(x, size=12, add_break=F) {
+    p=ggplot(x, aes(x=count, y=value, fill=Size)) + geom_bar_pattern(
+	  aes(pattern=Size, fill=Size),							     
+          stat = "identity", position="stack",
+          colour          = 'black',
+          #pattern_fill = "black",
+          #pattern_colour = 'darkgrey',
+          pattern_angle = 45,
+          pattern_density = 0.03,
+          pattern_key_scale_factor = 0.6,
+          pattern_spacing = 0.05) +
+      scale_fill_manual(values = custom_colors_simple) +
+      scale_pattern_manual(values = custom_patterns) +  facet_wrap(~cell_line, ncol=5) + ylab(expression("#mosaic SV")) + xlab("") + get_theme(size=size, angle=0)
     p
 }
 
@@ -141,6 +197,7 @@ do_bar_chart <- function(data_path, out_path, threads, myparam) {
     res.small = parsed_res[[2]]
 
     parsed_res_germline = preprocess_data(data_path, count_thresh=5)
+    # target variable here!!
     res.germline = parsed_res_germline[[1]]
     res.small.germline = parsed_res_germline[[2]]
 
@@ -267,11 +324,30 @@ do_bar_chart <- function(data_path, out_path, threads, myparam) {
     res.normal.germline.hg38$file = gsub("l\\+", "msv:", res.normal.germline.hg38$file)
     res.small.normal.hg38$file = gsub("l\\+", "msv:", res.small.normal.hg38$file)
 
-    p_normal = plot_bar_thresholds(res.normal.mosaic.thresholds %>% filter(genome=='hg38'), size=11) + scale_fill_manual(values = custom_colors)
-    p_big_germline = plot_bar(res.normal.germline.hg38, is_germline=T, facet_wrap=T, size=11)
-    p_big = plot_bar(res.normal.hg38 %>% filter(file!='cuteSV'), facet_wrap=T, size=11)
-    p_small = plot_bar(res.small.normal.hg38, facet_wrap=T, size=11)
-    print((p_big_germline + p_big) / (p_small + p_normal) + scale_fill_manual(values = custom_colors) + plot_layout(heights=c(1, 1), widths = c(1, 1))) # +plot_layout(guides = "collect")
+    #p_normal = plot_bar_thresholds(res.normal.mosaic.thresholds %>% filter(genome=='hg38'), size=11) + scale_fill_manual(values = custom_colors)
+    p_normal = plot_bar_thresholds_pattern(res.normal.mosaic.thresholds %>% filter(genome=='hg38'), size=11)
+    #p_big_germline = plot_bar(res.normal.germline.hg38, is_germline=T, facet_wrap=T, size=11) + scale_fill_manual(values = custom_colors)
+    p_big_germline = plot_bar_pattern(res.normal.germline.hg38, is_germline=T, facet_wrap=T, size=11) 
+    #p_big = plot_bar(res.normal.hg38 %>% filter(file!='cuteSV'), facet_wrap=T, size=11) + scale_fill_manual(values = custom_colors)
+    p_big = plot_bar_pattern(res.normal.hg38 %>% filter(file!='cuteSV') %>% 
+			     mutate(file= 
+				    case_when(
+                                      file=="severus" ~ "Severus",
+                                      file=="snf" ~ "Sniffles2",
+                                      file=="snf_mosaic" ~ "Sniffles2:mos",
+                                      .default = file
+					      )), facet_wrap=T, size=11)
+    #p_small = plot_bar(res.small.normal.hg38, facet_wrap=T, size=11) + scale_fill_manual(values = custom_colors)
+    p_small = plot_bar_pattern(res.small.normal.hg38 %>% filter(file!='cuteSV') %>% 
+			     mutate(file= 
+				    case_when(
+                                      file=="severus" ~ "Severus",
+                                      file=="snf" ~ "Sniffles2",
+                                      file=="snf_mosaic" ~ "Sniffles2:mos",
+                                      .default = file
+					      )), facet_wrap=T, size=11)
+    write_tsv(res.normal.germline.hg38, file="test.tsv")
+    print((p_big_germline + p_big) / (p_small + p_normal) + plot_annotation(tag_levels = list(c('A', 'B', 'C', 'D'), '1')) + plot_layout(heights=c(1, 1), widths = c(1, 1), guides = "collect")& theme(legend.position = "bottom"))
     dev.off()
 
     pdf(out_path[['hg38normal_germline']], width=9.6, height=3.2)
@@ -290,5 +366,6 @@ do_bar_chart <- function(data_path, out_path, threads, myparam) {
     print((p_big + p_small) + scale_fill_manual(values = custom_colors)) # +plot_layout(guides = "collect")
     dev.off()
 }
+
 
 do_bar_chart(snakemake@input[[1]], snakemake@output, snakemake@threads, snakemake@params)

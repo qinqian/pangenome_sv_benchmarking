@@ -40,9 +40,9 @@ upset_simple = function(df, cl, xlog10=F, ylog10=F, axis_off=F, label="", theme=
     class='asm_keep'
   )
   perf_metrics = perf_metrics %>% mutate(tp=y, fn=total_asm-y) %>% mutate(tool=case_when(
-      x==1 ~ "severus",
+      x==1 ~ "Severus",
       x==2 ~ "minisv",
-      x==3 ~ "savana",
+      x==3 ~ "SAVANA",
       x==4 ~ "nanomonsv",
   ))
 
@@ -286,7 +286,8 @@ do_bar_chart <- function(data_path, out_path, threads, myparam) {
     print(metrics)
  
     metrics = data.frame(do.call(rbind, lapply(strsplit(metrics$comb, ""), as.numeric)), metrics$caller, metrics$asm_keep, metrics$cell_line)
-    colnames(metrics) = c("severus", "minisv", "savana", "nanomonsv", "count", "asm_keep", "cell_line")
+    #colnames(metrics) = c("severus", "minisv", "savana", "nanomonsv", "count", "asm_keep", "cell_line")
+    colnames(metrics) = c("Severus", "minisv", "SAVANA", "nanomonsv", "count", "asm_keep", "cell_line")
 
     metrics = data.frame(metrics[, c(1,2,3,4,5,6,7)])
     metrics = metrics %>% 
@@ -296,7 +297,8 @@ do_bar_chart <- function(data_path, out_path, threads, myparam) {
        mutate(asm_filter=count-asm_keep) %>% 
        mutate(count=asm_keep) %>% 
        select(-asm_keep) %>% 
-       rename(count2=asm_filter) 
+       rename(count2=asm_filter) %>% 
+       mutate(count2=ifelse(count2>0, count2, 0))
 
     write_tsv(metrics, out_path[['stat']])
 

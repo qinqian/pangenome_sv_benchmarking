@@ -145,9 +145,12 @@ do_bar_chart <- function(input, out_path, threads, myparam) {
 
     metrics_summarize = metrics_summarize %>% mutate(
         tools = case_when(
-            tool=="msv_ltgs" ~ "minisv_ltg",
-            tool=="snf" ~ "sniffles2", 
-            tool=="msv_lts" ~ "minisv_lt",
+            tool=="msv_ltgs" ~ "msv:tg",
+            tool=="snf" ~ "Sniffles2", 
+            tool=="sniffles2" ~ "Sniffles2", 
+            tool=="savana" ~ "SAVANA", 
+            tool=="severus" ~ "Severus", 
+            tool=="msv_lts" ~ "msv:t",
             .default = tool
         )
     )
@@ -161,12 +164,12 @@ do_bar_chart <- function(input, out_path, threads, myparam) {
     )
 
     pdf(out_path[['bar_pdf2']], width=12, height=8)
-    p = ggplot(data=metrics_summarize, aes(x=tools, y=count, fill=factor(process))) + geom_bar(position="stack", stat="identity") + xlab("Self-assembly overlapped read cutoff") + ylab("SV numbers") + facet_grid(cell_line~cutoff, scales = "free") + get_theme(angle=30) + scale_fill_manual(values = custom_colors)
+    p = ggplot(data=metrics_summarize, aes(x=tools, y=count, fill=factor(process))) + geom_bar(position="stack", stat="identity") + xlab("Self-assembly overlapped read cutoff") + ylab("#SV") + facet_grid(cell_line~cutoff, scales = "free") + get_theme(angle=30) + scale_fill_manual(values = custom_colors)
     print(p)
     dev.off()
 
     pdf(out_path[['bar_pdf2_bw']], width=12, height=8)
-    p = ggplot(data=metrics_summarize, aes(x=tools, y=count, fill=factor(process))) + geom_bar(position="stack", stat="identity") + xlab("Self-assembly overlapped read cutoff") + ylab("SV numbers") + facet_grid(cell_line~cutoff, scales = "free") + get_theme(angle=30) + scale_fill_manual(values = custom_colors2)
+    p = ggplot(data=metrics_summarize, aes(x=tools, y=count, fill=factor(process))) + geom_bar(position="stack", stat="identity") + xlab("Self-assembly overlapped read cutoff") + ylab("#SV") + facet_grid(cell_line~cutoff, scales = "free") + get_theme(angle=30) + scale_fill_manual(values = custom_colors2)
     print(p)
     dev.off()
 }

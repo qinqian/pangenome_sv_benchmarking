@@ -139,6 +139,30 @@ do_bar_chart <- function(data_path, out_path, threads, myparam) {
     metrics = load_data(data_path[['stat']], out_path[['stat']])
     metrics_ont = load_data(data_path[['stat_ont']], out_path[['stat_ont']])
 
+    metrics = metrics %>% mutate(tool=
+       case_when(
+           tool=="severus" ~ "Severus",
+           tool=="savana" ~ "SAVANA",
+           tool=="sniffles2" ~ "Sniffles2",
+           tool=="delly" ~ "Delly",
+           tool=="cutesv" ~ "cuteSV",
+           tool=="svision" ~ "SVision-pro",
+           .default = tool
+       )
+    )
+
+    metrics_ont = metrics_ont %>% mutate(tool=
+       case_when(
+           tool=="severus" ~ "Severus",
+           tool=="savana" ~ "SAVANA",
+           tool=="sniffles2" ~ "Sniffles2",
+           tool=="delly" ~ "Delly",
+           tool=="cutesv" ~ "cuteSV",
+           tool=="svision" ~ "SVision-pro",
+           .default = tool
+       )
+    )
+
     pdf(out_path[['bar_pdf_2_ont_bw']], width=6, height=2.8)
     p3 = ggplot(data=metrics_ont %>% filter(metrics == 'FP')) +
       geom_bar_pattern(
@@ -159,11 +183,11 @@ do_bar_chart <- function(data_path, out_path, threads, myparam) {
       xlab("") +
       get_theme(angle=0, size=9) +
       facet_wrap(~tool, ncol=5) + 
-      ggtitle("") + ylab("The number of FP SVs") + 
-      guides(fill = "none", 
-             pattern = guide_legend(override.aes = list(
-               pattern = c("stripe", "none"),
-               fill = c(`kept by asm` = "gray", `filtered by asm` = "gray"))))
+      ggtitle("") + ylab("#FP SVs") + theme(legend.position='none')
+      #guides(fill = "none", 
+      #       pattern = guide_legend(override.aes = list(
+      #         pattern = c("stripe", "none"),
+      #         fill = c(`kept by asm` = "gray", `filtered by asm` = "gray"))))
     print(p3)
     dev.off()
 
@@ -187,7 +211,7 @@ do_bar_chart <- function(data_path, out_path, threads, myparam) {
       xlab("") +
       get_theme(angle=0, size=9) +
       facet_wrap(~tool, ncol=5) + 
-      ggtitle("") + ylab("The number of TP SVs") + ylim(0, 60) + 
+      ggtitle("") + ylab("#TP SVs") + ylim(0, 60) + 
       get_theme(angle=0, size=9) + geom_hline(yintercept=58, color='black')+
       guides(fill = "none", 
              pattern = guide_legend(override.aes = list(
@@ -216,7 +240,7 @@ do_bar_chart <- function(data_path, out_path, threads, myparam) {
       xlab("") +
       get_theme(angle=0, size=9) +
       facet_wrap(~tool, ncol=5) + 
-      ggtitle("") + ylab("The number of FP SVs") + 
+      ggtitle("") + ylab("#FP SVs") + theme(legend.position='none')
       guides(fill = "none", 
              pattern = guide_legend(override.aes = list(
                pattern = c("stripe", "none"),
@@ -244,7 +268,7 @@ do_bar_chart <- function(data_path, out_path, threads, myparam) {
       xlab("") +
       get_theme(angle=0, size=9) +
       facet_wrap(~tool, ncol=5) + 
-      ggtitle("") + ylab("The number of FP SVs") + 
+      ggtitle("") + ylab("#FP SVs") + theme(legend.position='none') +
       guides(fill = "none", 
              pattern = guide_legend(override.aes = list(
                pattern = c("stripe", "none"),
@@ -272,7 +296,7 @@ do_bar_chart <- function(data_path, out_path, threads, myparam) {
       xlab("") +
       facet_wrap(~tool, ncol=5) + 
       get_theme(angle=0, size=9) + geom_hline(yintercept=58, color='red')+
-      ggtitle("") + ylab("The number of TP SVs")+
+      ggtitle("") + ylab("#TP SVs")+
       guides(fill = "none", 
              pattern = guide_legend(override.aes = list(
                pattern = c("stripe", "none"),
@@ -290,7 +314,7 @@ do_bar_chart <- function(data_path, out_path, threads, myparam) {
 	  ), 
           stat = "identity", position = 'stack',
           colour = 'black',
-	  pattern_fill = "black",
+	  #pattern_fill = "black",
 	  pattern_angle = 45,
 	  pattern_density = 0.03,
 	  pattern_key_scale_factor = 0.6,
@@ -300,7 +324,7 @@ do_bar_chart <- function(data_path, out_path, threads, myparam) {
       xlab("") +
       facet_wrap(~tool, ncol=5) + 
       get_theme(angle=0, size=9) + geom_hline(yintercept=58, color='black')+
-      ggtitle("") + ylab("The number of TP SVs")+
+      ggtitle("") + ylab("#TP SVs")+
       guides(fill = "none", 
              pattern = guide_legend(override.aes = list(
                pattern = c("stripe", "none"),
@@ -309,7 +333,7 @@ do_bar_chart <- function(data_path, out_path, threads, myparam) {
     dev.off()
 
     pdf(out_path[['bar_pdf_all_bw']], width=9, height=6)
-    print((p1+p3) / (p2+p4))
+    print(((p1+p3) / (p2+p4))+plot_annotation(tag_levels = list(c('A', 'B', 'C', 'D'), '1'))) # + plot_layout(guides='collect', ncol=2, nrow=2, widths = c(4, 4), heights=c(1, 1)) & theme(legend.position = "bottom"))
     dev.off()
 }
 
