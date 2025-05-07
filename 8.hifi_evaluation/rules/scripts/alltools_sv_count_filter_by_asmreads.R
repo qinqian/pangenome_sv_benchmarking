@@ -1,4 +1,5 @@
 library(ggplot2)
+library(ggpattern)
 library(ggthemes)
 library(stringr)
 library(tidyverse)
@@ -11,7 +12,7 @@ custom_colors <- c(
 )
 
 custom_colors2 <- c(
-  "filtered by asm" = "black",
+  "filtered by asm" = "gray",
   "kept by asm" = "gray"
 )
 
@@ -99,7 +100,6 @@ do_bar_chart <- function(input, out_path, threads, myparam) {
 
 	metrics_sub_comb = metrics_sub_all %>% left_join(metrics_sub_all_dsa, by=c("tool", "cell_line"))
 	metrics_sub_comb = metrics_sub_comb %>% mutate(asm_filter=total.x-total.y) %>% mutate(cutoff = cutoff) 
-	print(head(metrics_sub_comb))
 	metrics_sub_comb = metrics_sub_comb %>% mutate(asm_filter=total.x-total.y) %>% rename(asm_support=total.y) %>% select(tool, cell_line, asm_filter, asm_support, cutoff) %>% pivot_longer(cols=starts_with("asm"), names_to="process", values_to="count")
         metrics_summarize[[cutoff]] = metrics_sub_comb
     }
@@ -119,8 +119,8 @@ do_bar_chart <- function(input, out_path, threads, myparam) {
     )
 
     pdf(out_path[['bar_pdf']], width=9, height=9)
-    p = ggplot(data=metrics_summarize, aes(x=tools, y=count, fill=factor(process))) + geom_bar(position="stack", stat="identity") + xlab("Self-assembly overlapped read cutoff") + ylab("SV numbers") + facet_grid(cell_line~cutoff, scales = "free") + get_theme(angle=30) + scale_fill_manual(values = custom_colors)
-    print(p)
+    #p = ggplot(data=metrics_summarize, aes(x=tools, y=count, fill=factor(process))) + geom_bar(position="stack", stat="identity") + xlab("Self-assembly overlapped read cutoff") + ylab("SV numbers") + facet_grid(cell_line~cutoff, scales = "free") + get_theme(angle=30) + scale_fill_manual(values = custom_colors)
+    #print(p)
     dev.off()
 
     metrics = metrics %>% mutate(cell_line = gsub("msv_lts_|msv_ltgs_|snf_|severus_|nanomonsv_|savana_", "", cell_line))
@@ -132,7 +132,6 @@ do_bar_chart <- function(input, out_path, threads, myparam) {
 
 	metrics_sub_comb = metrics_sub_all %>% left_join(metrics_sub_all_dsa, by=c("tool", "cell_line"))
 	metrics_sub_comb = metrics_sub_comb %>% mutate(asm_filter=total.x-total.y) %>% mutate(cutoff = cutoff) 
-	print(head(metrics_sub_comb))
 	metrics_sub_comb = metrics_sub_comb %>% mutate(asm_filter=total.x-total.y) %>% rename(asm_support=total.y) %>% select(tool, cell_line, asm_filter, asm_support, cutoff) %>% pivot_longer(cols=starts_with("asm"), names_to="process", values_to="count")
         metrics_summarize[[cutoff]] = metrics_sub_comb
     }
@@ -164,12 +163,29 @@ do_bar_chart <- function(input, out_path, threads, myparam) {
     )
 
     pdf(out_path[['bar_pdf2']], width=12, height=8)
-    p = ggplot(data=metrics_summarize, aes(x=tools, y=count, fill=factor(process))) + geom_bar(position="stack", stat="identity") + xlab("Self-assembly overlapped read cutoff") + ylab("#SV") + facet_grid(cell_line~cutoff, scales = "free") + get_theme(angle=30) + scale_fill_manual(values = custom_colors)
-    print(p)
+    #p = ggplot(data=metrics_summarize, aes(x=tools, y=count, fill=factor(process))) + geom_bar(position="stack", stat="identity") + xlab("Self-assembly overlapped read cutoff") + ylab("#SV") + facet_grid(cell_line~cutoff, scales = "free") + get_theme(angle=30) + scale_fill_manual(values = custom_colors)
+    #print(p)
     dev.off()
 
+    custom_patterns <- c(
+     "kept by as" = "none",
+     "filtered by asm" = "stripe"
+    )
+
+    metrics_summarize$process = factor(metrics_summarize$process)
+    print(levels(metrics_summarize$process))
     pdf(out_path[['bar_pdf2_bw']], width=12, height=8)
-    p = ggplot(data=metrics_summarize, aes(x=tools, y=count, fill=factor(process))) + geom_bar(position="stack", stat="identity") + xlab("Self-assembly overlapped read cutoff") + ylab("#SV") + facet_grid(cell_line~cutoff, scales = "free") + get_theme(angle=30) + scale_fill_manual(values = custom_colors2)
+    ##p = ggplot(data=metrics_summarize, aes(x=tools, y=count, fill=factor(process))) + geom_bar(position="stack", stat="identity") + xlab("Self-assembly overlapped read cutoff") + ylab("#SV") + facet_grid(cell_line~cutoff, scales = "free") + get_theme(angle=30) + scale_fill_manual(values = custom_colors2)
+    size=12
+    angle=45
+    p=ggplot(data=metrics_summarize) + geom_bar_pattern(
+          aes(x=tools, y=count, pattern=process, fill=process),		
+          stat = "identity", position="stack",
+          colour          = 'black',
+          pattern_angle = 45,
+          pattern_density = 0.03,
+          pattern_key_scale_factor = 0.6,
+          pattern_spacing = 0.05) + ylab("#SV") + xlab("") + scale_fill_manual(values = custom_colors2) + scale_pattern_manual(values = custom_patterns) + facet_grid(cell_line~cutoff, scales="free") + theme_clean(base_size=13) + theme(legend.title=element_blank(), strip.text=element_text(size=size), legend.text=element_text(size=size), axis.title.x=element_text(size=size), axis.title.y=element_text(size=size), axis.text.y=element_text(size=size), axis.text.x=element_text(size=size, angle=angle, hjust = 1, vjust=1.05), legend.position="bottom", legend.box = "horizontal")
     print(p)
     dev.off()
 }

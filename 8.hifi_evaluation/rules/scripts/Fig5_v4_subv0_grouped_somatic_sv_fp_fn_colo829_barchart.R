@@ -13,7 +13,7 @@ custom_colors <- c(
 )
 
 custom_colors2 <- c(
-  "filtered by asm" = "black",
+  "filtered by asm" = "gray",
   "kept by asm" = "gray"
 )
 
@@ -72,14 +72,14 @@ upset_simple = function(df, cl, xlog10=F, ylog10=F, axis_off=F, label="", theme=
     sums$y = log10(sums$y)
     ylabel = "Set Size (log 10)"
   } else {
-    ylabel = "The number of SV calls"
+    ylabel = "#SV"
   }
   
   if (ylog10) {
     df$count = log10(df$count)
     xlabel = "Intersection Size (log10)"
   } else {
-    xlabel = "The number of SV calls"
+    xlabel = "#SV"
   }
 
   if (axis_off) {
@@ -95,9 +95,31 @@ upset_simple = function(df, cl, xlog10=F, ylog10=F, axis_off=F, label="", theme=
   } else {
      legend="none"
   }
-  
+
+  ##  p=ggplot(x, aes(x=count, y=value, fill=Size)) + geom_bar_pattern(
+  ##        aes(pattern=Size, fill=Size),							     
+  ##        stat = "identity", position="stack",
+  ##        colour          = 'black',
+  ##        #pattern_fill = "black",
+  ##        #pattern_colour = 'darkgrey',
+  ##        pattern_angle = 45,
+  ##        pattern_density = 0.03,
+  ##        pattern_key_scale_factor = 0.6,
+  ##        pattern_spacing = 0.05) +
+  ##    scale_fill_manual(values = custom_colors_simple) + scale_pattern_manual(values = custom_patterns)
+
+  ##    scale_pattern_manual(values = custom_patterns) +  facet_wrap(~cell_line, ncol=5) + ylab(expression("#mosaic SV")) + xlab("") + get_theme(size=size, angle=0)
+
   p1 = ggplot(sums, aes(x=x, y=y, fill=factor(class))) + 
-    geom_bar(stat="identity", width=0.3) +
+    #geom_bar(stat="identity", width=0.3) +
+    geom_bar_pattern(aes(pattern=factor(class), fill=factor(class)), 
+                     stat="identity", width=0.3,
+          colour = 'black',
+	  pattern_fill = "black",
+	  pattern_angle = 45,
+	  pattern_density = 0.03,
+	  pattern_key_scale_factor = 0.6,
+          pattern_spacing = 0.03) + 
     scale_x_continuous(breaks=1:n, labels=labels, limits=c(0.5, n+0.5), position = "bottom") + 
     theme_minimal() +
     theme(
@@ -111,6 +133,7 @@ upset_simple = function(df, cl, xlog10=F, ylog10=F, axis_off=F, label="", theme=
       legend.position="none"
     ) +
     scale_fill_manual(values = custom_colors2) + 
+    scale_pattern_manual(values = c(`kept by asm` = 'none', `filtered by asm` = 'stripe')) + 
     ylab(ylabel) +
     coord_flip() + 
     scale_y_continuous(trans = "reverse")
@@ -129,7 +152,15 @@ upset_simple = function(df, cl, xlog10=F, ylog10=F, axis_off=F, label="", theme=
   print(processed_df)
 
   p2 = ggplot(processed_df) + 
-    geom_bar(aes(x=x, y=value, fill=factor(name)), stat="identity", width=0.5, position='stack') +
+    #geom_bar(aes(x=x, y=value, fill=factor(name)), stat="identity", width=0.5, position='stack') +
+    geom_bar_pattern(aes(x=x, y=value, pattern=factor(name), fill=factor(name)), 
+                     stat="identity", width=0.3,
+          colour = 'black',
+	  pattern_fill = "black",
+	  pattern_angle = 45,
+	  pattern_density = 0.03,
+	  pattern_key_scale_factor = 0.6,
+          pattern_spacing = 0.01) + 
     theme_minimal() +
     theme(
       axis.text.x = element_blank(),
@@ -148,6 +179,7 @@ upset_simple = function(df, cl, xlog10=F, ylog10=F, axis_off=F, label="", theme=
     labs(title=NULL, x=NULL, y=NULL, tag=NULL) +
     ylab(xlabel) +
     scale_fill_manual(values = custom_colors2) + 
+    scale_pattern_manual(values = c(`kept by asm` = 'none', `filtered by asm` = 'stripe')) + 
     scale_x_continuous(limits=c(0, nrow(df)+1), expand=c(0, 0)) + 
     scale_y_continuous(expand=c(0, 0)) + ggtitle(paste0(cl))
 
@@ -302,7 +334,7 @@ do_bar_chart <- function(data_path, out_path, threads, myparam) {
 
     write_tsv(metrics, out_path[['stat']])
 
-    pdf(out_path[['bar_pdf']], width=20, height=9)
+    pdf(out_path[['bar_pdf']], width=20, height=11)
     plot_list <- list() 
     labels = toupper(letters)
     n = 0
@@ -347,7 +379,7 @@ do_bar_chart <- function(data_path, out_path, threads, myparam) {
     #  ggtitle("COLO829 tumor-normal paired somatic SV") + ylab("FP SV calls number")
     dev.off()
 
-    pdf(out_path[['bar_pdf_bw']], width=20, height=9)
+    pdf(out_path[['bar_pdf_bw']], width=20, height=11)
     plot_list <- list() 
     labels = toupper(letters)
     n = 0
