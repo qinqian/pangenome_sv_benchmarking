@@ -14,6 +14,16 @@ sniffles_mo_tbi_files  = expand("output/sniffles_mosaic/{cell_line}/{assembly}.v
 sniffles_files_wovntr  = expand("output/sniffles_wovntr/{cell_line}/{assembly}.vcf.gz", cell_line=config['samples']['normal'], assembly=config['assembly'])
 sniffles_tbi_files_wovntr  = expand("output/sniffles_wovntr/{cell_line}/{assembly}.vcf.gz.tbi", cell_line=config['samples']['normal'], assembly=config['assembly'])
 
+sniffles_files_latest  = expand("output/latest_sniffles/{cell_line}/{assembly}.vcf.gz", cell_line=config['samples']['normal'], assembly=config['assembly'])
+sniffles_tbi_files_latest  = expand("output/latest_sniffles/{cell_line}/{assembly}.vcf.gz.tbi", cell_line=config['samples']['normal'], assembly=config['assembly'])
+
+sniffles_files_latest_mosaic = expand("output/latest_sniffles_mo/{cell_line}/{assembly}.vcf.gz", cell_line=config['samples']['normal'], assembly=config['assembly'])
+sniffles_tbi_files_latest_mosaic = expand("output/latest_sniffles_mo/{cell_line}/{assembly}.vcf.gz.tbi", cell_line=config['samples']['normal'], assembly=config['assembly'])
+
+sniffles_files_wovntr_latest  = expand("output/latest_sniffles_wovntr/{cell_line}/{assembly}.vcf.gz", cell_line=config['samples']['normal'], assembly=config['assembly'])
+sniffles_tbi_files_wovntr_latest  = expand("output/latest_sniffles_wovntr/{cell_line}/{assembly}.vcf.gz.tbi", cell_line=config['samples']['normal'], assembly=config['assembly'])
+
+
 cutesv_files  = expand("output/cutesv/{cell_line}/{assembly}.vcf.gz", cell_line=config['samples']['normal'], assembly=config['assembly'])
 cutesv_files_cutoff2  = expand("output/cutesv/{cell_line}_cutoff2/{assembly}.vcf.gz", cell_line=config['samples']['normal'], assembly=config['assembly'])
 cutesv_files_cutoff2_newparam  = expand("output/cutesv_newparam/{cell_line}_cutoff2/{assembly}.vcf.gz", cell_line=config['samples']['normal'], assembly=config['assembly'])
@@ -22,6 +32,10 @@ svision_files  = expand("output/svision/{cell_line}/{assembly}/{cell_line}.svisi
 hp_tag_files = expand("output/extract_hp/{cell_line}_{assembly}.tsv.gz", cell_line=config['samples']['normal'], assembly=config['assembly'])
 sawfish_files = expand("output/sawfish/{cell_line}/{assembly}/jointcall", cell_line=config['samples']['normal'], assembly=config['assembly'])
 delly_files = expand("output/delly/{cell_line}/{assembly}.bcf", cell_line=config['samples']['normal'], assembly=config['assembly'])
+
+svdss_files = expand("output/svdss/{cell_line}/{assembly}", cell_line=["HG002"], assembly=['grch38'])
+pbsv_vcf = expand("output/pbsv/{cell_line}_{assembly}.vcf", cell_line=["HG002"], assembly=['grch38'])
+de_vcf = expand("output/debreak/{cell_line}_{assembly}", cell_line=["HG002"], assembly=['grch38'])
 
 
 wildcard_constraints:
@@ -35,6 +49,7 @@ module aligner_workflow:
 use rule * from aligner_workflow as minimap2_workflow_*
 
 include: "rules/sniffles2.smk"
+include: "rules/sniffles2_latest.smk"
 
 include: "rules/clair3.smk"
 
@@ -42,20 +57,33 @@ module severus_workflow:
     snakefile: "rules/severus.smk"
     config: config
 
+module severus_workflow_latest:
+    snakefile: "rules/severus_latest.smk"
+    config: config
+
 use rule * from severus_workflow as severus_workflow_*
+use rule * from severus_workflow_latest as severus_workflow_latest_*
 include: "rules/cutesv.smk"
 include: "rules/cutesv_cutoffs.smk"
 include: "rules/svision.smk"
 include: "rules/sawfish.smk"
 include: "rules/delly.smk"
+include: "rules/svdss.smk"
 
 rule all:
     input:
         rules.minimap2_workflow_all.input,
+
         rules.severus_workflow_all.input,
+        rules.severus_workflow_latest_all.input,
+
         sniffles_files, sniffles_tbi_files, sniffles_files_wovntr, sniffles_tbi_files_wovntr, 
+        sniffles_files_latest, sniffles_files_wovntr_latest,
+        sniffles_files_latest_mosaic, 
         cutesv_files, sniffles_mo_files, sniffles_mo_tbi_files, svision_files, hp_tag_files,
         delly_files,
-        cutesv_files_cutoff2, sawfish_files, cutesv_files_cutoff2_newparam
+        cutesv_files_cutoff2, sawfish_files, cutesv_files_cutoff2_newparam,
+        pbsv_vcf, de_vcf,
+        svdss_files, 
     default_target: True 
 

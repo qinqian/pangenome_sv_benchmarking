@@ -29,14 +29,23 @@ module aligner_workflow:
 use rule * from aligner_workflow as minimap2_workflow_*
 include: "rules/sniffles2.smk"
 
+include: "rules/sniffles2_latest.smk"
+
 include: "rules/clair3.smk"
 module severus_workflow:
     snakefile: "rules/severus.smk"
     config: config
 use rule * from severus_workflow as severus_workflow_*
 
+module severus_workflow_latest:
+    snakefile: "rules/severus_latest.smk"
+    config: config
+use rule * from severus_workflow_latest as latest_severus_workflow_*
+
 include: "rules/savana1.2.smk"
+include: "rules/savana1.36.smk"
 include: "rules/nanomonsv.smk"
+include: "rules/nanomonsv_latest.smk"
 
 include: "rules/gafcall_tnpair.smk"
 
@@ -133,11 +142,20 @@ celllines = ["COLO829"]
 platforms = ['ont1', 'ont2']
 sniffles_multi_files  = expand(expand("output/sniffles/{cell_line}_{platform}/{{pair}}/{{assembly}}.snf", cell_line=celllines, platform=platforms), pair=["T", "BL"], assembly=assembly)
 sniffles_multi_vcf_files  = expand(expand("output/sniffles/{cell_line}_{platform}/{{assembly}}_multi.vcf.gz", cell_line=celllines, platform=platforms), assembly=assembly)
+
+sniffles_multi_files_latest  = expand(expand("output/sniffles_latest/{cell_line}_{platform}/{{pair}}/{{assembly}}.snf", cell_line=celllines, platform=platforms), pair=["T", "BL"], assembly=assembly)
+sniffles_multi_vcf_files_latest  = expand(expand("output/sniffles_latest/{cell_line}_{platform}/{{assembly}}_multi.vcf.gz", cell_line=celllines, platform=platforms), assembly=assembly)
+
 clair3_outdir  = expand("output/clair3/{cell_line}_{platform}/{pair}/{assembly}/", cell_line=celllines, platform=platforms, pair=["T", "BL"], assembly=assembly)
 
 savana12_outdir  = expand(expand("output/savana12/{cell_line}_{platform}/{{assembly}}", cell_line=celllines, platform=platforms), assembly=assembly)
 savana12_vcf     = expand(expand("output/savana12/{cell_line}_{platform}/{{assembly}}/{{assembly}}_T_tag.classified.somatic.vcf", cell_line=celllines, platform=platforms), assembly=assembly)
+
+savana13_outdir  = expand(expand("output/savana13/{cell_line}_{platform}/{{assembly}}", cell_line=celllines, platform=platforms), assembly=assembly)
+savana13_vcf     = expand(expand("output/savana13/{cell_line}_{platform}/{{assembly}}/{{assembly}}_T_tag.classified.somatic.vcf", cell_line=celllines, platform=platforms), assembly=assembly)
+
 nanomonsv_files  = expand("output/nanomonsv/{cell_line}_{platform}/{assembly}_tnpair.txt", cell_line=celllines, assembly=assembly, platform=platforms)
+nanomonsv_files_latest  = expand("output/nanomonsv_latest/{cell_line}_{platform}/{assembly}_tnpair.txt", cell_line=celllines, assembly=assembly, platform=platforms)
 
 minisv_pair = expand(expand("output/minisv_pair/{cell_line}_{platform}_pair_hg38l_l+t+g+s_{{cnt}}.msv.gz", cell_line=celllines, platform=platforms), cnt=['c2s1', 'c3s1', 'c4s1', 'c5s1'])
 minisv_pair_tg = expand(expand("output/minisv_pair/{cell_line}_{platform}_pair_hg38l_l+tg_{{cnt}}.msv.gz", cell_line=celllines, platform=platforms), cnt=['c2s1', 'c3s1', 'c4s1', 'c5s1'])
@@ -145,6 +163,7 @@ minisv_self = expand("output/minisv/{cell_line}_{pair}_{platform}_self.rsv.gz", 
 
 include: "rules/minisv_eval.smk"
 minisv_eval = expand("output/minisv_puretumor_somatic_asm/{cell_line}_{platform}_{assembly}_count{cutoff}_eval.tsv", cell_line=celllines, platform=platforms, cutoff=[2,3,4,5,6,7], assembly=assembly)
+minisv_eval_latest = expand("output/latest_minisv_puretumor_somatic_asm/{cell_line}_{platform}_{assembly}_count{cutoff}_eval.tsv", cell_line=celllines, platform=platforms, cutoff=[2,3,4,5,6,7], assembly=assembly)
 
 
 rule all:
@@ -154,8 +173,14 @@ rule all:
         sniffles_multi_files, sniffles_multi_vcf_files,
         clair3_outdir,
         rules.severus_workflow_all.input,
+        rules.latest_severus_workflow_all.input,
         savana12_outdir, savana12_vcf, 
-        minisv_pair, minisv_pair_tg, minisv_self, minisv_eval,
+        minisv_pair, minisv_pair_tg, minisv_self, 
+        minisv_eval,
+        minisv_eval_latest,
+
+        savana13_outdir, savana13_vcf,
+        sniffles_multi_vcf_files_latest,
 
         ##sniffles_multi_files, 
         ##sniffles_mo_multi_files, sniffles_mo_multi_vcf_files,
@@ -163,7 +188,7 @@ rule all:
         ##severus_outdir, 
         ##severus_single_outdir,
         ##severus_outdir_repeat2,
-        nanomonsv_files,
+        nanomonsv_files, nanomonsv_files_latest
         ##extract_linear_files, extract_graph_files,
         ##svision_outdir, svision_vcfs, svision_outdir_somatic, svision_single_vcfs,
         ##minisv_pair, minisv_pair_t2t, minisv_pair_t2t_tg,

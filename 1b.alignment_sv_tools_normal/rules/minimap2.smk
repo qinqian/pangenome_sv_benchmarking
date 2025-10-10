@@ -17,11 +17,11 @@ rule all:
     input:
         idx_files,
         files,
-        gafs,
-        rsvs,
-        tgs_rsv,
-        msv,
-        ltgs_msv
+        #gafs,
+        #rsvs,
+        #tgs_rsv,
+        #msv,
+        #ltgs_msv
 
 
 rule minimap2:

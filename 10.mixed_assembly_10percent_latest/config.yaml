@@ -1,0 +1,9 @@
+samples:
+    - COLO829_hifi1
+    - HCC1395_hifi1
+    - HCC1937_hifi1
+    - HCC1954_hifi1
+    - NCI1437_hifi1
+    - NCI2009_hifi1
+
+prefix: /hlilab/21data/collections/cancer-pair/

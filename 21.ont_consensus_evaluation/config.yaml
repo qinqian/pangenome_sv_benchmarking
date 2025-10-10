@@ -1,0 +1,7 @@
+samples:
+    - H1437_ont1
+    - H2009_ont1
+    - HCC1395_ont1
+    - HCC1954_ont1
+
+prefix: /hlilab/21data/collections/cancer-pair/

@@ -33,3 +33,22 @@ rule sawfish:
         sawfish discover --threads {threads} --ref {input.assembly} --bam {input.bam} --output-dir {output.workdir}
         sawfish joint-call --threads {threads} --sample {output.workdir} --output-dir {output.workdir2}
         """
+
+rule pbsv:
+    threads: 4
+    resources:
+        mem_mb=36000, 
+        tmpdir="local_tmp/"
+    input:
+        bam = "output/sawfish/{cell_line}_{assembly}.bam",
+        assembly = "../1a.alignment_sv_tools/{assembly}.fa",
+    output:
+        signature = "output/pbsv/{cell_line}_{assembly}.svsig.gz",
+        vcf = "output/pbsv/{cell_line}_{assembly}.vcf"
+    conda: "sawfish"
+    shell:
+        """
+        ./pbsv discover -b ../1a.alignment_sv_tools/{wildcards.assembly}_vntrs.bed {input.bam} {output.signature}
+        tabix -c '#' -s 3 -b 4 -e 4 {output.signature}
+        ./pbsv call ../1a.alignment_sv_tools/{wildcards.assembly}.fa {output.signature} {output.vcf}
+        """

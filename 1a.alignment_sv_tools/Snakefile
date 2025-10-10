@@ -25,15 +25,31 @@ sniffles_multi_files  = expand(expand("output/sniffles/{cell_line}_{platform}/{{
 "output/sniffles/{cell_line}_{platform}/{assembly}_multi.vcf.gz"
 sniffles_multi_vcf_files  = expand(expand("output/sniffles/{cell_line}_{platform}/{{assembly}}_multi.vcf.gz", zip, cell_line=config['samples']['tumor'], platform=config['samples']['platform']), assembly=config['assembly'])
 
+sniffles_multi_vcf_files_latest  = expand(expand("output/sniffles_latest/{cell_line}_{platform}/{{assembly}}_multi.vcf.gz", zip, cell_line=config['samples']['tumor'], platform=config['samples']['platform']), assembly=['grch38'])
+sniffles_mix10_mosaic_files  = expand(expand("output/sniffles_mosaic_latest/{cell_line}_{platform}/{{assembly}}_mixdown10_mosaic.vcf.gz", zip, cell_line=config['samples']['tumor'], platform=config['samples']['platform']), assembly=['grch38'])
+
+
+
 sniffles_mo_multi_files  = expand(expand("output/sniffles_mosaic/{cell_line}_{platform}/{{pair}}/{{assembly}}.snf", zip, cell_line=config['samples']['tumor'], platform=config['samples']['platform']), pair=["T", "BL"], assembly=config['assembly'])
 sniffles_mo_multi_vcf_files  = expand(expand("output/sniffles_mosaic/{cell_line}_{platform}/{{assembly}}_multi.vcf.gz", zip, cell_line=config['samples']['tumor'], platform=config['samples']['platform']), assembly=config['assembly'])
 
 nanomonsv_files  = expand(expand("output/nanomonsv/{cell_line}_{platform}/{{assembly}}_tnpair.txt", zip, cell_line=config['samples']['tumor'], platform=config['samples']['platform']), assembly=config['assembly'])
+nanomonsv_files_latest  = expand(expand("output/nanomonsv_latest/{cell_line}_{platform}/{{assembly}}_tnpair.txt", zip, cell_line=config['samples']['tumor'], platform=config['samples']['platform']), assembly=['grch38'])
+
 savana_outdir  = expand(expand("output/savana/{cell_line}_{platform}/{{assembly}}", zip, cell_line=config['samples']['tumor'], platform=config['samples']['platform']), assembly=config['assembly'])
 savana_vcf  = expand(expand("output/savana/{cell_line}_{platform}/{{assembly}}/{{assembly}}.classified.somatic.vcf", zip, cell_line=config['samples']['tumor'], platform=config['samples']['platform']), assembly=config['assembly'])
 
 savana12_outdir  = expand(expand("output/savana12/{cell_line}_{platform}/{{assembly}}", zip, cell_line=config['samples']['tumor'], platform=config['samples']['platform']), assembly=config['assembly'])
 savana12_vcf  = expand(expand("output/savana12/{cell_line}_{platform}/{{assembly}}/{{assembly}}_T_tag.classified.somatic.vcf", zip, cell_line=config['samples']['tumor'], platform=config['samples']['platform']), assembly=config['assembly'])
+
+savana13_outdir  = expand(expand("output/savana13/{cell_line}_{platform}/{{assembly}}", zip, cell_line=config['samples']['tumor'], platform=config['samples']['platform']), assembly=['grch38'])
+savana13_vcf  = expand(expand("output/savana13/{cell_line}_{platform}/{{assembly}}/{{assembly}}_T_tag.classified.somatic.vcf", zip, cell_line=config['samples']['tumor'], platform=config['samples']['platform']), assembly=['grch38'])
+
+savana13_outdir_mixed10_phasedself = expand(expand("output/savana13_to_mixed10_phasedbyself/{cell_line}_{platform}/{{assembly}}", zip, cell_line=['COLO829', 'COLO829'], platform=['hifi1', 'ont1']), assembly=['grch38'])
+
+clair3_to = expand(expand("output/clair3_to_mix10/{cell_line}_{platform}_{{assembly}}_mixdown10", zip, cell_line=['COLO829', 'COLO829'], platform=['hifi1', 'ont1']), assembly=['grch38'])
+
+###savana13_outdir_mixed10_phased1KG = expand(expand("output/savana13_to_mixed10_phasedby1KG/{cell_line}_{platform}/{{assembly}}", zip, cell_line=['COLO829', 'COLO829'], platform=['hifi1', 'ont1']), assembly=['grch38'])
 
 severus_outdir  = expand(expand("output/severus/{cell_line}_{platform}/{{assembly}}", zip, cell_line=config['samples']['tumor'], platform=config['samples']['platform']), assembly=config['assembly'])
 severus_single_outdir  = expand(expand("output/severus_{platform}/{cell_line}_{{pair}}_{{assembly}}", zip, cell_line=config['samples']['tumor'], platform=config['samples']['platform']), pair=["T", "BL"], assembly=config['assembly'])
@@ -71,8 +87,10 @@ module aligner_workflow:
 use rule * from aligner_workflow as minimap2_workflow_*
 
 include: "rules/sniffles2.smk"
+include: "rules/sniffles2_latest.smk"
 include: "rules/savana.smk"
 include: "rules/savana1.2.smk"
+include: "rules/savana1.36.smk"
 include: "rules/clair3.smk"
 
 module severus_workflow:
@@ -87,11 +105,18 @@ module severus_workflow_cutoff:
 
 use rule * from severus_workflow_cutoff as severus_workflow_cutoff_*
 
+module severus_workflow_cutoff_latest:
+    snakefile: "rules/severus_latest.smk"
+    config: config
+
+use rule * from severus_workflow_cutoff_latest as severus_workflow_cutoff_latest_*
+
 include: "rules/nanomonsv.smk"
+include: "rules/nanomonsv_latest.smk"
 include: "rules/svision.smk"
 include: "rules/gafcall_tnpair.smk"
 include: "rules/gafcall_mixed.smk"
-include: "rules/hifiasm.smk"
+#include: "rules/hifiasm.smk"
 
 #minisv_self_extract = expand(expand("output/minisv/{cell_line}_{{pair}}_{platform}_self.rsv.gz", zip, cell_line=config['samples']['tumor'], platform=config['samples']['platform']), pair=["T", "BL"])
 #
@@ -189,7 +214,6 @@ haplotag_mixed10 = expand(expand(os.path.join(config['pwd'], "output/align/{cell
 #haplotag_mixed25 = expand(expand(os.path.join(config['pwd'], "output/align/{cell_line}_{platform}_{{assembly}}_mixdown25_tag.cram"), zip, cell_line = cell_line_hifi, platform = platform_hifi), assembly=['chm13', 'grch38'])
 
 snf_mixed10_withBL = expand(expand("output/sniffles/{cell_line}_{platform}/{{assembly}}_multi_mixdown10.vcf.gz", zip, cell_line = cell_line_hifi, platform = platform_hifi), assembly=['chm13', 'grch38'])
-
 #snf_mixed25_withBL = expand(expand("output/sniffles/{cell_line}_{platform}/{{assembly}}_multi_mixdown25.vcf.gz", zip, cell_line = cell_line_hifi, platform = platform_hifi), assembly=['chm13', 'grch38'])
 
 
@@ -198,14 +222,20 @@ rule all:
         rules.minimap2_workflow_all.input,
         rules.severus_workflow_all.input,
         rules.severus_workflow_cutoff_all.input,
+        rules.severus_workflow_cutoff_latest_all.input,
+
         sniffles_files, sniffles_tbi_files,
         sniffles_mosaic_files, sniffles_mosaic_tbi_files,
         sniffles_multi_files, sniffles_multi_vcf_files,
         sniffles_mo_multi_files, sniffles_mo_multi_vcf_files,
         savana_outdir, savana12_outdir, savana_vcf, savana12_vcf,
+        savana13_outdir, savana13_vcf, 
+        savana13_outdir_mixed10_phasedself, 
+        clair3_to,
+        #savana13_outdir_mixed10_phased1KG,
         clair3_outdir, clair3_mix10_outdir, # clair3_mix25_outdir,
         severus_outdir, severus_single_outdir,
-        nanomonsv_files,
+        nanomonsv_files, nanomonsv_files_latest,
         svision_outdir, svision_single_vcfs,
         severus_mixdown_outdir, severus_mixdown_outdir_cutoff2, severus_mixdown10_outdir_cutoff2,
         ##severus_mixdown25_outdir_cutoff2_withmixphased_somatic, 
@@ -215,6 +245,7 @@ rule all:
         sniffles_mix_mosaic_files, sniffles_mix_mosaic_tbi_files,
         sniffles_mix10_mosaic_files, sniffles_mix10_mosaic_tbi_files, # 10% mixdown reads
         snf_mixed10_withBL, ##snf_mixed25_withBL,
+        sniffles_multi_vcf_files_latest, sniffles_mix10_mosaic_files,
 
         hifiasm_mixed_fastq10,
         haplotag_mixed10, ##haplotag_mixed25,
@@ -230,6 +261,7 @@ rule all:
         minisv_eval_concensus,
         single_eval_performance, single_eval_performance_20kb, single_eval_performance_20kb_concensus, single_eval_performance_100kb, single_eval_performance_100kb_concensus,
         "output/minisv_view_single/single_sample_allsvtools_svlength.tsv", 
-        hifiasm_mixed_fastq, #hifiasm_mixed_asm1, hifiasm_mixed_asm2
+
+        #hifiasm_mixed_fastq, #hifiasm_mixed_asm1, hifiasm_mixed_asm2
         #hifiasm_mixed10_asm1, hifiasm_mixed10_asm2
     default_target: True 
