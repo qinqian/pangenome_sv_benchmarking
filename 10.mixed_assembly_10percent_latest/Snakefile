@@ -93,6 +93,10 @@ def input_severus(wildcards):
 # with PON, severus output somatic prediction
     return f"../1a.alignment_sv_tools/output/severus_latest_{platform}/{cellline}_grch38_mixdown10_cutoff2_phased_mixed/somatic_SVs/severus_somatic.vcf"
 
+def input_severus_wo_pon(wildcards):
+    cellline, platform = wildcards.cell_line.split('_')
+    return f"../1a.alignment_sv_tools/output/severus_latest_{platform}/{cellline}_grch38_mixdown10_cutoff2_phased_mixed/all_SVs/severus_all.vcf"
+
 def input_savana(wildcards):
     cellline, platform = wildcards.cell_line.split('_')
     #return f"../1a.alignment_sv_tools/output/severus_{platform}/{cellline}_grch38_mixdown10_cutoff2/all_SVs/severus_all.vcf"
@@ -108,6 +112,10 @@ def input_savana_ids(wildcards):
     return f"../1a.alignment_sv_tools/output/savana13_to_mixed10_phasedbyself/{cellline}_{platform}/grch38/{cellline}_{platform}_grch38_mixdown10_tag.sv_breakpoints_read_support.tsv"
 
 def input_severus_mosaic_ids(wildcards):
+    cellline, platform = wildcards.cell_line.split('_')
+    return f"../1a.alignment_sv_tools/output/severus_latest_{platform}/{cellline}_grch38_mixdown10_cutoff2_phased_mixed/read_ids.csv"
+
+def input_severus_mosaic_ids_wo_pon(wildcards):
     cellline, platform = wildcards.cell_line.split('_')
     return f"../1a.alignment_sv_tools/output/severus_latest_{platform}/{cellline}_grch38_mixdown10_cutoff2_phased_mixed/read_ids.csv"
 
@@ -351,6 +359,10 @@ for cutoff in [2,3,4,5,6,7,8,10]:
         name: f"minisv_eval_mixed_count{cutoff}"
         input:
             sniffles_mosaic = "../1a.alignment_sv_tools/output/sniffles_mosaic_latest/{cell_line}/grch38_mixdown10_mosaic.vcf.gz",
+
+            severus_wo_pon = input_severus_wo_pon,
+            severus_read_ids_wo_pon = input_severus_mosaic_ids_wo_pon,
+
             severus = input_severus,
             severus_read_ids = input_severus_mosaic_ids,
             ##savana_latest = input_savana,
@@ -367,13 +379,13 @@ for cutoff in [2,3,4,5,6,7,8,10]:
             truth2 = input_truth2
         output:
             severus_consensus_id = f"output/minisv_mosaic_asm/{{cell_line}}_grch38_severus_lowaf25_{cutoff}.ids",
-
             #out_savana_filterstat = f"output/minisv_mosaic_asm/{{cell_line}}_grch38_savana_lowaf25_{cutoff}.asm_stat",
-
             out_severus_filterstat = f"output/minisv_mosaic_asm/{{cell_line}}_grch38_severus_lowaf25_{cutoff}.asm_stat",
             out_snf_filterstat = f"output/minisv_mosaic_asm/{{cell_line}}_grch38_snf_{cutoff}.asm_stat",
+
             severus_filtered = f"output/minisv_mosaic_asm/{{cell_line}}_grch38_severus_lowaf25_{cutoff}.vcf.gz",
             severus_asm = f"output/minisv_mosaic_asm/{{cell_line}}_grch38_severus_{cutoff}_asm.vcf",
+            severus_asm_wopon = f"output/minisv_mosaic_asm/{{cell_line}}_grch38_severuswopon_{cutoff}_asm.vcf",
 
             #savana_somatic_asm = f"output/minisv_mosaic_asm/{{cell_line}}_grch38_savana_{cutoff}_asm.vcf",
             #savana_somatic_asm_readname = f"output/minisv_mosaic_asm/{{cell_line}}_grch38_savana_{cutoff}_readname_asm.vcf",
@@ -381,6 +393,9 @@ for cutoff in [2,3,4,5,6,7,8,10]:
             #savana_somatic_filtered_asm_readname = f"output/minisv_mosaic_asm/{{cell_line}}_grch38_savana_lowaf25_{cutoff}_readname_asm.vcf",
 
             severus_filtered_asm = f"output/minisv_mosaic_asm/{{cell_line}}_grch38_severus_lowaf25_{cutoff}_asm.vcf",
+            severus_wopon_filtered_asm = f"output/minisv_mosaic_asm/{{cell_line}}_grch38_severuswopon_lowaf25_{cutoff}_asm.vcf",
+            severus_wo_pon_filtered = f"output/minisv_mosaic_asm/{{cell_line}}_grch38_severuswopon_lowaf25_{cutoff}.vcf.gz",
+
             snf_filtered_asm     = f"output/minisv_mosaic_asm/{{cell_line}}_grch38_snf_lowaf25_{cutoff}_asm.vcf",
 
             severus_asm_readname = f"output/minisv_mosaic_asm/{{cell_line}}_grch38_severus_{cutoff}_readname_asm.vcf",
@@ -412,6 +427,8 @@ for cutoff in [2,3,4,5,6,7,8,10]:
             minisv filterasm -c {params.c} -a -i {output.severus_consensus_id} -b ~/data/pangenome_sv_benchmarking/minisv/data/hs38.reg.bed {input.severus_read_ids} {input.asm_rsv} {output.out_severus_filterstat} {input.severus} > {output.severus_asm}
             minisv filterasm -r -c {params.c} -a -i {output.severus_consensus_id} -b ~/data/pangenome_sv_benchmarking/minisv/data/hs38.reg.bed {input.severus_read_ids} {input.asm_rsv} {output.out_severus_filterstat} {input.severus} > {output.severus_asm_readname}
 
+            minisv filterasm -c {params.c} -a -i {output.severus_consensus_id} -b ~/data/pangenome_sv_benchmarking/minisv/data/hs38.reg.bed {input.severus_read_ids_wo_pon} {input.asm_rsv} {output.out_severus_filterstat} {input.severus_wo_pon} > {output.severus_asm_wopon}
+
             minisv filterasm -c {params.c} -a -b ~/data/pangenome_sv_benchmarking/minisv/data/hs38.reg.bed {input.sniffles_mosaic} {input.asm_rsv} {output.out_snf_filterstat} {input.sniffles_mosaic} > {output.snf_filtered_asm}
             minisv filterasm -r -c {params.c} -a -b ~/data/pangenome_sv_benchmarking/minisv/data/hs38.reg.bed {input.sniffles_mosaic} {input.asm_rsv} {output.out_snf_filterstat} {input.sniffles_mosaic} > {output.snf_filtered_asm_readname}
 
@@ -423,10 +440,13 @@ for cutoff in [2,3,4,5,6,7,8,10]:
 
             bcftools filter -Oz -i 'FMT/VAF[0] <= 0.25' {input.severus} > {output.severus_filtered}
             bcftools filter -i 'FMT/VAF[0] <= 0.25' {output.severus_asm} > {output.severus_filtered_asm}
+
+            bcftools filter -i 'FMT/VAF[0] <= 0.25' {input.severus_wo_pon} > {output.severus_wo_pon_filtered}
+            bcftools filter -i 'FMT/VAF[0] <= 0.25' {output.severus_asm_wopon} > {output.severus_wopon_filtered_asm}
             bcftools filter -i 'FMT/VAF[0] <= 0.25' {output.severus_asm_readname} > {output.severus_filtered_asm_readname} 
 
             if [ {wildcards.cell_line} == 'COLO829_hifi1' ]; then
-                /hlilab/alvin/miniconda3/envs/gafcall/bin/k8 /hlilab/alvin/miniconda3/envs/gafcall/bin/minisv.js eval -c {params.c} -b ~/data/pangenome_sv_benchmarking/minisv/data/hs38.reg.bed {input.truth} {input.minisv_ltg} {input.minisv_ltgs} {input.minisv_ltg_version2} {output.msv_filtered_asm} {input.sniffles_mosaic} {output.severus_filtered} {output.severus_filtered_asm} {input.minisv_lt} {input.minisv_lts} {output.snf_filtered_asm} {output.snf_filtered_asm_readname} {output.severus_asm_readname} {output.severus_filtered_asm_readname} {output.msv_filtered_asm_readname} {output.msv_filtered_asm_version2} {output.msv_filtered_asm_readname_version2} > {output.eval}
+                /hlilab/alvin/miniconda3/envs/gafcall/bin/k8 /hlilab/alvin/miniconda3/envs/gafcall/bin/minisv.js eval -c {params.c} -b ~/data/pangenome_sv_benchmarking/minisv/data/hs38.reg.bed {input.truth} {input.minisv_ltg} {input.minisv_ltgs} {input.minisv_ltg_version2} {output.msv_filtered_asm} {input.sniffles_mosaic} {output.severus_filtered} {output.severus_filtered_asm} {input.minisv_lt} {input.minisv_lts} {output.snf_filtered_asm} {output.snf_filtered_asm_readname} {output.severus_asm_readname} {output.severus_filtered_asm_readname} {output.msv_filtered_asm_readname} {output.msv_filtered_asm_version2} {output.msv_filtered_asm_readname_version2} {output.severus_wopon_filtered_asm} {output.severus_wo_pon_filtered} > {output.eval}
             else
                 for input in {input.sniffles_mosaic} {input.minisv_ltgs} {input.minisv_ltg} {output.msv_filtered_asm} {output.severus_filtered} {output.severus_filtered_asm} {input.minisv_lt} {input.minisv_lts} {output.snf_filtered_asm} {output.severus_asm_readname} {output.severus_filtered_asm_readname} {output.snf_filtered_asm_readname} {output.msv_filtered_asm_readname}; do
                     /hlilab/alvin/miniconda3/envs/gafcall/bin/k8 /hlilab/alvin/miniconda3/envs/gafcall/bin/minisv.js eval -M -c {params.c} -b ~/data/pangenome_sv_benchmarking/minisv/data/hs38.reg.bed $input {input.truth} | head -2 >> {output.eval}

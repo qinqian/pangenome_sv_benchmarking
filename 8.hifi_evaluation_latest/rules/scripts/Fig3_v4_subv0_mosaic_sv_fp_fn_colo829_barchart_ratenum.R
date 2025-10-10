@@ -33,8 +33,8 @@ parse_evaluation <- function(data_path) {
         tools = res[, ncol(res)] %>% pull()
 
         # interesting
-        # in total 15 cols, will change as we append more tools
-	res = as.data.frame(res)[, c(-1, -19)]
+        # in total 20 cols, will change as we append more tools
+	res = as.data.frame(res)[, c(-1, -21)]
 
         # sensitivity
         sensitivity = res %>% select(X2) %>% pull()
@@ -69,8 +69,11 @@ parse_evaluation <- function(data_path) {
     metrics = metrics %>% mutate(group=paste0(group, group2))
 
     metrics = metrics %>% mutate(tool = ifelse(
+      grepl("severuswopon", tools),
+      "Severus_wo_PON",
+       ifelse(
       grepl("severus_lowaf25", tools),
-      "severus", 
+      "Severus_wt_PON", 
       ifelse(grepl("sniffles|snf", tools),
              "snf",
 	     ifelse(grepl("grch38l_l\\+t\\+g_mosaic", tools) & grepl("new_g", tools),
@@ -91,12 +94,13 @@ parse_evaluation <- function(data_path) {
 	     )
 	     )
       )))
-    )))))
+    ))))))
 
 
     metrics = metrics %>% filter(tool != "msv_lt")
     metrics = metrics %>% filter(tool != "msv_lts")
     metrics = metrics %>% filter(tool != "msv_ltgs_1")
+    metrics = metrics %>% filter(tool != "msv_ltgs_2_version2")
 
     metrics = metrics %>% mutate(
         tools=case_when(
@@ -107,10 +111,11 @@ parse_evaluation <- function(data_path) {
             tool=="msv_ltg" ~ "minisv",
             tool=="msv_ltg_v2" ~ "minisv_v2",
             ##tool=="msv_ltgs_asmonlyname" ~ "minisv",
-            tool=="snf" ~ "sniffles2", 
+            tool=="snf" ~ "Sniffles2", 
             .default = tool
         )
     )
+    metrics = metrics %>% filter(tools != "minisv_v2")
 
     print("-------")
     print(table(metrics$tool))
