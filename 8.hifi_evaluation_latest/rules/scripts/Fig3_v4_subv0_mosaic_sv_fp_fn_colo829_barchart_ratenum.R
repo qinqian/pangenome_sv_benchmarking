@@ -70,10 +70,10 @@ parse_evaluation <- function(data_path) {
 
     metrics = metrics %>% mutate(tool = ifelse(
       grepl("severuswopon", tools),
-      "Severus_wo_PON",
+      "Severus",
        ifelse(
       grepl("severus_lowaf25", tools),
-      "Severus_wt_PON", 
+      "Severus:pon", 
       ifelse(grepl("sniffles|snf", tools),
              "snf",
 	     ifelse(grepl("grch38l_l\\+t\\+g_mosaic", tools) & grepl("new_g", tools),

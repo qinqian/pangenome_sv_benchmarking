@@ -4,6 +4,7 @@ library(stringr)
 library(tidyverse)
 library(ggthemes)
 library(patchwork)
+    library(ggbreak)
 
 
 custom_colors <- c(
@@ -182,7 +183,7 @@ do_bar_chart <- function(data_path, out_path, threads, myparam) {
       scale_pattern_manual(values = c(`kept by asm` = "none", `filtered by asm` = "stripe")) +
       xlab("") +
       get_theme(angle=0, size=9) +
-      facet_wrap(~tool, ncol=5) + 
+      facet_wrap(~tool, ncol=5) + scale_y_break(c(50, 300), scales=0.35) +
       ggtitle("") + ylab("#FP SVs") + theme(legend.position='none')
       #guides(fill = "none", 
       #       pattern = guide_legend(override.aes = list(
@@ -220,6 +221,7 @@ do_bar_chart <- function(data_path, out_path, threads, myparam) {
     print(p4)
     dev.off()
 
+
     pdf(out_path[['bar_pdf_1']], width=6, height=2.8)
     p1 = ggplot(data=metrics %>% filter(metrics == 'FP')) +
       geom_bar_pattern(
@@ -234,12 +236,12 @@ do_bar_chart <- function(data_path, out_path, threads, myparam) {
 	  pattern_angle = 45,
 	  pattern_density = 0.03,
 	  pattern_key_scale_factor = 0.6,
-          pattern_spacing = 0.05) + ylim(0, 550) +
-      scale_fill_manual(values = custom_colors) + 
+          pattern_spacing = 0.05) + scale_fill_manual(values = custom_colors) + 
       scale_pattern_manual(values = c(`kept by asm` = "none", `filtered by asm` = "stripe")) +
       xlab("") +
       get_theme(angle=0, size=9) +
-      facet_wrap(~tool, ncol=5) + 
+      facet_wrap(~tool, ncol=5) + scale_y_break(c(2, 100), scales = 0.5) +
+          scale_y_break(c(300, 550), scales = 0.2) +
       ggtitle("") + ylab("#FP SVs") + theme(legend.position='none')
       guides(fill = "none", 
              pattern = guide_legend(override.aes = list(
@@ -267,7 +269,7 @@ do_bar_chart <- function(data_path, out_path, threads, myparam) {
       scale_pattern_manual(values = c(`kept by asm` = "none", `filtered by asm` = "stripe")) +
       xlab("") +
       get_theme(angle=0, size=9) +
-      facet_wrap(~tool, ncol=5) + 
+      facet_wrap(~tool, ncol=5) + scale_y_break(c(50, 300), scales=0.35) +
       ggtitle("") + ylab("#FP SVs") + theme(legend.position='none') +
       guides(fill = "none", 
              pattern = guide_legend(override.aes = list(
@@ -332,8 +334,10 @@ do_bar_chart <- function(data_path, out_path, threads, myparam) {
     print(p2)
     dev.off()
 
-    pdf(out_path[['bar_pdf_all_bw']], width=9, height=6)
-    print(((p1+p3) / (p2+p4))+plot_annotation(tag_levels = list(c('A', 'B', 'C', 'D'), '1'))) # + plot_layout(guides='collect', ncol=2, nrow=2, widths = c(4, 4), heights=c(1, 1)) & theme(legend.position = "bottom"))
+    pdf(out_path[['bar_pdf_all_bw']], width=9.5, height=3.8)
+    #print(((p1+p3) / (p2+p4))+plot_annotation(tag_levels = list(c('A', 'B', 'C', 'D'), '1')))
+    print(p1 + p3)
+    print(p2 + p4)
     dev.off()
 }
 

@@ -20,6 +20,9 @@ sniffles_tbi_files_latest  = expand("output/latest_sniffles/{cell_line}/{assembl
 sniffles_files_latest_mosaic = expand("output/latest_sniffles_mo/{cell_line}/{assembly}.vcf.gz", cell_line=config['samples']['normal'], assembly=config['assembly'])
 sniffles_tbi_files_latest_mosaic = expand("output/latest_sniffles_mo/{cell_line}/{assembly}.vcf.gz.tbi", cell_line=config['samples']['normal'], assembly=config['assembly'])
 
+# /hlilab/alvin/miniconda3/envs/sniffles_latest/lib/python3.12/site-packages/sniffles/config.py
+sniffles_files_latest_mosaic_cutoff2 = expand("output/latest_sniffles_mo_cutoff2/{cell_line}/{assembly}.vcf.gz", cell_line=config['samples']['normal'], assembly=['grch38'])
+
 sniffles_files_wovntr_latest  = expand("output/latest_sniffles_wovntr/{cell_line}/{assembly}.vcf.gz", cell_line=config['samples']['normal'], assembly=config['assembly'])
 sniffles_tbi_files_wovntr_latest  = expand("output/latest_sniffles_wovntr/{cell_line}/{assembly}.vcf.gz.tbi", cell_line=config['samples']['normal'], assembly=config['assembly'])
 
@@ -78,7 +81,7 @@ rule all:
         rules.severus_workflow_latest_all.input,
 
         sniffles_files, sniffles_tbi_files, sniffles_files_wovntr, sniffles_tbi_files_wovntr, 
-        sniffles_files_latest, sniffles_files_wovntr_latest,
+        sniffles_files_latest, sniffles_files_wovntr_latest, sniffles_files_latest_mosaic_cutoff2,
         sniffles_files_latest_mosaic, 
         cutesv_files, sniffles_mo_files, sniffles_mo_tbi_files, svision_files, hp_tag_files,
         delly_files,

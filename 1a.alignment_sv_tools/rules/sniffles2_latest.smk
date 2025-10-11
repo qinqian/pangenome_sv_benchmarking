@@ -99,3 +99,24 @@ rule sniffles2_mosaic_downsample10_call_latest:
         """
 
 
+
+rule sniffles2_mosaic_downsample10_call_latest_cutoff2:
+    input:
+        cram = "output/align/{cell_line}_{platform}/{assembly}_mixdown10.cram",
+        crai = "output/align/{cell_line}_{platform}/{assembly}_mixdown10.crai"
+    output:
+        vcf = "output/sniffles_mosaic_latest_cutoff2/{cell_line}_{platform}/{assembly}_mixdown10_mosaic.vcf.gz",
+        tbi = "output/sniffles_mosaic_latest_cutoff2/{cell_line}_{platform}/{assembly}_mixdown10_mosaic.vcf.gz.tbi"
+    params:
+        mosaic= "--mosaic"
+    conda: "sniffles_latest"
+    threads: 16
+    resources:
+        mem_mb=32000,
+        tmpdir="local_tmp/"
+    shell:
+        """
+        sniffles --minsupport 2 --threads {threads} --reference ../1a.alignment_sv_tools/{wildcards.assembly}.fa --tandem-repeats ../1a.alignment_sv_tools/{wildcards.assembly}_vntrs.bed -i {input.cram} -v {output.vcf} --output-rnames --sample-id {wildcards.cell_line}_{wildcards.platform} {params.mosaic}
+        """
+
+

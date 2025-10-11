@@ -26,8 +26,9 @@ sniffles_multi_files  = expand(expand("output/sniffles/{cell_line}_{platform}/{{
 sniffles_multi_vcf_files  = expand(expand("output/sniffles/{cell_line}_{platform}/{{assembly}}_multi.vcf.gz", zip, cell_line=config['samples']['tumor'], platform=config['samples']['platform']), assembly=config['assembly'])
 
 sniffles_multi_vcf_files_latest  = expand(expand("output/sniffles_latest/{cell_line}_{platform}/{{assembly}}_multi.vcf.gz", zip, cell_line=config['samples']['tumor'], platform=config['samples']['platform']), assembly=['grch38'])
-sniffles_mix10_mosaic_files  = expand(expand("output/sniffles_mosaic_latest/{cell_line}_{platform}/{{assembly}}_mixdown10_mosaic.vcf.gz", zip, cell_line=config['samples']['tumor'], platform=config['samples']['platform']), assembly=['grch38'])
 
+sniffles_mix10_mosaic_files  = expand(expand("output/sniffles_mosaic_latest/{cell_line}_{platform}/{{assembly}}_mixdown10_mosaic.vcf.gz", zip, cell_line=config['samples']['tumor'], platform=config['samples']['platform']), assembly=['grch38'])
+sniffles_mix10_mosaic_files_cutoff2  = expand(expand("output/sniffles_mosaic_latest_cutoff2/{cell_line}_{platform}/{{assembly}}_mixdown10_mosaic.vcf.gz", zip, cell_line=["COLO829"], platform=["hifi1"]), assembly=['grch38'])
 
 
 sniffles_mo_multi_files  = expand(expand("output/sniffles_mosaic/{cell_line}_{platform}/{{pair}}/{{assembly}}.snf", zip, cell_line=config['samples']['tumor'], platform=config['samples']['platform']), pair=["T", "BL"], assembly=config['assembly'])
@@ -244,6 +245,7 @@ rule all:
         svision_outdir_somatic,
         sniffles_mix_mosaic_files, sniffles_mix_mosaic_tbi_files,
         sniffles_mix10_mosaic_files, sniffles_mix10_mosaic_tbi_files, # 10% mixdown reads
+        sniffles_mix10_mosaic_files_cutoff2,
         snf_mixed10_withBL, ##snf_mixed25_withBL,
         sniffles_multi_vcf_files_latest, sniffles_mix10_mosaic_files,
 
