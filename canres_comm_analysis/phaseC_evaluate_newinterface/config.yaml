@@ -1,0 +1,23 @@
+prefix: /hlilab/21data/collections/cancer-pair/
+pwd: /hlilab/alvin/pangenome_sv_benchmarking/canres_comm_analysis/phaseC_evaluate_newinterface
+
+samples:
+  tumor:
+      - HCC1395
+      - COLO829
+      - HCC1937
+      - HCC1954
+      - NCI1437
+      - NCI2009
+      - COLO829
+  platform:
+      - hifi1
+      - hifi1
+      - hifi1
+      - hifi1
+      - hifi1
+      - hifi1
+      - ont1
+
+assembly:
+  - grch38

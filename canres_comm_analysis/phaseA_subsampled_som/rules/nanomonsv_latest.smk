@@ -1,0 +1,73 @@
+wildcard_constraints:
+    cell_line = "[A-Za-z0-9]+",
+    pair = "BL|T",
+    assembly = "chm13|grch38",
+    platform = "ont1|ont2|hifi1"
+
+vcf  = expand(expand("output/nanomonsv_latest/{cell_line}_{platform}/{{assembly}}_tnpair.vcf", zip, cell_line=config['samples']['tumor'], platform=config['samples']['platform']), assembly=config['assembly'])
+txt  = expand(expand("output/nanomonsv_latest/{cell_line}_{platform}/{{assembly}}_tnpair.txt", zip, cell_line=config['samples']['tumor'], platform=config['samples']['platform']), assembly=config['assembly'])
+
+rule all:
+    input:
+        txt,
+        vcf
+
+
+rule nanomonsv_parse_latest:
+    threads: 1
+    conda: "nanomonsv_latest"
+    resources:
+        mem_mb=36000, 
+        tmpdir="local_tmp/"
+    input:
+        cram = "output/align/{cell_line}_{platform}_{pair}_{assembly}.cram",
+        crai = "output/align/{cell_line}_{platform}_{pair}_{assembly}.cram.crai",
+    output:
+        bp_bed = "output/nanomonsv_latest/{cell_line}_{platform}/{pair}/{assembly}_parse.bp_info.sorted.bed.gz",
+        bp_bed_idx = "output/nanomonsv_latest/{cell_line}_{platform}/{pair}/{assembly}_parse.bp_info.sorted.bed.gz.tbi",
+
+        del_bed = "output/nanomonsv_latest/{cell_line}_{platform}/{pair}/{assembly}_parse.deletion.sorted.bed.gz",
+        del_bed_idx = "output/nanomonsv_latest/{cell_line}_{platform}/{pair}/{assembly}_parse.deletion.sorted.bed.gz.tbi",
+
+        ins_bed = "output/nanomonsv_latest/{cell_line}_{platform}/{pair}/{assembly}_parse.insertion.sorted.bed.gz",
+        ins_bed_idx = "output/nanomonsv_latest/{cell_line}_{platform}/{pair}/{assembly}_parse.insertion.sorted.bed.gz.tbi",
+
+        trans_bed = "output/nanomonsv_latest/{cell_line}_{platform}/{pair}/{assembly}_parse.rearrangement.sorted.bedpe.gz",
+        trans_bed_idx = "output/nanomonsv_latest/{cell_line}_{platform}/{pair}/{assembly}_parse.rearrangement.sorted.bedpe.gz.tbi"
+    params:
+        prefix = "output/nanomonsv_latest/{cell_line}_{platform}/{pair}/{assembly}_parse"
+    shell:
+        """
+        nanomonsv parse --reference_fasta ../../1a.alignment_sv_tools/{wildcards.assembly}.fa {input.cram} {params.prefix}
+        """
+
+
+rule nanomonsv_call_latest:
+    input:
+        bp_bed = expand("output/nanomonsv_latest/{{cell_line}}_{{platform}}/{pair}/{{assembly}}_parse.bp_info.sorted.bed.gz", pair=["T", "BL"]),
+        bp_bed_idx = expand("output/nanomonsv_latest/{{cell_line}}_{{platform}}/{pair}/{{assembly}}_parse.bp_info.sorted.bed.gz.tbi", pair=["T", "BL"]),
+        del_bed = expand("output/nanomonsv_latest/{{cell_line}}_{{platform}}/{pair}/{{assembly}}_parse.deletion.sorted.bed.gz", pair=["T", "BL"]),
+        del_bed_idx = expand("output/nanomonsv_latest/{{cell_line}}_{{platform}}/{pair}/{{assembly}}_parse.deletion.sorted.bed.gz.tbi", pair=["T", "BL"]),
+        ins_bed = expand("output/nanomonsv_latest/{{cell_line}}_{{platform}}/{pair}/{{assembly}}_parse.insertion.sorted.bed.gz", pair=["T", "BL"]),
+        ins_bed_idx = expand("output/nanomonsv_latest/{{cell_line}}_{{platform}}/{pair}/{{assembly}}_parse.insertion.sorted.bed.gz.tbi", pair=["T", "BL"]),
+        trans_bed = expand("output/nanomonsv_latest/{{cell_line}}_{{platform}}/{pair}/{{assembly}}_parse.rearrangement.sorted.bedpe.gz", pair=["T", "BL"]),
+        trans_bed_idx = expand("output/nanomonsv_latest/{{cell_line}}_{{platform}}/{pair}/{{assembly}}_parse.rearrangement.sorted.bedpe.gz.tbi", pair=["T", "BL"]),
+        crams = expand("output/align/{{cell_line}}_{{platform}}_{pair}_{{assembly}}.cram", pair=["T", "BL"]),
+        crais = expand("output/align/{{cell_line}}_{{platform}}_{pair}_{{assembly}}.cram.crai", pair=["T", "BL"])
+    output:
+        txt = "output/nanomonsv_latest/{cell_line}_{platform}/{assembly}_tnpair.txt",
+        vcf = "output/nanomonsv_latest/{cell_line}_{platform}/{assembly}_tnpair.vcf"
+    params:
+        prefixes = expand("output/nanomonsv_latest/{{cell_line}}_{{platform}}/{pair}/{{assembly}}_parse", pair=["T", "BL"])
+    threads: 1
+    conda: "nanomonsv_latest"
+    resources:
+        mem_mb=36000, 
+        tmpdir="local_tmp/"
+    shell:
+        """
+        nanomonsv get {params.prefixes[0]} {input.crams[0]} ../../1a.alignment_sv_tools/{wildcards.assembly}.fa --control_prefix {params.prefixes[1]} --control_bam {input.crams[1]} 
+
+        cp {params.prefixes[0]}.nanomonsv.result.txt {output.txt}
+        cp {params.prefixes[0]}.nanomonsv.result.vcf {output.vcf}
+        """

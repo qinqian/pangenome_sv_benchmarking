@@ -1,0 +1,20 @@
+configfile: "config.yaml"
+
+
+module ds_workflow:
+    snakefile: "rules/downsample.smk"
+    config: config
+
+use rule * from ds_workflow as ds_workflow_*
+
+module aligner_workflow:
+    snakefile: "rules/minimap2_local.smk"
+    config: config
+use rule * from aligner_workflow as minimap2_workflow_*
+
+
+rule all:
+    input:
+        rules.ds_workflow_all.input,
+        rules.minimap2_workflow_all.input,
+    default_target: True 

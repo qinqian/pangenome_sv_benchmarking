@@ -1,0 +1,36 @@
+configfile: "config.yaml"
+
+
+module ds_workflow:
+    snakefile: "rules/downsample.smk"
+    config: config
+use rule * from ds_workflow as ds_workflow_*
+
+module aligner_workflow:
+    snakefile: "rules/minimap2.smk"
+    config: config
+use rule * from aligner_workflow as minimap2_workflow_*
+
+module nanomonsv_wf:
+    snakefile: "rules/nanomonsv_latest.smk"
+    config: config
+use rule * from nanomonsv_wf as nanomonsv_wf_*
+
+module savana_severus_wf:
+    snakefile: "rules/severus_savana.smk"
+    config: config
+use rule * from savana_severus_wf as savana_severus_workflow_*
+
+module gfa_wf:
+    snakefile: "rules/convert_gfa.smk"
+    config: config
+use rule * from gfa_wf as gfa_workflow_*
+
+rule all:
+    input:
+        rules.ds_workflow_all.input,
+        rules.minimap2_workflow_all.input,
+        rules.nanomonsv_wf_all.input,
+        rules.savana_severus_workflow_all.input,
+        rules.gfa_workflow_all.input
+    default_target: True 
