@@ -30,11 +30,12 @@ load_data <- function(paths, out_path) {
         res = read_tsv(path, col_names = FALSE)
         tools = res[, ncol(res)] %>% pull()
         print(dim(res))
+	print(head(res))
          
         if (grepl("ont", path, fixed=T)) {
-	    res = as.data.frame(res)[, c(-1, -13)]
+	    res = as.data.frame(res)[, c(-1, -9)]
         } else {
-	    res = as.data.frame(res)[, c(-1, -15)]
+	    res = as.data.frame(res)[, c(-1, -9)]
         }
 
         # sensitivity
@@ -50,7 +51,7 @@ load_data <- function(paths, out_path) {
 	fp = total_pred - tp
         count = str_extract(path, "count(\\d+)", group=1)
 	metrics = as_tibble(data.frame(FP=fp, TP=tp, tools=tools[-1], count=count))
-	metrics = metrics %>% mutate(cell_line=gsub("_[hifi1|ont1]_grch38_count\\d_eval.tsv", "", basename(path)))
+	metrics = metrics %>% mutate(cell_line="COLO829")
         df_list[[path]] = metrics
     }
 
@@ -107,17 +108,7 @@ load_data <- function(paths, out_path) {
         ))
      )
     }
-    metrics = metrics %>% mutate(group=paste0(ifelse(grepl("asm\\.vcf", tools), "asm_keep", "caller")))
-    metrics = metrics %>% filter(tool != "msv_lt")
-    metrics = metrics %>% filter(tool != "minisv_lts")
-    metrics = metrics %>% filter(tool != "sniffles2")
-
-    metrics = metrics %>% mutate(
-       tool=case_when(
-          tool=="minisv_ltg" ~ "minisv",
-          .default=tool
-       )
-    )
+    metrics = metrics %>% mutate(group=paste0(ifelse(grepl("l\\+s", tools), "asm_keep", "caller")))
 
     print(head(metrics))
     metrics = metrics[,-1] %>% pivot_wider(names_from=c("group"), values_from='SV_num')

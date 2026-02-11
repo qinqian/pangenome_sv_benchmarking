@@ -23,3 +23,5 @@ samples:
 
 assembly:
   - grch38
+
+mosaic: false

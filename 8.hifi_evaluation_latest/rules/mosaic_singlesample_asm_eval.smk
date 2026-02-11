@@ -82,7 +82,6 @@ rule main_fig_colo829_mosaic_sv_evaluation:
     input:
         stat = expand("../10.mixed_assembly_10percent_latest/output/minisv_mosaic_asm/{cell_line}_hifi1_grch38_count{count}_eval.tsv", cell_line=['COLO829'], count=[2]),
     output:
-        ## -c 2 -g 5
         stat = "mosaic2/Fig3_v4_subv0_colo829_mosaic_sv_consensus_eval.tsv",
         bar_pdf3_1 = "mosaic2/Fig3_v4_subv1_1.pdf",
         bar_pdf3_2 = "mosaic2/Fig3_v4_subv1_2.pdf",

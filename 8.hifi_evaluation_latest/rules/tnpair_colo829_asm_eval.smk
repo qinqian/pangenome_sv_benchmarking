@@ -8,7 +8,8 @@ rule all:
         bar_pdf_1 = "tnpair/Fig2_v4_subv0_1.pdf",
         bar_pdf_2 = "tnpair/Fig2_v4_subv0_2.pdf",
         stat4 = "tnpair/Fig5_v4_subv0.tsv",
-        bar_pdf4 = "tnpair/Fig5_v4_subv0.pdf"
+        bar_pdf4 = "tnpair/Fig5_v4_subv0.pdf",
+        bar_pdf_all_bw = "tnpair/Fig2_v4_subv0_bw.pdf",
 
 
 # Tumor-normal paired SV evaluation

@@ -45,6 +45,26 @@ rule savana136_mix10_phased_byself:
         """
 
 
+rule filter_mix10_savana_res:
+    input:
+        input_vcf = "output/savana13_to_mixed10_phasedbyself/{cell_line}_{platform}/{assembly}/{cell_line}_{platform}_{assembly}_mixdown10_tag.classified.somatic.vcf"
+    output:
+        output_vcf ="output/savana13_to_mixed10_phasedbyself/{cell_line}_{platform}_{assembly}_savana_mixdown10_filtered.vcf",
+        output_vcf_filtered_af ="output/savana13_to_mixed10_phasedbyself/{cell_line}_{platform}_{assembly}_savana_mixdown10_filtered_by_af25.vcf",
+        output_vcf_filtered_af2 ="output/savana13_to_mixed10_phasedbyself/{cell_line}_{platform}_{assembly}_savana_mixdown10_filtered_by_af25_nosingleton.vcf"
+    conda: "truvari5"
+    shell:
+        """
+        bedtk/bedtk flt -v -c -f 0.5 bedtk/GRCh38-464.bed {input.input_vcf} > {output.output_vcf}
+
+        bcftools view \
+          -i 'INFO/TUMOUR_AF[0] <=0.25 || INFO/TUMOUR_AF[1] <= 0.25' \
+          {output.output_vcf} > {output.output_vcf_filtered_af}
+    
+        python filter_singleton_bnd.py {output.output_vcf_filtered_af} {output.output_vcf_filtered_af2}
+        """
+
+
 ## https://github.com/cortes-ciriano-lab/savana/issues/83
 ## The quicker option is to perform whatshap phase using your tumour bam and a population SNP VCF to generate a phased version of the population SNP VCF for your data, and then using that phased population VCF in the whatshap haplotag command. This comes with important caveats that some somatic SNVs might overlap with the population SNPs, which could produce unexpected results. If you expect your sample to be highly rearranged or have a high mutational burden, this is likely not the best approach.
 ## ClairS-TO allows for the classification of small variants into somatic, germline, or subclonal somatic. You may have success using the germline variants, phasing them against the tumour BAM, and then using the phased germline variants to haplotag your tumour BAM.

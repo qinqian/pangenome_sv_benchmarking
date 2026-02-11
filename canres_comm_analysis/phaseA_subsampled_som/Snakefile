@@ -16,6 +16,11 @@ module nanomonsv_wf:
     config: config
 use rule * from nanomonsv_wf as nanomonsv_wf_*
 
+module snf_wf:
+    snakefile: "rules/sniffles2_latest.smk"
+    config: config
+use rule * from snf_wf as snf_wf_*
+
 module savana_severus_wf:
     snakefile: "rules/severus_savana.smk"
     config: config
@@ -31,6 +36,7 @@ rule all:
         rules.ds_workflow_all.input,
         rules.minimap2_workflow_all.input,
         rules.nanomonsv_wf_all.input,
+        rules.snf_wf_all.input,
         rules.savana_severus_workflow_all.input,
         rules.gfa_workflow_all.input
     default_target: True 

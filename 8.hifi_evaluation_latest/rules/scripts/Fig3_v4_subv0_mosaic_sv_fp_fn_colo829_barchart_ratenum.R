@@ -33,8 +33,11 @@ parse_evaluation <- function(data_path) {
         tools = res[, ncol(res)] %>% pull()
 
         # interesting
-        # in total 20 cols, will change as we append more tools
-	res = as.data.frame(res)[, c(-1, -21)]
+        # in total 23 cols, will change as we append more tools
+        # 21x23
+        print(head(res))
+        print(dim(res))
+	res = as.data.frame(res)[, c(-1, -23)]
 
         # sensitivity
         sensitivity = res %>% select(X2) %>% pull()
@@ -67,8 +70,12 @@ parse_evaluation <- function(data_path) {
     # remove only read name evaluation
     metrics = metrics %>% filter(group2 != '_onlyname')
     metrics = metrics %>% mutate(group=paste0(group, group2))
+    print(table(metrics$tools))
 
     metrics = metrics %>% mutate(tool = ifelse(
+      grepl("savana", tools),
+      "SAVANA:pon",
+      ifelse(
       grepl("severuswopon", tools),
       "Severus",
        ifelse(
@@ -94,7 +101,7 @@ parse_evaluation <- function(data_path) {
 	     )
 	     )
       )))
-    ))))))
+    )))))))
 
 
     metrics = metrics %>% filter(tool != "msv_lt")
@@ -110,12 +117,13 @@ parse_evaluation <- function(data_path) {
 
             tool=="msv_ltg" ~ "minisv",
             tool=="msv_ltg_v2" ~ "minisv_v2",
-            ##tool=="msv_ltgs_asmonlyname" ~ "minisv",
             tool=="snf" ~ "Sniffles2", 
             .default = tool
         )
     )
     metrics = metrics %>% filter(tools != "minisv_v2")
+    metrics = metrics %>% filter(tools != "minisv")
+    metrics = metrics %>% filter(tools != "SAVANA:pon")
 
     print("-------")
     print(table(metrics$tool))

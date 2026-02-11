@@ -48,6 +48,10 @@ savana13_vcf  = expand(expand("output/savana13/{cell_line}_{platform}/{{assembly
 
 savana13_outdir_mixed10_phasedself = expand(expand("output/savana13_to_mixed10_phasedbyself/{cell_line}_{platform}/{{assembly}}", zip, cell_line=['COLO829', 'COLO829'], platform=['hifi1', 'ont1']), assembly=['grch38'])
 
+savana13_outdir_mixed10_phased_filtered = expand(expand("output/savana13_to_mixed10_phasedbyself/{cell_line}_{platform}_{{assembly}}_savana_mixdown10_filtered.vcf", zip, cell_line=['COLO829', 'COLO829'], platform=['hifi1', 'ont1']), assembly=['grch38'])
+
+savana13_outdir_mixed10_phased_filtered_af25 = expand(expand("output/savana13_to_mixed10_phasedbyself/{cell_line}_{platform}_{{assembly}}_savana_mixdown10_filtered_by_af25.vcf", zip, cell_line=['COLO829', 'COLO829'], platform=['hifi1', 'ont1']), assembly=['grch38'])
+
 clair3_to = expand(expand("output/clair3_to_mix10/{cell_line}_{platform}_{{assembly}}_mixdown10", zip, cell_line=['COLO829', 'COLO829'], platform=['hifi1', 'ont1']), assembly=['grch38'])
 
 ###savana13_outdir_mixed10_phased1KG = expand(expand("output/savana13_to_mixed10_phasedby1KG/{cell_line}_{platform}/{{assembly}}", zip, cell_line=['COLO829', 'COLO829'], platform=['hifi1', 'ont1']), assembly=['grch38'])
@@ -231,7 +235,7 @@ rule all:
         sniffles_mo_multi_files, sniffles_mo_multi_vcf_files,
         savana_outdir, savana12_outdir, savana_vcf, savana12_vcf,
         savana13_outdir, savana13_vcf, 
-        savana13_outdir_mixed10_phasedself, 
+        savana13_outdir_mixed10_phasedself, savana13_outdir_mixed10_phased_filtered,savana13_outdir_mixed10_phased_filtered_af25,
         clair3_to,
         #savana13_outdir_mixed10_phased1KG,
         clair3_outdir, clair3_mix10_outdir, # clair3_mix25_outdir,
