@@ -89,6 +89,8 @@ upset_simple = function(df, cl, xlog10=F, ylog10=F, axis_off=F, label="", theme=
       axis_x = element_text(vjust=1)
       labels = colnames(df)[1:n]
   }
+      axis_x = element_text(vjust=1)
+      labels = colnames(df)[1:n]
 
   if (theme) {
      legend="left"
@@ -110,9 +112,9 @@ upset_simple = function(df, cl, xlog10=F, ylog10=F, axis_off=F, label="", theme=
 
   ##    scale_pattern_manual(values = custom_patterns) +  facet_wrap(~cell_line, ncol=5) + ylab(expression("#mosaic SV")) + xlab("") + get_theme(size=size, angle=0)
 
-print(sums)
+  print(sums)
+  print(labels)
   p1 = ggplot(sums, aes(x=x, y=y, fill=factor(class))) + 
-    #geom_bar(stat="identity", width=0.3) +
     geom_bar_pattern(aes(pattern=factor(class), fill=factor(class)), 
                      stat="identity", width=0.62,
           colour = 'black',
@@ -312,7 +314,7 @@ do_bar_chart <- function(data_path, out_path, threads, myparam) {
         asm_union_count = read.table(data_path[['asm_union_count']][index], colClasses = 'character', sep='\t')
 	metrics = as_tibble(union_count) %>% left_join(as_tibble(asm_union_count), by='V1')
 	####df_list[[index]] = metrics %>% mutate(cell_line = gsub("origunion_", "", gsub('_hifi1_somatic_generation[235]_eval.tsv', '', basename(data_path[['union_count']][index]))))
-	df_list[[index]] = metrics %>% mutate(cell_line = gsub("_hifi1_new_interface", "", basename(dirname(data_path[['union_count']][index]))))
+	df_list[[index]] = metrics %>% mutate(cell_line = gsub("_new_interface", "", basename(dirname(data_path[['union_count']][index]))))
     }
 
     metrics = bind_rows(df_list)
@@ -392,8 +394,8 @@ do_bar_chart <- function(data_path, out_path, threads, myparam) {
     for (cl in unique(metrics$cell_line)) {
         n <- n + 1
         metrics_cl = metrics %>% filter(cell_line == cl)
-        if (cl == "COLO829" || cl == "HCC1954") {
-            if (cl == "COLO829") {
+        if (cl == "G100k-41" || cl == "SARC-010") {
+            if (cl == "G100k-41") {
                 results = upset_simple(metrics_cl, cl, axis_off=F, label=labels[n], theme=T)
                 plot_list[[cl]] = results[[2]]
             } else {

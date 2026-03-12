@@ -4,6 +4,9 @@ configfile: "config.yaml"
 rule all:
     input:
         expand("output/hifi/{cell_line}_{platform}_new_interface", zip, cell_line=config['samples']['tumor'], platform=config['samples']['platform']),
+        expand(expand("output/hifi/{cell_line}_{platform}_new_interface_renew_m{{ratio_cutoff}}_d{{diff_len_cutoff}}", zip, cell_line=config['samples']['tumor'], platform=config['samples']['platform']), ratio_cutoff=[0.2, 0.4, 0.6], diff_len_cutoff=[1000, 2000, 5000, 10000, 100000]),
+        expand("statrenew_m{ratio_cutoff}_d{diff_len_cutoff}/{cell_line}_joined.tsv", cell_line=config['samples']['tumor'], ratio_cutoff=[0.2, 0.4, 0.6], diff_len_cutoff=[1000, 2000, 5000, 10000, 100000]),
+        expand("stat/{cell_line}_joined.tsv", cell_line=config['samples']['tumor']),
         "output/ont/COLO829_ont1_new_interface",
         #bar_pdf_bw2 = "tnpair/Fig5_v5.pdf",
         #bar_pdf_bw3 = "tnpair/Fig5_v5_ls.pdf"
@@ -142,3 +145,67 @@ rule sv_num_with_asmcount_filter:
     conda: "plot"
     script:
         "scripts/alltools_sv_count_filter_by_asmreads_v5.R"
+
+
+rule count_g_s_diff:
+    input:
+        g_msv = "output/hifi/{cell_line}_hifi1_new_interface/l+g_union.msv",
+        s_msv = "output/hifi/{cell_line}_hifi1_new_interface/l+s_union.msv"
+    output:
+        g_stat = "stat/{cell_line}_g.tsv",
+        s_stat = "stat/{cell_line}_s.tsv",
+        j_stat = "stat/{cell_line}_joined.tsv"
+    shell:
+        """
+        cut -f 6 {input.g_msv} | cut -f 1 -d\";\"|sort -k 1 | uniq -c | awk \'{{print $2, $1}}\'> {output.g_stat}
+        cut -f 6 {input.s_msv} | cut -f 1 -d\";\"|sort -k 1 | uniq -c | awk \'{{print $2, $1}}\'> {output.s_stat}
+
+        join -1 1 -2 1 {output.g_stat} {output.s_stat} | awk \'BEGIN {{print \"TYPE\\tG\\tS\\tDiff\\tChange\"}}
+          {{diff=$2-$3; per=(diff/$3)*100; print $1, $2, $3, diff, per}}\' > {output.j_stat}
+    
+        """
+
+
+for ratio_cutoff in [0.2, 0.4, 0.6]:
+    for diff_len_cutoff in [1000, 2000, 5000, 10000, 100000]:
+        rule:
+            input:
+                snf = "../../1a.alignment_sv_tools/output/sniffles_latest/{cell_line}_{platform}/grch38_multi.vcf.gz",
+                severus = "../../1a.alignment_sv_tools/output/severus_latest/{cell_line}_{platform}/grch38_cutoff2_read_ids/somatic_SVs/severus_somatic.vcf",
+                severus_id = "../../1a.alignment_sv_tools/output/severus_latest/{cell_line}_{platform}/grch38_cutoff2_read_ids/read_ids.csv",
+                savana = "../../1a.alignment_sv_tools/output/savana13/{cell_line}_{platform}/grch38/grch38_T_tag.classified.somatic.vcf",
+                savana_id = "../../1a.alignment_sv_tools/output/savana13/{cell_line}_{platform}/grch38/grch38_T_tag.sv_breakpoints_read_support.tsv",
+                nanomonsv = "../../1a.alignment_sv_tools/output/nanomonsv_latest/{cell_line}_{platform}/grch38_tnpair.vcf",
+                nanomonsv_id = "../../1a.alignment_sv_tools/output/nanomonsv_latest/{cell_line}_{platform}/T/grch38_parse.nanomonsv.supporting_read.txt",
+
+                cram = "../../1a.alignment_sv_tools/output/align/{cell_line}_{platform}/T/grch38.cram",
+                conf_bed = "/hlilab/alvin/pangenome_sv_benchmarking/minisv/data/hs38.reg.bed",
+                folder = directory("output/hifi/{cell_line}_{platform}_new_interface"),
+                snf_somatic = "output/hifi/{cell_line}_{platform}_snf_somatic.vcf"
+            output:
+                folder = directory(f"output/hifi/{{cell_line}}_{{platform}}_new_interface_renew_m{ratio_cutoff}_d{diff_len_cutoff}")
+            conda: "msvpy"
+            params: ratio=ratio_cutoff, diff_len_cutoff=diff_len_cutoff
+            shell:
+                """
+                minisv test-sv-filter -m {params.ratio} --max_diff_len {params.diff_len_cutoff} --maskb /hlilab/alvin/pangenome_sv_benchmarking/minisv/data/hg38.cen-mask.bed -b ~/data/pangenome_sv_benchmarking/minisv/data/hs38.reg.bed -b {input.conf_bed} --vcf {input.severus} {input.savana} {input.nanomonsv} {input.snf_somatic} --readid_tsv {input.severus_id} {input.savana_id} {input.nanomonsv_id} {input.snf_somatic} {input.folder} {output.folder}
+                """
+
+        rule:
+            name: f"m{ratio_cutoff}_d{diff_len_cutoff}_count_g_s_diff"
+            input:
+                g_msv = f"output/hifi/{{cell_line}}_hifi1_new_interface_renew_m{ratio_cutoff}_d{diff_len_cutoff}/l+g_union.msv",
+                s_msv = f"output/hifi/{{cell_line}}_hifi1_new_interface_renew_m{ratio_cutoff}_d{diff_len_cutoff}/l+s_union.msv"
+            output:
+                g_stat = f"statrenew_m{ratio_cutoff}_d{diff_len_cutoff}/{{cell_line}}_g.tsv",
+                s_stat = f"statrenew_m{ratio_cutoff}_d{diff_len_cutoff}/{{cell_line}}_s.tsv",
+                j_stat = f"statrenew_m{ratio_cutoff}_d{diff_len_cutoff}/{{cell_line}}_joined.tsv"
+            shell:
+                """
+                cut -f 6 {input.g_msv} | cut -f 1 -d\";\"|sort -k 1 | uniq -c | awk \'{{print $2, $1}}\'> {output.g_stat}
+                cut -f 6 {input.s_msv} | cut -f 1 -d\";\"|sort -k 1 | uniq -c | awk \'{{print $2, $1}}\'> {output.s_stat}
+        
+                join -1 1 -2 1 {output.g_stat} {output.s_stat} | awk \'BEGIN {{print \"TYPE\\tG\\tS\\tDiff\\tChange\"}}
+                  {{diff=$2-$3; per=(diff/$3)*100; print $1, $2, $3, diff, per}}\' > {output.j_stat}
+            
+                """

@@ -110,7 +110,6 @@ upset_simple = function(df, cl, xlog10=F, ylog10=F, axis_off=F, label="", theme=
 
   ##    scale_pattern_manual(values = custom_patterns) +  facet_wrap(~cell_line, ncol=5) + ylab(expression("#mosaic SV")) + xlab("") + get_theme(size=size, angle=0)
 
-print(sums)
   p1 = ggplot(sums, aes(x=x, y=y, fill=factor(class))) + 
     #geom_bar(stat="identity", width=0.3) +
     geom_bar_pattern(aes(pattern=factor(class), fill=factor(class)), 

@@ -27,6 +27,7 @@ get_theme <- function(size=12, angle=0) {
 
 upset_simple = function(df, cl, xlog10=F, ylog10=F, axis_off=F, label="", theme=F) {
   n = ncol(df) - 3
+  print(head(df))
   #df = df[order(-df$count, -df$count2, apply(df[,1:n], 1, sum)), ] %>% mutate(count2=ifelse(count2<0, 0, count2))
 
   # total count sort
@@ -41,9 +42,8 @@ upset_simple = function(df, cl, xlog10=F, ylog10=F, axis_off=F, label="", theme=
   )
   perf_metrics = perf_metrics %>% mutate(tp=y, fn=total_asm-y) %>% mutate(tool=case_when(
       x==1 ~ "Severus",
-      x==2 ~ "minisv",
-      x==3 ~ "SAVANA",
-      x==4 ~ "nanomonsv",
+      x==2 ~ "SAVANA",
+      x==3 ~ "nanomonsv",
   ))
 
   sums = data.frame(
@@ -110,7 +110,6 @@ upset_simple = function(df, cl, xlog10=F, ylog10=F, axis_off=F, label="", theme=
 
   ##    scale_pattern_manual(values = custom_patterns) +  facet_wrap(~cell_line, ncol=5) + ylab(expression("#mosaic SV")) + xlab("") + get_theme(size=size, angle=0)
 
-print(sums)
   p1 = ggplot(sums, aes(x=x, y=y, fill=factor(class))) + 
     #geom_bar(stat="identity", width=0.3) +
     geom_bar_pattern(aes(pattern=factor(class), fill=factor(class)), 
@@ -311,7 +310,7 @@ do_bar_chart <- function(data_path, out_path, threads, myparam) {
         union_count = read.table(data_path[['union_count']][index], colClasses = 'character', sep='\t')
         asm_union_count = read.table(data_path[['asm_union_count']][index], colClasses = 'character', sep='\t')
 	metrics = as_tibble(union_count) %>% left_join(as_tibble(asm_union_count), by='V1')
-	####df_list[[index]] = metrics %>% mutate(cell_line = gsub("origunion_", "", gsub('_hifi1_somatic_generation[235]_eval.tsv', '', basename(data_path[['union_count']][index]))))
+	##df_list[[index]] = metrics %>% mutate(cell_line = gsub("origunion_", "", gsub('_hifi1_somatic_generation[235]_eval.tsv', '', basename(data_path[['union_count']][index]))))
 	df_list[[index]] = metrics %>% mutate(cell_line = gsub("_hifi1_new_interface", "", basename(dirname(data_path[['union_count']][index]))))
     }
 
@@ -322,6 +321,7 @@ do_bar_chart <- function(data_path, out_path, threads, myparam) {
  
     metrics = data.frame(do.call(rbind, lapply(strsplit(metrics$comb, ""), as.numeric)), metrics$caller, metrics$asm_keep, metrics$cell_line)
     #colnames(metrics) = c("severus", "minisv", "savana", "nanomonsv", "count", "asm_keep", "cell_line")
+
     colnames(metrics) = c("Severus", "SAVANA", "nanomonsv", "count", "asm_keep", "cell_line")
 
     metrics = data.frame(metrics[, c(1,2,3,4,5,6)])
@@ -337,53 +337,51 @@ do_bar_chart <- function(data_path, out_path, threads, myparam) {
 
     write_tsv(metrics, out_path[['stat']])
 
-    #pdf(out_path[['bar_pdf']], width=20, height=11)
-    #plot_list <- list() 
-    #labels = toupper(letters)
-    #n = 0
-    #for (cl in unique(metrics$cell_line)) {
-    #    n <- n + 1
-    #    metrics_cl = metrics %>% filter(cell_line == cl)
-    #    print(cl)
-    #    #COLO829
-    #    if (cl == "COLO829" || cl == "HCC1954") {
-    #        if (cl == "COLO829") {
-    #            results = upset_simple(metrics_cl, cl, axis_off=F, label=labels[n], theme=T)
-    #            plot_list[[cl]] = results[[2]]
-    #        } else {
-    #            results = upset_simple(metrics_cl, cl, axis_off=F, label=labels[n], theme=F)
-    #            plot_list[[cl]] = results[[2]]
-    #        }
-    #    } else {
-    #        results = upset_simple(metrics_cl, cl, axis_off=T, label=labels[n], theme=F)
-    #        plot_list[[cl]] = results[[2]]
-    #    }
-    #}
-    #print(wrap_plots(plot_list), ncol=2, guides='collect')
-    ##p1 = ggplot(data=metrics)+
-    ##  geom_bar_pattern(
-    ##      aes(
-    ##            x=reorder(comb, SV_num), y=SV_num,
-    ##            fill=factor(metrics), 
-    ##    	pattern=factor(metrics),
-    ##      ), 
-    ##      stat = "identity", position = 'stack',
-    ##      colour = 'black',
-    ##      pattern_fill = "black",
-    ##      pattern_angle = 45,
-    ##      pattern_density = 0.03,
-    ##      pattern_key_scale_factor = 0.6,
-    ##      pattern_spacing = 0.05) + 
-    ##  scale_fill_manual(values = custom_colors) + 
-    ##  scale_pattern_manual(values = c(asm_keep = "none", `asm_filter` = "stripe")) +
-    ##  xlab("different tools") +
-    ##  facet_wrap(~cell_line, ncol=2) +
-    ##  get_theme(angle=0, size=9) +
-    ##  ggtitle("COLO829 tumor-normal paired somatic SV") + ylab("FP SV calls number")
-    #dev.off()
+    pdf(out_path[['bar_pdf']], width=20, height=11)
+    plot_list <- list() 
+    labels = toupper(letters)
+    n = 0
+    for (cl in unique(metrics$cell_line)) {
+        n <- n + 1
+        metrics_cl = metrics %>% filter(cell_line == cl)
+        print(cl)
+        #COLO829
+        if (cl == "COLO829" || cl == "HCC1954") {
+            if (cl == "COLO829") {
+                results = upset_simple(metrics_cl, cl, axis_off=F, label=labels[n], theme=T)
+                plot_list[[cl]] = results[[2]]
+            } else {
+                results = upset_simple(metrics_cl, cl, axis_off=F, label=labels[n], theme=F)
+                plot_list[[cl]] = results[[2]]
+            }
+        } else {
+            results = upset_simple(metrics_cl, cl, axis_off=T, label=labels[n], theme=F)
+            plot_list[[cl]] = results[[2]]
+        }
+    }
+    print(wrap_plots(plot_list), ncol=2, guides='collect')
+    #p1 = ggplot(data=metrics)+
+    #  geom_bar_pattern(
+    #      aes(
+    #            x=reorder(comb, SV_num), y=SV_num,
+    #            fill=factor(metrics), 
+    #    	pattern=factor(metrics),
+    #      ), 
+    #      stat = "identity", position = 'stack',
+    #      colour = 'black',
+    #      pattern_fill = "black",
+    #      pattern_angle = 45,
+    #      pattern_density = 0.03,
+    #      pattern_key_scale_factor = 0.6,
+    #      pattern_spacing = 0.05) + 
+    #  scale_fill_manual(values = custom_colors) + 
+    #  scale_pattern_manual(values = c(asm_keep = "none", `asm_filter` = "stripe")) +
+    #  xlab("different tools") +
+    #  facet_wrap(~cell_line, ncol=2) +
+    #  get_theme(angle=0, size=9) +
+    #  ggtitle("COLO829 tumor-normal paired somatic SV") + ylab("FP SV calls number")
+    dev.off()
 
-    print("test again---------")
-    print(out_path[['bar_pdf_bw']])
     pdf(out_path[['bar_pdf_bw']], width=20, height=11)
     plot_list <- list() 
     labels = toupper(letters)
@@ -404,12 +402,12 @@ do_bar_chart <- function(data_path, out_path, threads, myparam) {
             results = upset_simple(metrics_cl, cl, axis_off=T, label=labels[n], theme=F)
             plot_list[[cl]] = results[[2]]
         }
-        #out.list[[cl]] = cbind(results[[1]], cl)
+        out.list[[cl]] = cbind(results[[1]], cl)
     }
     print(wrap_plots(plot_list), ncol=2, guides='collect')
     dev.off()
 
-    #write_tsv(do.call(rbind, out.list), out_path[['metrics']])
+    write_tsv(do.call(rbind, out.list), out_path[['metrics']])
 }
 
 

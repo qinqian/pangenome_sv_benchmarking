@@ -13,8 +13,9 @@ custom_colors <- c(
 )
 
 custom_colors2 <- c(
-  "filtered by asm" = "gray",
-  "kept by asm" = "gray"
+  "kept by filters" = rgb(127, 0, 202, max = 255),
+  "filtered by lg" = rgb(20, 143, 97, max = 255),
+  "filtered by lgs" = rgb(220, 141, 13, max = 255)
 )
 
 get_theme <- function(size=12, angle=0) {
@@ -26,48 +27,51 @@ get_theme <- function(size=12, angle=0) {
 
 
 upset_simple = function(df, cl, xlog10=F, ylog10=F, axis_off=F, label="", theme=F) {
-  n = ncol(df) - 3
-  #df = df[order(-df$count, -df$count2, apply(df[,1:n], 1, sum)), ] %>% mutate(count2=ifelse(count2<0, 0, count2))
-
-  # total count sort
-  df = df %>% mutate(count2=ifelse(count2<0, 0, count2)) %>% arrange(desc(count+count2))
+  df = df %>% select(-l_count, -cell_line, -lg_filter, -lgs_filter)
   print('---------')
-  total_asm = sum(df$count)
-
-  perf_metrics = data.frame(
-    x=1:n,
-    y=sapply(1:n, function(i) sum(df[which(df[,i] == 1), "count"])),
-    class='asm_keep'
-  )
-  perf_metrics = perf_metrics %>% mutate(tp=y, fn=total_asm-y) %>% mutate(tool=case_when(
-      x==1 ~ "Severus",
-      x==2 ~ "minisv",
-      x==3 ~ "SAVANA",
-      x==4 ~ "nanomonsv",
-  ))
-
+  print(head(df))
+  # total count sort
+  df = df %>% arrange(desc(count+count2+count3))
+  perf_metrics = data.frame()
+  ##perf_metrics = data.frame(
+  ##  x=1:n,
+  ##  y=sapply(1:n, function(i) sum(df[which(df[,i] == 1), "count"])),
+  ##  class='asm_keep'
+  ##)
+  ##perf_metrics = perf_metrics %>% mutate(tp=y, fn=total_asm-y) %>% mutate(tool=case_when(
+  ##    x==1 ~ "Severus",
+  ##    x==2 ~ "SAVANA",
+  ##    x==3 ~ "nanomonsv",
+  ##))
+  n = 3 # sv caller number
+  print(n)
   sums = data.frame(
     x=1:n,
     y=sapply(1:n, function(i) sum(df[which(df[,i] == 1), "count"])),
     class='asm_keep'
   )
-
   sums2 = data.frame(
     x=1:n,
     y=sapply(1:n, function(i) sum(df[which(df[,i] == 1), "count2"])),
-    class='asm_filter'
+    class='filter'
   )
-
-
-  sums = rbind(sums, sums2)
+  sums3 = data.frame(
+    x=1:n,
+    y=sapply(1:n, function(i) sum(df[which(df[,i] == 1), "count3"])),
+    class='filter2'
+  )
+  print('---------')
+  sums = rbind(sums, sums2, sums3)
   sums = sums %>% mutate(
         class=case_when(
-            class == "asm_keep" ~ "kept by asm",
-            class == "asm_filter" ~ "filtered by asm",
+            class == "asm_keep" ~ "kept by filters",
+            class == "filter" ~ "filtered by lgs",
+            class == "filter2" ~ "filtered by lg",
             .default = class,
         )
   )
-  
+  print(sums)
+
   if (xlog10) {
     sums$y = log10(sums$y)
     ylabel = "Set Size (log 10)"
@@ -89,38 +93,13 @@ upset_simple = function(df, cl, xlog10=F, ylog10=F, axis_off=F, label="", theme=
       axis_x = element_text(vjust=1)
       labels = colnames(df)[1:n]
   }
-
   if (theme) {
      legend="left"
   } else {
      legend="none"
   }
-
-  ##  p=ggplot(x, aes(x=count, y=value, fill=Size)) + geom_bar_pattern(
-  ##        aes(pattern=Size, fill=Size),							     
-  ##        stat = "identity", position="stack",
-  ##        colour          = 'black',
-  ##        #pattern_fill = "black",
-  ##        #pattern_colour = 'darkgrey',
-  ##        pattern_angle = 45,
-  ##        pattern_density = 0.03,
-  ##        pattern_key_scale_factor = 0.6,
-  ##        pattern_spacing = 0.05) +
-  ##    scale_fill_manual(values = custom_colors_simple) + scale_pattern_manual(values = custom_patterns)
-
-  ##    scale_pattern_manual(values = custom_patterns) +  facet_wrap(~cell_line, ncol=5) + ylab(expression("#mosaic SV")) + xlab("") + get_theme(size=size, angle=0)
-
-print(sums)
   p1 = ggplot(sums, aes(x=x, y=y, fill=factor(class))) + 
-    #geom_bar(stat="identity", width=0.3) +
-    geom_bar_pattern(aes(pattern=factor(class), fill=factor(class)), 
-                     stat="identity", width=0.62,
-          colour = 'black',
-	  pattern_fill = "black",
-	  pattern_angle = 45,
-	  pattern_density = 0.03,
-	  pattern_key_scale_factor = 0.6,
-          pattern_spacing = 0.03) + 
+    geom_bar(stat="identity", width=0.3) +
     scale_x_continuous(breaks=1:n, labels=labels, limits=c(0.5, n+0.5), position = "bottom") + 
     theme_minimal() +
     theme(
@@ -134,7 +113,6 @@ print(sums)
       legend.position="none"
     ) +
     scale_fill_manual(values = custom_colors2) + 
-    scale_pattern_manual(values = c(`kept by asm` = 'none', `filtered by asm` = 'stripe')) + 
     ylab(ylabel) +
     coord_flip() + 
     scale_y_continuous(trans = "reverse")
@@ -142,27 +120,17 @@ print(sums)
   point_size=3
   line_size=0.75
   text_scale=1
-
-  processed_df = as_tibble(df) %>% mutate(x=1:nrow(df), count2=ifelse(count2<0, 0, count2)) %>% rename(asm_filter=count2, asm_keep=count) %>% pivot_longer(cols=c('asm_keep', 'asm_filter')) %>% mutate(
+  processed_df = as_tibble(df) %>% mutate(x=1:nrow(df)) %>% pivot_longer(cols=c('count', 'count2', 'count3')) %>% mutate(
         name=case_when(
-            name == "asm_keep" ~ "kept by asm",
-            name == "asm_filter" ~ "filtered by asm",
+            name == "count" ~ "kept by filters",
+            name == "count2" ~ "filtered by lgs",
+            name == "count3" ~ "filtered by lg",
             .default = name,
         )
   )
-  print(processed_df)
 
   p2 = ggplot(processed_df) + 
-    #geom_bar(aes(x=x, y=value, fill=factor(name)), stat="identity", width=0.5, position='stack') +
-    geom_bar_pattern(aes(x=x, y=value, pattern=factor(name), fill=factor(name)), 
-                     #stat="identity", width=0.3,
-                     stat="identity", width=0.68,
-          colour = 'black',
-	  pattern_fill = "black",
-	  pattern_angle = 45,
-	  pattern_density = 0.03,
-	  pattern_key_scale_factor = 0.6,
-          pattern_spacing = 0.01) + 
+    geom_bar(aes(x=x, y=value, fill=factor(name)), stat="identity", width=0.5, position='stack') +
     theme_minimal() +
     theme(
       axis.text.x = element_blank(),
@@ -181,11 +149,10 @@ print(sums)
     labs(title=NULL, x=NULL, y=NULL, tag=NULL) +
     ylab(xlabel) +
     scale_fill_manual(values = custom_colors2) + 
-    scale_pattern_manual(values = c(`kept by asm` = 'none', `filtered by asm` = 'stripe')) + 
     scale_x_continuous(limits=c(0, nrow(df)+1), expand=c(0, 0)) + 
     scale_y_continuous(expand=c(0, 0)) + ggtitle(paste0(cl))
 
-  nsets = ncol(df) - 3
+  nsets = 3
   nbars = nrow(df)
   Mat_data = make_mat_data(df)
   shading_data = make_shading_data(nsets, nbars)
@@ -217,12 +184,10 @@ print(sums)
   
   guide = guide_area() 
   plot = guide + p2 + p1 + p3 +  plot_layout(ncol = 2,  widths = c(4, 10), heights=c(3.2, 0.8), guides="collect")
+  ####plot = guide + p2 + p1 +  plot_layout(ncol = 2,  widths = c(4, 10), heights=c(3.2, 0.8), guides="collect")
   list(perf_metrics, plot)
 }
 
-count_metrics = function(df) {
-  print(df)
-}
 
 make_mat_data = function(df) {
   n = ncol(df)-3
@@ -309,35 +274,38 @@ do_bar_chart <- function(data_path, out_path, threads, myparam) {
 
     for (index in seq(file_num)) {
         union_count = read.table(data_path[['union_count']][index], colClasses = 'character', sep='\t')
-        asm_union_count = read.table(data_path[['asm_union_count']][index], colClasses = 'character', sep='\t')
-	metrics = as_tibble(union_count) %>% left_join(as_tibble(asm_union_count), by='V1')
-	####df_list[[index]] = metrics %>% mutate(cell_line = gsub("origunion_", "", gsub('_hifi1_somatic_generation[235]_eval.tsv', '', basename(data_path[['union_count']][index]))))
+        g_union_count = read.table(data_path[['g_union_count']][index], colClasses = 'character', sep='\t')
+        gs_union_count = read.table(data_path[['gs_union_count']][index], colClasses = 'character', sep='\t')
+	metrics = as_tibble(union_count) %>% left_join(as_tibble(g_union_count), by='V1')
+	metrics = as_tibble(metrics) %>% left_join(as_tibble(gs_union_count), by='V1')
 	df_list[[index]] = metrics %>% mutate(cell_line = gsub("_hifi1_new_interface", "", basename(dirname(data_path[['union_count']][index]))))
+return
     }
 
     metrics = bind_rows(df_list)
-    colnames(metrics)[1:3] = c('comb', 'caller',  'asm_keep')
-
-    print(metrics)
+    colnames(metrics)[1:4] = c('comb', 'caller',  'lg_keep', 'lgs_keep')
  
-    metrics = data.frame(do.call(rbind, lapply(strsplit(metrics$comb, ""), as.numeric)), metrics$caller, metrics$asm_keep, metrics$cell_line)
-    #colnames(metrics) = c("severus", "minisv", "savana", "nanomonsv", "count", "asm_keep", "cell_line")
-    colnames(metrics) = c("Severus", "SAVANA", "nanomonsv", "count", "asm_keep", "cell_line")
+    metrics = data.frame(do.call(rbind, lapply(strsplit(metrics$comb, ""), as.numeric)), metrics$caller, metrics$lg_keep, metrics$lgs_keep, metrics$cell_line)
+    colnames(metrics) = c("Severus", "SAVANA", "nanomonsv", "l_count", "lg_keep", "lgs_keep", "cell_line")
 
-    metrics = data.frame(metrics[, c(1,2,3,4,5,6)])
+    #metrics = data.frame(metrics[, c(1,2,3,4,5,6,7)])
+    print(head(metrics))
     metrics = metrics %>% 
-       mutate(count=as.numeric(count)) %>% 
-       mutate(asm_keep=as.numeric(asm_keep)) %>%
-       #arrange(desc(count)) %>% 
-       mutate(asm_filter=count-asm_keep) %>% 
-       mutate(count=asm_keep) %>% 
-       select(-asm_keep) %>% 
-       rename(count2=asm_filter) %>% 
-       mutate(count2=ifelse(count2>0, count2, 0))
+        mutate(l_count=as.numeric(l_count)) %>% 
+        mutate(lg_keep=as.numeric(lg_keep)) %>%
+        mutate(lgs_keep=as.numeric(lgs_keep)) %>%
+        mutate(lg_filter=l_count-lg_keep) %>% 
+        mutate(lgs_filter=lg_keep-lgs_keep) %>% 
+        mutate(count=lgs_keep) %>% 
+        mutate(count2=lgs_filter) %>% 
+        mutate(count3=lg_filter) %>% 
+        mutate(count2=ifelse(count2>0, count2, 0)) %>% 
+        mutate(count3=ifelse(count3>0, count3, 0))
 
     write_tsv(metrics, out_path[['stat']])
+    metrics = metrics %>% dplyr::select(-lg_keep) %>% dplyr::select(-lgs_keep)
 
-    #pdf(out_path[['bar_pdf']], width=20, height=11)
+    pdf(out_path[['bar_pdf']], width=20, height=11)
     #plot_list <- list() 
     #labels = toupper(letters)
     #n = 0
@@ -345,7 +313,6 @@ do_bar_chart <- function(data_path, out_path, threads, myparam) {
     #    n <- n + 1
     #    metrics_cl = metrics %>% filter(cell_line == cl)
     #    print(cl)
-    #    #COLO829
     #    if (cl == "COLO829" || cl == "HCC1954") {
     #        if (cl == "COLO829") {
     #            results = upset_simple(metrics_cl, cl, axis_off=F, label=labels[n], theme=T)
@@ -360,30 +327,8 @@ do_bar_chart <- function(data_path, out_path, threads, myparam) {
     #    }
     #}
     #print(wrap_plots(plot_list), ncol=2, guides='collect')
-    ##p1 = ggplot(data=metrics)+
-    ##  geom_bar_pattern(
-    ##      aes(
-    ##            x=reorder(comb, SV_num), y=SV_num,
-    ##            fill=factor(metrics), 
-    ##    	pattern=factor(metrics),
-    ##      ), 
-    ##      stat = "identity", position = 'stack',
-    ##      colour = 'black',
-    ##      pattern_fill = "black",
-    ##      pattern_angle = 45,
-    ##      pattern_density = 0.03,
-    ##      pattern_key_scale_factor = 0.6,
-    ##      pattern_spacing = 0.05) + 
-    ##  scale_fill_manual(values = custom_colors) + 
-    ##  scale_pattern_manual(values = c(asm_keep = "none", `asm_filter` = "stripe")) +
-    ##  xlab("different tools") +
-    ##  facet_wrap(~cell_line, ncol=2) +
-    ##  get_theme(angle=0, size=9) +
-    ##  ggtitle("COLO829 tumor-normal paired somatic SV") + ylab("FP SV calls number")
-    #dev.off()
+    dev.off()
 
-    print("test again---------")
-    print(out_path[['bar_pdf_bw']])
     pdf(out_path[['bar_pdf_bw']], width=20, height=11)
     plot_list <- list() 
     labels = toupper(letters)

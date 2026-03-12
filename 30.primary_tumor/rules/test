@@ -1,0 +1,2 @@
+tumor_size=$(cat {input.sz[0]} | cut -f 1);normal_size=$(cat {input.sz[1]} | cut -f 1)
+$(echo \'scale=3;${{normal_size}}*0\.25 / ${{tumor_size}}\' | bc -l)
