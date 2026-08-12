@@ -121,8 +121,6 @@ def input_severus_mosaic_ids_wo_pon(wildcards):
     return f"../1a.alignment_sv_tools/output/severus_latest_{platform}/{cellline}_grch38_mixdown10_cutoff2_phased_mixed/read_ids.csv"
 
 #../1a.alignment_sv_tools/output/severus_hifi1/COLO829_grch38_mixdown10_cutoff2_phased_mixed/read_ids.csv
-
-
 def input_severus_read_ids(wildcards):
     cellline, platform = wildcards.cell_line.split('_')
     #../1a.alignment_sv_tools/output/severus_hifi1/COLO829_chm13_mixdown10_cutoff2_phased_mixed/read_ids.csv
@@ -417,6 +415,114 @@ for cutoff in [2,3,4,5,6,7,8,10]:
             #cell_line_fn = f"output/minisv_mosaic_asm/{{cell_line}}_grch38_count{cutoff}_fn_print.tsv"
             union_count = f"output/minisv_mosaic_asm/origunion_{{cell_line}}_somatic_generation{cutoff}_eval.tsv",
             asm_union_count = f"output/minisv_mosaic_asm/asmunion_{{cell_line}}_somatic_generation{cutoff}_eval.tsv"
+        conda: 'msvpy'
+        params:
+            c = cutoff
+        shell: 
+            """
+            /hlilab/alvin/miniconda3/envs/gafcall/bin/k8 /hlilab/alvin/miniconda3/envs/gafcall/bin/minisv.js annot -a -b ~/data/pangenome_sv_benchmarking/minisv/data/hs38.reg.bed -c {params.c} -l 100 -p {input.severus} {input.truth2} | awk '$9>=1' | cut -f 8 > {output.severus_consensus_id}
+
+            minisv filterasm -c {params.c} -a -b ~/data/pangenome_sv_benchmarking/minisv/data/hs38.reg.bed {input.savana_latest_ids} {input.asm_rsv} {output.out_savana_filterstat} {input.savana_latest} > {output.savana_somatic_asm}
+            minisv filterasm -r -c {params.c} -a -b ~/data/pangenome_sv_benchmarking/minisv/data/hs38.reg.bed {input.savana_latest_ids} {input.asm_rsv} {output.out_savana_filterstat} {input.savana_latest} > {output.savana_somatic_asm_readname}
+
+            minisv filterasm -c {params.c} -a -i {output.severus_consensus_id} -b ~/data/pangenome_sv_benchmarking/minisv/data/hs38.reg.bed {input.severus_read_ids} {input.asm_rsv} {output.out_severus_filterstat} {input.severus} > {output.severus_asm}
+            minisv filterasm -r -c {params.c} -a -i {output.severus_consensus_id} -b ~/data/pangenome_sv_benchmarking/minisv/data/hs38.reg.bed {input.severus_read_ids} {input.asm_rsv} {output.out_severus_filterstat} {input.severus} > {output.severus_asm_readname}
+
+            minisv filterasm -c {params.c} -a -i {output.severus_consensus_id} -b ~/data/pangenome_sv_benchmarking/minisv/data/hs38.reg.bed {input.severus_read_ids_wo_pon} {input.asm_rsv} {output.out_severus_filterstat} {input.severus_wo_pon} > {output.severus_asm_wopon}
+
+            minisv filterasm -c {params.c} -a -b ~/data/pangenome_sv_benchmarking/minisv/data/hs38.reg.bed {input.sniffles_mosaic} {input.asm_rsv} {output.out_snf_filterstat} {input.sniffles_mosaic} > {output.snf_filtered_asm}
+            minisv filterasm -r -c {params.c} -a -b ~/data/pangenome_sv_benchmarking/minisv/data/hs38.reg.bed {input.sniffles_mosaic} {input.asm_rsv} {output.out_snf_filterstat} {input.sniffles_mosaic} > {output.snf_filtered_asm_readname}
+
+            minisv filterasm -c {params.c} -a -b ~/data/pangenome_sv_benchmarking/minisv/data/hs38.reg.bed {input.minisv_ltg} {input.asm_rsv} {output.out_msv_filterstat} {input.minisv_ltg} > {output.msv_filtered_asm} 
+            minisv filterasm -r -c {params.c} -a -b ~/data/pangenome_sv_benchmarking/minisv/data/hs38.reg.bed {input.minisv_ltg} {input.asm_rsv} {output.out_msv_filterstat_readname} {input.minisv_ltg} > {output.msv_filtered_asm_readname} 
+
+            minisv filterasm -c {params.c} -a -b ~/data/pangenome_sv_benchmarking/minisv/data/hs38.reg.bed {input.minisv_ltg_version2} {input.asm_rsv} {output.out_msv_filterstat_version2} {input.minisv_ltg_version2} > {output.msv_filtered_asm_version2} 
+            minisv filterasm -r -c {params.c} -a -b ~/data/pangenome_sv_benchmarking/minisv/data/hs38.reg.bed {input.minisv_ltg_version2} {input.asm_rsv} {output.out_msv_filterstat_readname_version2} {input.minisv_ltg_version2} > {output.msv_filtered_asm_readname_version2} 
+
+            bcftools filter -Oz -i 'FMT/VAF[0] <= 0.25' {input.severus} > {output.severus_filtered}
+            bcftools filter -i 'FMT/VAF[0] <= 0.25' {output.severus_asm} > {output.severus_filtered_asm}
+            bcftools filter -i 'FMT/VAF[0] <= 0.25' {input.severus_wo_pon} > {output.severus_wo_pon_filtered}
+            bcftools filter -i 'FMT/VAF[0] <= 0.25' {output.severus_asm_wopon} > {output.severus_wopon_filtered_asm}
+            bcftools filter -i 'FMT/VAF[0] <= 0.25' {output.severus_asm_readname} > {output.severus_filtered_asm_readname} 
+
+            if [ {wildcards.cell_line} == 'COLO829_hifi1' ]; then
+                /hlilab/alvin/miniconda3/envs/gafcall/bin/k8 /hlilab/alvin/miniconda3/envs/gafcall/bin/minisv.js eval -c {params.c} -b ~/data/pangenome_sv_benchmarking/minisv/data/hs38.reg.bed {input.truth} {input.minisv_ltg} {input.minisv_ltgs} {input.minisv_ltg_version2} {output.msv_filtered_asm} {input.sniffles_mosaic} {output.severus_filtered} {output.severus_filtered_asm} {input.minisv_lt} {input.minisv_lts} {output.snf_filtered_asm} {output.snf_filtered_asm_readname} {output.severus_asm_readname} {output.severus_filtered_asm_readname} {output.msv_filtered_asm_readname} {output.msv_filtered_asm_version2} {output.msv_filtered_asm_readname_version2} {output.severus_wopon_filtered_asm} {output.severus_wo_pon_filtered} {input.savana_latest} {output.savana_somatic_asm} > {output.eval}
+            else
+                for input in {input.sniffles_mosaic} {input.minisv_ltgs} {input.minisv_ltg} {output.msv_filtered_asm} {output.severus_filtered} {output.severus_filtered_asm} {input.minisv_lt} {input.minisv_lts} {output.snf_filtered_asm} {output.severus_asm_readname} {output.severus_filtered_asm_readname} {output.snf_filtered_asm_readname} {output.msv_filtered_asm_readname}; do
+                    /hlilab/alvin/miniconda3/envs/gafcall/bin/k8 /hlilab/alvin/miniconda3/envs/gafcall/bin/minisv.js eval -M -c {params.c} -b ~/data/pangenome_sv_benchmarking/minisv/data/hs38.reg.bed $input {input.truth} | head -2 >> {output.eval}
+                done
+            fi
+
+            /hlilab/alvin/miniconda3/envs/gafcall/bin/k8 /hlilab/alvin/miniconda3/envs/gafcall/bin/minisv.js union -c {params.c} -b ~/data/pangenome_sv_benchmarking/minisv/data/hs38.reg.bed {output.severus_filtered} {input.minisv_ltg} {input.sniffles_mosaic} > {output.union_count}
+
+            /hlilab/alvin/miniconda3/envs/gafcall/bin/k8 /hlilab/alvin/miniconda3/envs/gafcall/bin/minisv.js union -c {params.c} -b ~/data/pangenome_sv_benchmarking/minisv/data/hs38.reg.bed {output.severus_filtered_asm} {output.msv_filtered_asm} {output.snf_filtered_asm} > {output.asm_union_count}
+
+            """
+
+
+    rule:
+        name: f"minisv_eval_mixed_count{cutoff}_graph_filtering"
+        input:
+            sniffles_mosaic = "../1a.alignment_sv_tools/output/sniffles_mosaic_latest/{cell_line}/grch38_mixdown10_mosaic.vcf.gz",
+
+            severus_wo_pon = input_severus_wo_pon,
+            severus_read_ids_wo_pon = input_severus_mosaic_ids_wo_pon,
+
+            severus = input_severus,
+            severus_read_ids = input_severus_mosaic_ids,
+
+            savana_latest = input_savana,
+            savana_latest_ids = input_savana_ids,
+
+            minisv_ltgs = "../10.mixed_assembly_10percent/output/minisv_mosaic_asm/{cell_line}/grch38l_l+t+g+s_mosaic.msv.gz",
+            minisv_ltg = "../10.mixed_assembly_10percent/output/minisv_mosaic_asm/{cell_line}/grch38l_l+t+g_mosaic.msv.gz",
+            minisv_ltg_version2 = "../10.mixed_assembly_10percent/output/minisv_mosaic_asm_new_g/{cell_line}/grch38l_l+t+g_mosaic.msv.gz",
+
+            minisv_lt = "../10.mixed_assembly_10percent/output/minisv_mosaic_asm/{cell_line}/grch38l_l+t_mosaic.msv.gz",
+            minisv_lts = "../10.mixed_assembly_10percent/output/minisv_mosaic_asm/{cell_line}/grch38l_l+t+s_mosaic.msv.gz",
+            asm_rsv = "../10.mixed_assembly_10percent/output/align/{cell_line}_asm.rsv.gz",
+# ../10.mixed_assembly_10percent/output/minisv_mosaic_asm_new_g/COLO829_hifi1/grch38l_l+t+g_mosaic.msv.gz
+# output/minisv_mosaic_asm_new_g/{{cell_line}}_grch38_msv_{cutoff}_asm.vcf
+            truth = input_truth,
+            truth2 = input_truth2
+        output:
+            severus_consensus_id = f"output/minisv_mosaic_graph/{{cell_line}}_grch38_severus_lowaf25_{cutoff}.ids",
+            out_savana_filterstat = f"output/minisv_mosaic_graph/{{cell_line}}_grch38_savana_lowaf25_{cutoff}.graph_stat",
+            out_severus_filterstat = f"output/minisv_mosaic_graph/{{cell_line}}_grch38_severus_lowaf25_{cutoff}.graph_stat",
+            out_snf_filterstat = f"output/minisv_mosaic_graph/{{cell_line}}_grch38_snf_{cutoff}.graph_stat",
+
+            severus_filtered = f"output/minisv_mosaic_graph/{{cell_line}}_grch38_severus_lowaf25_{cutoff}.vcf.gz",
+            severus_graph = f"output/minisv_mosaic_graph/{{cell_line}}_grch38_severus_{cutoff}_graph.vcf",
+            severus_graph_wopon = f"output/minisv_mosaic_graph/{{cell_line}}_grch38_severuswopon_{cutoff}_graph.vcf",
+
+            savana_somatic_graph = f"output/minisv_mosaic_graph/{{cell_line}}_grch38_savana_{cutoff}_graph.vcf",
+            savana_somatic_graph_readname = f"output/minisv_mosaic_graph/{{cell_line}}_grch38_savana_{cutoff}_readname_graph.vcf",
+
+            severus_filtered_graph = f"output/minisv_mosaic_graph/{{cell_line}}_grch38_severus_lowaf25_{cutoff}_graph.vcf",
+            severus_wopon_filtered_graph = f"output/minisv_mosaic_graph/{{cell_line}}_grch38_severuswopon_lowaf25_{cutoff}_graph.vcf",
+            severus_wo_pon_filtered = f"output/minisv_mosaic_graph/{{cell_line}}_grch38_severuswopon_lowaf25_{cutoff}.vcf.gz",
+
+            snf_filtered_graph     = f"output/minisv_mosaic_graph/{{cell_line}}_grch38_snf_lowaf25_{cutoff}_graph.vcf",
+
+            severus_graph_readname = f"output/minisv_mosaic_graph/{{cell_line}}_grch38_severus_{cutoff}_readname_graph.vcf",
+            severus_filtered_graph_readname = f"output/minisv_mosaic_graph/{{cell_line}}_grch38_severus_lowaf25_{cutoff}_readname_graph.vcf",
+            snf_filtered_graph_readname    = f"output/minisv_mosaic_graph/{{cell_line}}_grch38_snf_lowaf25_{cutoff}_readname_graph.vcf",
+            msv_filtered_graph = f"output/minisv_mosaic_graph/{{cell_line}}_grch38_msv_{cutoff}_graph.vcf",
+            msv_filtered_graph_readname = f"output/minisv_mosaic_graph/{{cell_line}}_grch38_msv_{cutoff}_readname_graph.vcf",
+
+            msv_filtered_graph_readname_version2 = f"output/minisv_mosaic_graph_new_g/{{cell_line}}_grch38_msv_{cutoff}_readname_graph.vcf",
+            msv_filtered_graph_version2 = f"output/minisv_mosaic_graph_new_g/{{cell_line}}_grch38_msv_{cutoff}_graph.vcf",
+
+            out_msv_filterstat = f"output/minisv_mosaic_graph/{{cell_line}}_grch38_msv_{cutoff}_graph.stat",
+            out_msv_filterstat_readname = f"output/minisv_mosaic_graph/{{cell_line}}_grch38_msv_{cutoff}_readname_graph.stat",
+
+            out_msv_filterstat_version2 = f"output/minisv_mosaic_graph_new_g/{{cell_line}}_grch38_msv_{cutoff}_graph.stat",
+            out_msv_filterstat_readname_version2 = f"output/minisv_mosaic_graph_new_g/{{cell_line}}_grch38_msv_{cutoff}_readname_graph.stat",
+
+            eval = f"output/minisv_mosaic_graph/{{cell_line}}_grch38_count{cutoff}_eval.tsv",
+            #cell_line_fn = f"output/minisv_mosaic_graph/{{cell_line}}_grch38_count{cutoff}_fn_print.tsv"
+            union_count = f"output/minisv_mosaic_graph/origunion_{{cell_line}}_somatic_generation{cutoff}_eval.tsv",
+            graph_union_count = f"output/minisv_mosaic_graph/graphunion_{{cell_line}}_somatic_generation{cutoff}_eval.tsv"
         conda: 'msvpy'
         params:
             c = cutoff

@@ -1,6 +1,8 @@
 main() {
+#	conda activate gafcall
     #snakemake -s Snakefile -j 200 --slurm --default-resources --use-conda --latency-wait 60 --rerun-triggers mtime --rerun-incomplete
     snakemake -s Snakefile -j 48 --use-conda --latency-wait 60 --rerun-triggers mtime --rerun-incomplete
 }
+
 
 main

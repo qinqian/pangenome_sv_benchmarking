@@ -1,0 +1,225 @@
+options(warn=1)
+library(ggplot2)
+library(stringr)
+library(tidyverse)
+library(ggpattern)
+library(ggthemes)
+library(patchwork)
+
+
+custom_colors <- c(
+  "FP" = rgb(46, 108, 128, maxColorValue = 255),
+  "TP" = rgb(233, 127, 90, maxColorValue = 255)
+)
+
+custom_colors2 <- c(
+  "FP" = "gray",
+  "TP" = "gray"
+)
+
+
+get_theme <- function(size=12, angle=0) {
+    #defined_theme = theme_clean(base_size=size) + theme(legend.title=element_text(size=size), strip.text=element_text(size=size), legend.text=element_text(size=size), axis.title.x=element_text(size=size), axis.title.y=element_text(size=size), axis.text.y=element_text(size=size), axis.text.x=element_text(size=size, angle=angle, hjust = 1, vjust=1.05), legend.box.spacing = unit(0, "mm"))
+    defined_theme = theme_minimal(base_size=size) + theme(legend.title=element_blank(), legend.text=element_text(size=size), axis.title.x=element_text(size=size), axis.title.y=element_text(size=size), axis.text.y=element_text(size=size), axis.text.x=element_text(size=size, angle=angle, hjust = 1, vjust=1.05), legend.box.spacing = unit(0, "mm"), strip.text = element_blank(), legend.position="bottom")
+    defined_theme
+}
+
+
+parse_evaluation <- function(data_path) {
+    # R code
+    df_list = list()
+    for (path in unlist(data_path)) {
+        res = read_tsv(path, col_names = FALSE)
+        tools = res[, ncol(res)] %>% pull()
+
+        # interesting
+        # in total 23 cols, will change as we append more tools
+	res = as.data.frame(res)[, c(-1, -10)]
+
+        # sensitivity
+        sensitivity = res %>% select(X2) %>% pull()
+	tp = sensitivity[2:length(sensitivity)] * sensitivity[1]
+	#fn = round(sensitivity[1] - tp)
+        #fn_rate = 1 - sensitivity[2:length(sensitivity)]
+
+        ## precision
+	total_pred = as.numeric(diag(as.matrix(res)))
+	total_pred = total_pred[2:length(total_pred)]
+        specificity = as.numeric(unlist(as.data.frame(res)[1, 2:ncol(res)]))
+	tp = round(total_pred * specificity)
+	fp = total_pred - tp
+        fp_rate = 1 - specificity
+
+        count = str_extract(path, "count(\\d+)", group=1)
+	metrics_fp = as_tibble(data.frame(metrics='FP', SV_num=fp, tools=tools[-1], count=count))
+	metrics_fn = as_tibble(data.frame(metrics='TP', SV_num=tp, tools=tools[-1], count=count))
+        metrics = bind_rows(metrics_fp, metrics_fn)
+
+##COLO829_grch38_count2_eval.tsv
+	metrics = metrics %>% mutate(cell_line=gsub("_100k", "", gsub("_grch38_count2_eval.tsv", "", basename(path))))
+        df_list[[path]] = metrics
+    }
+
+    metrics = as_tibble(do.call(rbind, df_list))
+    print("-------")
+
+    print(head(metrics))
+    metrics$count = as.numeric(metrics$count)
+
+    metrics = metrics %>% mutate(group=ifelse(grepl("_graph\\.vcf", tools), "graph_keep", "caller"))
+
+#metrics SV_num  tools   count   cell_line       group   tool
+#FP      12      output/minisv_mosaic_graph/COLO829_grch38_severus_2_filtered_graph.vcf  2       COLO829 graph_keep      NA
+#FP      36      output/minisv_mosaic_graph/COLO829_grch38_severuswopon_2_filtered_graph.vcf     2       COLO829 graph_keep      NA
+    metrics = metrics %>% filter(!grepl("savana", tools))
+
+    metrics = metrics %>% mutate(tool = ifelse(
+      grepl("savana", tools),
+      "SAVANA:pon",
+      ifelse(
+      grepl("severus_lowaf25_2_pon|_grch38_severuswopon_2_filtered_graph", tools),
+      "Severus",
+       ifelse(
+      grepl("_severus_lowaf25_2\\.vcf|_grch38_severus_2_filtered_graph", tools),
+      "Severus:pon", 
+      ifelse(grepl("sniffles|snf", tools),
+             "Sniffles2",
+	     NA
+	     )
+	     )
+      )))
+#
+#    metrics = metrics %>% mutate(
+#        tools=case_when(
+#            ##tool=="msv_ltg_1" ~ "minisv",
+#            tool=="msv_ltgs_2" ~ "minisv",
+#            tool=="msv_ltgs_2_version2" ~ "minisv_v2",
+#
+#            tool=="msv_ltg" ~ "minisv",
+#            tool=="msv_ltg_v2" ~ "minisv_v2",
+#            tool=="snf" ~ "Sniffles2", 
+#            .default = tool
+#        )
+#    )
+#
+    print("-------")
+    write_tsv(metrics, "test.tsv")
+
+    metrics = metrics %>% select(metrics,SV_num,tool,count,cell_line,group)
+    print(head(metrics))
+    metrics = metrics %>% pivot_wider(names_from=c("group"), values_from='SV_num')
+    metrics = metrics %>% mutate(graph_filter=caller-graph_keep)
+    print(head(metrics))
+    metrics = metrics %>% select(count,cell_line,metrics,tool,graph_keep,graph_filter) %>% pivot_longer(cols=c("graph_filter", "graph_keep"), names_to="group", values_to="SV_num")
+
+    metrics_cutoff2 = metrics %>% filter(count == 2)
+    metrics_cutoff2
+}
+
+
+do_bar_chart <- function(data_path, out_path, threads, myparam) {
+    metrics = parse_evaluation(data_path['stat'])
+    write_tsv(metrics, out_path[['stat']])
+    
+    p1 = ggplot(data=metrics %>% filter(metrics=='FP'), 
+          aes(x=tool, y=SV_num,
+              fill=factor(metrics),
+              pattern=factor(group))) + 
+      geom_bar_pattern(
+          stat = "identity", position="stack",
+          colour          = 'black',
+          pattern_fill = "black",
+          pattern_angle = 45,
+          pattern_density = 0.03,
+          pattern_key_scale_factor = 0.6,
+          pattern_spacing = 0.05) + 
+      scale_fill_manual(values = custom_colors) + 
+      scale_pattern_manual(values = c(graph_keep = "none", `graph_filter` = "stripe")) +
+      geom_text(aes(y=SV_num, label=SV_num), size=3,
+                position = 'stack') +
+      get_theme(angle=45, size=12) +
+      ggtitle("") + ylab("The number of FP SVs")+ xlab("") + 
+      guides(fill = "none", 
+             pattern = guide_legend(override.aes = list(
+               pattern = c("stripe", "none"),
+               fill = c(`kept by graph` = rgb(233, 127, 90, maxColorValue = 255), `filtered by graph` = rgb(233, 127, 90, maxColorValue = 255)))))
+
+    p2 = ggplot(data=metrics %>% filter(metrics=='TP'), 
+          aes(x=tool, y=SV_num,
+              fill=factor(metrics),
+              pattern=factor(group))) + 
+      geom_bar_pattern(
+          stat = "identity", position="stack",
+          colour          = 'black',
+          pattern_fill = "black",
+          pattern_angle = 45,
+          pattern_density = 0.03,
+          pattern_key_scale_factor = 0.6,
+          pattern_spacing = 0.05) + 
+      scale_fill_manual(values = custom_colors) + 
+      scale_pattern_manual(values = c(graph_keep = "none", `graph_filter` = "stripe")) +
+      geom_text(aes(y=SV_num, label=SV_num), size=3,
+                position = 'stack') +
+      get_theme(angle=45, size=12) +
+      geom_hline(yintercept = 58, color='black') +
+      ggtitle("") + ylab("The number of TP SVs") + xlab("") + 
+      guides(fill = "none", 
+             pattern = guide_legend(override.aes = list(
+               pattern = c("stripe", "none"),
+               fill = c(`kept by graph` = rgb(233, 127, 90, maxColorValue = 255), `filtered by graph` = rgb(233, 127, 90, maxColorValue = 255)))))
+
+
+    p1 = ggplot(data=metrics %>% filter(metrics=='FP'), 
+          aes(x=tool, y=SV_num,
+              fill=factor(metrics),
+              pattern=factor(group))) + 
+      geom_bar_pattern(
+          stat = "identity", position="stack",
+          colour          = 'black',
+          pattern_fill = "black",
+          pattern_angle = 45,
+          pattern_density = 0.03,
+          pattern_key_scale_factor = 0.6,
+          pattern_spacing = 0.05) + 
+      scale_fill_manual(values = custom_colors2) + 
+      scale_pattern_manual(values = c(graph_keep = "none", `graph_filter` = "stripe")) +
+      geom_text(aes(y=SV_num, label=SV_num), size=3,
+                position = 'stack') +
+      get_theme(angle=45, size=12) +
+      ggtitle("") + ylab("The number of FP SVs")+ xlab("") + 
+      guides(fill = "none", 
+             pattern = guide_legend(override.aes = list(
+               pattern = c("stripe", "none"),
+               fill = c(`kept by graph` = 'gray', `filtered by graph` = 'gray'))))
+
+    p2 = ggplot(data=metrics %>% filter(metrics=='TP'), 
+          aes(x=tool, y=SV_num,
+              fill=factor(metrics),
+              pattern=factor(group))) + 
+      geom_bar_pattern(
+          stat = "identity", position="stack",
+          colour          = 'black',
+          pattern_fill = "black",
+          pattern_angle = 45,
+          pattern_density = 0.03,
+          pattern_key_scale_factor = 0.6,
+          pattern_spacing = 0.05) + 
+      scale_fill_manual(values = custom_colors2) + 
+      scale_pattern_manual(values = c(graph_keep = "none", `graph_filter` = "stripe")) +
+      geom_text(aes(y=SV_num, label=SV_num), size=3,
+                position = 'stack') +
+      get_theme(angle=45, size=12) +
+      geom_hline(yintercept = 58, color='black') +
+      ggtitle("") + ylab("The number of TP SVs") + xlab("") + 
+      guides(fill = "none", 
+             pattern = guide_legend(override.aes = list(
+               pattern = c("stripe", "none"),
+               fill = c(`kept by graph` = 'gray', `filtered by graph` = 'gray'))))
+
+    pdf(out_path[['bar_pdf_all_bw']], width=5.3, height=3.2)
+    print(p1+p2)
+    dev.off()
+}
+
+
+do_bar_chart(snakemake@input, snakemake@output, snakemake@threads, snakemake@params)
